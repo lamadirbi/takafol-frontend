@@ -1,0 +1,9 @@
+/* Central theme tokens for non-utility usage (mirrors Tailwind @theme in globals.css) */
+:root {
+  --taiba-primary: #2c5e8a;
+  --taiba-header: #2c5e8a;
+  --taiba-secondary: #4caf50;
+  --taiba-accent: #5d92c4;
+  --taiba-surface: #ffffff;
+  font-feature-settings: "kern" 1;
+}
