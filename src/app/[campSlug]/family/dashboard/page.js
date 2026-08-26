@@ -144,7 +144,10 @@ export default function FamilyDashboardPage() {
         </Link>
       ) : null}
 
-      <InstantNotificationsCard />
+      <InstantNotificationsCard
+        title="إشعارات العائلة"
+        description="الإشعار بيوصل من تطبيق ntfy: طرد جديد، إلغاء طرد، ونتيجة طلب تعديل بياناتك."
+      />
 
       {unreadCount > 0 && pending.length === 0 ? (
         <Link

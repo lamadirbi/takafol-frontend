@@ -179,7 +179,7 @@ export default function AdminDashboardPage() {
 
       <InstantNotificationsCard
         title="إشعارات إدارة المخيم"
-        description="اربط تطبيق ntfy حتى يوصلك إشعار عند ورود طلب تعديل بيانات من العائلات، وعند قبول أو رفض تجديد الاشتراك."
+        description="اربط تطبيق ntfy حتى يوصلك إشعار عند طلب تعديل بيانات، تجديد الاشتراك، وقبل انتهاء الاشتراك."
       />
 
       <section className="mb-8">

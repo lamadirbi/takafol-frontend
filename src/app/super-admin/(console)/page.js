@@ -31,7 +31,7 @@ export default function SuperAdminHomePage() {
     <SuperAdminShell title="إدارة المنصة" description="اختر قسماً للمتابعة">
       <InstantNotificationsCard
         title="إشعارات المنصة"
-        description="اربط تطبيق ntfy حتى يوصلك إشعار عند طلب تسجيل مخيم جديد أو طلب تجديد اشتراك."
+        description="اربط تطبيق ntfy حتى يوصلك إشعار عند طلب تسجيل مخيم، تجديد اشتراك، أو قرب انتهاء الاشتراك."
       />
       <div className="mt-4 space-y-3">
         {SECTIONS.map((item) => {
