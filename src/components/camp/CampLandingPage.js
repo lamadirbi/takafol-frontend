@@ -18,11 +18,6 @@ const PAYMENT_METHODS = [
     number: '0592533678',
     name: 'لما أحمد الدربي',
   },
-  {
-    method: 'بنك فلسطين',
-    number: '0592377078',
-    name: 'اسماعيل أسامة عبد العال',
-  },
 ];
 
 const FEATURES = [
@@ -152,13 +147,12 @@ export default function CampLandingPage({ compact = false }) {
           </div>
         </details>
 
-        <details className="mt-3 overflow-hidden rounded-xl bg-white shadow-sm">
-          <summary className="flex min-h-12 cursor-pointer list-none items-center px-4 text-sm font-semibold">
-            وسائل الدفع
-          </summary>
-          <div className="grid gap-3 border-t border-black/8 px-4 py-4 md:grid-cols-2">
+        <section id="payment" className="mt-8 rounded-xl bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-semibold">وسائل الدفع</h2>
+          <p className="mt-1 text-sm text-muted-foreground">يمكن إرسال إشعار الدفع عبر الطرق التالية:</p>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
             {PAYMENT_METHODS.map((item) => (
-              <div key={item.method} className="text-sm">
+              <div key={item.method} className="rounded-lg bg-[#F0F2F5] p-3 text-sm">
                 <p className="font-medium">{item.method}</p>
                 <p className="mt-0.5 tabular-nums text-muted-foreground" dir="ltr">
                   {item.number}
@@ -167,7 +161,7 @@ export default function CampLandingPage({ compact = false }) {
               </div>
             ))}
           </div>
-        </details>
+        </section>
       </main>
     </div>
   );

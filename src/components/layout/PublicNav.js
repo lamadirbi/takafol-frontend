@@ -17,6 +17,7 @@ import {
   IconShield,
   IconWhatsApp,
   IconClose,
+  IconClipboard,
 } from '@/components/ui/Icons';
 
 const SUPPORT_WA =
@@ -93,6 +94,22 @@ export default function PublicNav({ onNavigate, onClose }) {
             </IconWell>
             الرئيسية
           </Link>
+          {!camp?.slug ? (
+            <>
+              <Link href="/#register" onClick={onNavigate} className={itemClass(false)}>
+                <IconWell>
+                  <IconClipboard className="h-5 w-5" />
+                </IconWell>
+                طلب تسجيل مخيم
+              </Link>
+              <Link href="/#payment" onClick={onNavigate} className={itemClass(false)}>
+                <IconWell>
+                  <IconMegaphone className="h-5 w-5" />
+                </IconWell>
+                الدفع
+              </Link>
+            </>
+          ) : null}
           {camp?.slug ? (
             <Link href={newsHref} onClick={onNavigate} className={itemClass(isNews)} aria-current={isNews ? 'page' : undefined}>
               <IconWell>

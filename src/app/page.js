@@ -29,11 +29,6 @@ const PAYMENT_METHODS = [
     number: '0592533678',
     name: 'لما أحمد الدربي',
   },
-  {
-    method: 'بنك فلسطين',
-    number: '0592377078',
-    name: 'اسماعيل أسامة عبد العال',
-  },
 ];
 
 function waDigits(s) {
@@ -212,6 +207,21 @@ export default function GlobalHomePage() {
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
             منصة سجل العائلات وتوزيع المساعدات. اختاري مخيمك للدخول، أو سجّلي مخيماً جديداً من الطلب أدناه.
           </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <a href="#register">
+              <Button type="button">طلب تسجيل مخيم</Button>
+            </a>
+            <a href="#payment">
+              <Button type="button" variant="outline">
+                الدفع
+              </Button>
+            </a>
+            <a href="#contact">
+              <Button type="button" variant="outline">
+                تواصل
+              </Button>
+            </a>
+          </div>
           {loading ? (
             <div className="flex justify-center py-10">
               <Spinner className="h-10 w-10 text-primary" label="جاري تحميل المخيمات" />
@@ -239,12 +249,8 @@ export default function GlobalHomePage() {
         </section>
         )}
 
-        <details className="mt-10 overflow-hidden rounded-xl bg-white shadow-sm">
-          <summary className="flex min-h-12 cursor-pointer list-none items-center px-4 text-sm font-semibold">
-            طلب تسجيل مخيم / تواصل / دفع
-          </summary>
-          <div className="grid gap-8 border-t border-black/8 p-4 lg:grid-cols-2 lg:items-start">
-          <section className="rounded-xl bg-[#F0F2F5] p-5 md:p-6">
+        <div className="mt-10 grid gap-8 lg:grid-cols-2 lg:items-start">
+          <section id="register" className="scroll-mt-24 rounded-xl bg-white p-5 shadow-sm md:p-6">
             <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">طلب تسجيل مخيم جديد</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               املأ البيانات وسنتواصل معك عبر واتساب لإنشاء الحساب وإرسال رابط المخيم بعد التجهيز.
@@ -304,7 +310,7 @@ export default function GlobalHomePage() {
             </form>
           </section>
 
-          <section className="rounded-xl bg-[#F0F2F5] p-5 md:p-6">
+          <section id="contact" className="scroll-mt-24 rounded-xl bg-white p-5 shadow-sm md:p-6">
             <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">تواصل عبر واتساب</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               لاستفسارات تأسيس المخيمات أو الدعم الفني، راسلنا على واتساب.
@@ -324,12 +330,12 @@ export default function GlobalHomePage() {
           </section>
         </div>
 
-        <section className="border-t border-black/8 p-4" dir="rtl">
-          <h2 className="text-sm font-semibold">وسائل الدفع</h2>
+        <section id="payment" className="mt-8 scroll-mt-24 rounded-xl bg-white p-5 shadow-sm md:p-6" dir="rtl">
+          <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">وسائل الدفع</h2>
           <p className="mt-1 text-sm text-muted-foreground">يمكن إرسال إشعار الدفع عبر الطرق التالية:</p>
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
             {PAYMENT_METHODS.map((item) => (
-              <div key={item.method} className="text-sm">
+              <div key={item.method} className="rounded-lg bg-[#F0F2F5] p-4 text-sm">
                 <p className="font-medium text-foreground">{item.method}</p>
                 <p className="mt-0.5 tabular-nums text-muted-foreground" dir="ltr">
                   {item.number}
@@ -339,7 +345,6 @@ export default function GlobalHomePage() {
             ))}
           </div>
         </section>
-        </details>
       </main>
 
       <Footer />

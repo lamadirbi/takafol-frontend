@@ -58,9 +58,11 @@ export default function Footer() {
           : { href: `${base}/login`, label: 'دخول العائلات' },
         ...(showAllCamps ? [{ href: '/', label: 'كل المخيمات' }] : []),
       ]
-    : showAllCamps
-      ? [{ href: '/', label: 'كل المخيمات' }]
-      : [];
+    : [
+        { href: '/#register', label: 'طلب تسجيل مخيم' },
+        { href: '/#payment', label: 'الدفع' },
+        ...(showAllCamps ? [{ href: '/', label: 'كل المخيمات' }] : []),
+      ];
 
   return (
     <footer className="mt-auto shrink-0 border-t border-black/8 bg-white" dir="rtl">

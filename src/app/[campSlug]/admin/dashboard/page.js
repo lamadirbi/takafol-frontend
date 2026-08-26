@@ -17,11 +17,6 @@ const PAYMENT_METHODS = [
     number: '0592533678',
     name: 'لما أحمد الدربي',
   },
-  {
-    method: 'بنك فلسطين',
-    number: '0592377078',
-    name: 'اسماعيل أسامة عبد العال',
-  },
 ];
 
 const SUB_STATUS_LABEL = {
