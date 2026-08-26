@@ -120,9 +120,12 @@ export default function InstallPwaButton({ className, variant = 'button', onClic
     const swActive = navigator.serviceWorker?.controller;
 
     if (!isSecure) {
-      setHint(
-        'تنبيه: المتصفح يمنع التثبيت لأن الاتصال غير آمن (HTTP). يرجى فتح الموقع عبر https أو localhost حصراً.'
-      );
+      const { hostname, pathname, search, hash } = window.location;
+      const host =
+        hostname.endsWith('.sslip.io') || hostname.endsWith('.nip.io')
+          ? 'takafol.duckdns.org'
+          : hostname;
+      window.location.replace(`https://${host}${pathname}${search}${hash}`);
       return;
     }
 

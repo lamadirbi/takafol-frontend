@@ -4,17 +4,31 @@ import { useEffect } from 'react';
 import { AuthProvider } from '@/context/AuthContext';
 import { NoticeProvider } from '@/context/NoticeContext';
 
+function canonicalHttpsUrl() {
+  const { hostname, pathname, search, hash } = window.location;
+  const host =
+    hostname.endsWith('.sslip.io') || hostname.endsWith('.nip.io')
+      ? 'takafol.duckdns.org'
+      : hostname;
+  return `https://${host}${pathname}${search}${hash}`;
+}
+
 export default function Providers({ children }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!('serviceWorker' in navigator)) return;
 
     const host = window.location.hostname;
+    const isLoopback = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+    if (!isLoopback && window.location.protocol === 'http:') {
+      window.location.replace(canonicalHttpsUrl());
+      return;
+    }
+
+    if (!('serviceWorker' in navigator)) return;
+
     const isLocalDev =
       process.env.NODE_ENV !== 'production' ||
-      host === 'localhost' ||
-      host === '127.0.0.1' ||
-      host === '::1' ||
+      isLoopback ||
       /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host) ||
       host.endsWith('.loca.lt') ||
       host.endsWith('.trycloudflare.com') ||
@@ -35,7 +49,7 @@ export default function Providers({ children }) {
         await navigator.serviceWorker.register('/sw.js', { scope: '/' });
       } catch (err) {
         // Avoid noisy logs in production; still helpful during local dev.
-        if (isLocalhost) console.warn('Service worker registration failed', err);
+        if (isLocalDev) console.warn('Service worker registration failed', err);
       }
     };
 
