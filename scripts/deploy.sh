@@ -11,6 +11,7 @@ git fetch origin main
 git reset --hard origin/main
 
 npm ci --include=dev
+export PATH="$ROOT/node_modules/.bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 NODE_ENV=production npm run build
 
 chown -R www:www .next
