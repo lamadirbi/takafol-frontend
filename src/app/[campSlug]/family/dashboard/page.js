@@ -145,6 +145,8 @@ export default function FamilyDashboardPage() {
         </Link>
       ) : null}
 
+      <InstantNotificationsCard />
+
       {unreadCount > 0 && pending.length === 0 ? (
         <Link
           href={`/${campSlug}/family/notifications`}
@@ -236,8 +238,6 @@ export default function FamilyDashboardPage() {
           </section>
         </div>
       </div>
-
-      <InstantNotificationsCard />
 
       <div className="mt-4 lg:hidden">
         <LogoutButton

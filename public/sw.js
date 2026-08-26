@@ -34,10 +34,14 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     self.registration.showNotification(title, {
-      body,
-      data,
-      dir: 'rtl',
-      lang: 'ar',
+            body,
+            data,
+            dir: 'rtl',
+            lang: 'ar',
+            icon: '/icon.png',
+            badge: '/icon.png',
+            tag: payload.tag || 'takafol',
+            renotify: true,
     })
   );
 });
