@@ -30,32 +30,23 @@ export default function FeaturedNewsSection() {
   }
 
   return (
-    <section className="py-14" aria-labelledby="featured-news-heading">
-      <h2
-        id="featured-news-heading"
-        className="mb-8 text-center text-xs font-bold uppercase tracking-[0.2em] text-slate-500 md:text-start"
-      >
+    <section className="py-6" aria-labelledby="featured-news-heading">
+      <h2 id="featured-news-heading" className="mb-3 text-lg font-bold text-foreground">
         أخبار مميزة
       </h2>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((post) => (
+      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+        {items.map((post, i) => (
           <Link
             key={post.id}
             href={`${newsBase}#post-${post.id}`}
-            className="group block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className={`block px-4 py-4 transition-colors hover:bg-[#F0F2F5] ${i > 0 ? 'border-t border-black/8' : ''}`}
           >
-            <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-sm shadow-slate-900/5 transition hover:shadow-md">
-              <div className="flex flex-1 flex-col p-5" dir="rtl">
-                <time className="text-xs font-medium text-slate-500">
-                  {formatDate(post.published_at || post.created_at)}
-                </time>
-                <h3 className="mt-2 line-clamp-2 text-lg font-bold leading-snug text-slate-900">
-                  {post.title}
-                </h3>
-                <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600">
-                  {post.content}
-                </p>
-              </div>
+            <article dir="rtl">
+              <time className="text-xs text-[#65676B]">
+                {formatDate(post.published_at || post.created_at)}
+              </time>
+              <h3 className="mt-1 line-clamp-2 font-semibold leading-snug text-foreground">{post.title}</h3>
+              <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[#65676B]">{post.content}</p>
             </article>
           </Link>
         ))}

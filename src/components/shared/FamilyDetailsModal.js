@@ -3,6 +3,7 @@
 import Modal from '@/components/ui/Modal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { formatDate } from '@/lib/utils';
+import { genderLabel } from '@/lib/memberOptions';
 
 export default function FamilyDetailsModal({ open, onClose, family }) {
   if (!family) return null;
@@ -85,7 +86,7 @@ export default function FamilyDetailsModal({ open, onClose, family }) {
               >
                 <span className="font-medium">{m.name}</span>
                 <span className="text-xs text-muted-foreground">
-                  تاريخ الميلاد: {m.date_of_birth ?? '—'} — العمر: {m.age ?? '—'} — الجنس: {m.gender || '—'}
+                  تاريخ الميلاد: {m.date_of_birth ?? '—'} — العمر: {m.age ?? '—'} — الجنس: {genderLabel(m.gender)}
                 </span>
               </div>
             ))}

@@ -1,9 +1,12 @@
-/* Central theme tokens for non-utility usage (mirrors Tailwind @theme in globals.css) */
 :root {
-  --taiba-primary: #2c5e8a;
-  --taiba-header: #2c5e8a;
-  --taiba-secondary: #4caf50;
-  --taiba-accent: #5d92c4;
-  --taiba-surface: #ffffff;
+  --taiba-primary: var(--carbon);
+  --taiba-header: var(--sheet);
+  --taiba-secondary: var(--mark);
+  --taiba-accent: #1877f2;
+  --taiba-surface: var(--sheet);
+  --taiba-background: var(--paper);
+  --taiba-foreground: var(--ink);
+  --taiba-border: var(--ruled);
+  --taiba-destructive: var(--stamp);
   font-feature-settings: "kern" 1;
 }

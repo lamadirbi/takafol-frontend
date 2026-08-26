@@ -29,10 +29,10 @@ export default function CampFilterFields({
   return (
     <div
       id="filters"
-        className="scroll-mt-28 overflow-hidden rounded-3xl border border-primary/15 bg-linear-to-br from-white via-slate-50/90 to-primary/4 shadow-md shadow-slate-200/60"
+      className="file-spine scroll-mt-28 overflow-hidden border border-border bg-card"
     >
-      <div className="border-b border-primary/10 bg-primary/[0.07] px-5 py-4">
-        <h3 className="text-base font-bold text-primary">
+      <div className="border-b border-border px-5 py-4">
+        <h3 className="text-sm font-semibold text-foreground">
           {isFamily ? 'فلترة العائلات' : 'فلترة الأفراد'}
         </h3>
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
@@ -44,11 +44,8 @@ export default function CampFilterFields({
 
       <div className="space-y-6 p-5 md:p-6" dir="rtl">
         {isFamily ? (
-          <section className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm">
-            <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                👨‍👩‍👧
-              </span>
+          <section className="border border-border p-4">
+            <h4 className="mb-3 text-sm font-semibold text-foreground">
               العائلة
             </h4>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -91,7 +88,7 @@ export default function CampFilterFields({
                 </div>
               </div>
               <div className="sm:col-span-2 lg:col-span-3">
-                <label className="flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-100 bg-white/80 px-3 py-2.5 text-sm">
+                <label className="flex cursor-pointer items-center gap-2 border border-border px-3 py-2.5 text-sm">
                   <input
                     type="checkbox"
                     checked={Boolean(filters.has_newborn)}
@@ -107,16 +104,13 @@ export default function CampFilterFields({
             </div>
           </section>
         ) : (
-          <section className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm">
-            <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-secondary/15 text-secondary">
-                👤
-              </span>
+          <section className="border border-border p-4">
+            <h4 className="mb-3 text-sm font-semibold text-foreground">
               أفراد يطابقون الشروط
             </h4>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="sm:col-span-2 lg:col-span-4">
-                <label className="flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-100 bg-white/80 px-3 py-2.5 text-sm">
+                <label className="flex cursor-pointer items-center gap-2 border border-border px-3 py-2.5 text-sm">
                   <input
                     type="checkbox"
                     checked={Boolean(filters.member_is_newborn)}
@@ -171,7 +165,7 @@ export default function CampFilterFields({
                 <p className="mb-2 text-sm font-medium text-muted-foreground">
                   صلة القرابة (اختيار متعدد — يُطبَّق مع العمر والجنس على نفس الفرد)
                 </p>
-                <div className="flex flex-wrap gap-x-4 gap-y-2 rounded-xl border border-slate-100 bg-white/80 p-3">
+                <div className="flex flex-wrap gap-x-4 gap-y-2 border border-border p-3">
                   {RELATIONSHIP_OPTIONS.map((opt) => (
                     <label
                       key={opt.value}
@@ -192,7 +186,7 @@ export default function CampFilterFields({
           </section>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
           <div className="flex flex-wrap gap-2">
             <Button type="button" onClick={onApply} disabled={applyDisabled}>
               تطبيق الفلترة

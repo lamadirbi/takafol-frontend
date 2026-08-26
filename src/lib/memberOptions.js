@@ -21,6 +21,62 @@ export const FAMILY_FINANCIAL_OPTIONS = [
   { value: 'good', label: 'جيد' },
 ];
 
+export const GENDER_LABELS = {
+  male: 'ذكر',
+  female: 'أنثى',
+  unknown: 'غير محدد',
+};
+
+export const SOCIAL_STATUS_LABELS = {
+  married: 'متزوج',
+  widowed: 'أرمل',
+  separated: 'منفصل',
+  divorced: 'مطلّق',
+  abandoned: 'مهجور',
+  single: 'أعزب',
+};
+
+export const FILE_STATUS_LABELS = {
+  active: 'نشط',
+  pending: 'معلق',
+  complete: 'مكتمل',
+  incomplete: 'غير مكتمل',
+};
+
+function lookupLabel(map, value) {
+  if (value == null || value === '') return '—';
+  const s = String(value);
+  return map[s] ?? s;
+}
+
+export function genderLabel(value) {
+  return lookupLabel(GENDER_LABELS, value);
+}
+
+export function socialStatusLabel(value) {
+  return lookupLabel(SOCIAL_STATUS_LABELS, value);
+}
+
+export function financialStatusLabel(value) {
+  if (value == null || value === '') return '—';
+  const row = FAMILY_FINANCIAL_OPTIONS.find((o) => o.value === value);
+  return row ? row.label : String(value);
+}
+
+export function fileStatusLabel(value) {
+  return lookupLabel(FILE_STATUS_LABELS, value);
+}
+
+/** عرض قيمة حقل عائلة للمستخدم (عربي) */
+export function familyFieldDisplay(key, value) {
+  if (value == null || value === '') return '—';
+  if (key === 'head_gender' || key === 'gender') return genderLabel(value);
+  if (key === 'social_status') return socialStatusLabel(value);
+  if (key === 'financial_status') return financialStatusLabel(value);
+  if (key === 'file_status') return fileStatusLabel(value);
+  return String(value);
+}
+
 export function relationshipLabel(value) {
   if (value == null || value === '') return '—';
   const row = RELATIONSHIP_OPTIONS.find((o) => o.value === value);

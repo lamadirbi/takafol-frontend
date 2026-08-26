@@ -28,6 +28,7 @@ export default function ConfirmDialog({
       onClose={handleClose}
       title={title}
       className="max-w-md"
+      centered
       wrapperClassName={nested ? 'z-[100]' : undefined}
     >
       {message != null && message !== '' ? (
@@ -43,15 +44,13 @@ export default function ConfirmDialog({
         </Button>
         <Button
           type="button"
-          variant="primary"
+          variant={danger ? 'danger' : 'primary'}
           disabled={loading}
-          className={cn(
-            danger &&
-              'bg-red-600 text-white shadow-sm hover:opacity-95 focus-visible:outline-red-600'
-          )}
+          loading={loading}
+          className={cn(danger && 'focus-visible:outline-destructive')}
           onClick={() => onConfirm?.()}
         >
-          {loading ? 'جاري التنفيذ…' : confirmLabel}
+          {confirmLabel}
         </Button>
       </div>
     </Modal>

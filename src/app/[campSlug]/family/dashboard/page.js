@@ -1,32 +1,17 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import { Card } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
-import { api } from '@/lib/api';
+import { useParams } from 'next/navigation';
+import FamilyShell from '@/components/layout/FamilyShell';
+import LogoutButton from '@/components/ui/LogoutButton';
+import EmptyState, { PageSpinner } from '@/components/ui/EmptyState';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
-import { formatDate, unwrapApiList, unwrapResource, unwrapResourceArray } from '@/lib/utils';
-import {
-  pushSupported,
-  getPushPermission,
-  enablePush,
-  disablePush,
-  getCurrentSubscription,
-} from '@/lib/push';
-
-function distLabel(d) {
-  const st = d?.status;
-  if (st === 'received') return 'تم الاستلام';
-  if (st === 'pending') return 'قيد الانتظار';
-  if (st === 'not_eligible') return 'غير مستحق';
-  return st || '—';
-}
+import { useFamilyFeed } from '@/context/FamilyFeedContext';
+import { familyFieldDisplay, genderLabel } from '@/lib/memberOptions';
+import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
+import { IconBell, IconClipboard, IconPackage } from '@/components/ui/Icons';
 
 const FAMILY_FIELD_LABELS = {
   head_name: 'اسم رب الأسرة',
@@ -60,337 +45,206 @@ const FAMILY_FIELD_ORDER = [
   'login_serial',
 ];
 
+function initials(name) {
+  const s = String(name || '').trim();
+  if (!s) return 'أ';
+  return s.slice(0, 1);
+}
+
 export default function FamilyDashboardPage() {
-  const router = useRouter();
   const { campSlug } = useParams();
-  const { camp } = useCamp();
-  const { user, logout } = useAuth();
-  const sub = user?.subscription;
+  const { camp } = useCamp() || {};
+  const { familyUser, logoutFamily } = useAuth();
+  const sub = familyUser?.subscription;
   const inGrace = Boolean(sub?.in_grace);
-  const monthlyAmount = sub?.monthly_amount_ils ?? 15;
-
-  const [family, setFamily] = useState(null);
-  const [distributions, setDistributions] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [pushState, setPushState] = useState('idle');
-  const [pushEnabled, setPushEnabled] = useState(false);
-
-  const refreshPush = useCallback(async () => {
-    if (!pushSupported()) {
-      setPushEnabled(false);
-      return;
-    }
-    const perm = await getPushPermission();
-    const sub = await getCurrentSubscription();
-    setPushEnabled(perm === 'granted' && !!sub);
-  }, []);
-
-  useEffect(() => {
-    refreshPush();
-  }, [refreshPush]);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [dashRes, newsRes] = await Promise.all([
-          api.get('/family/dashboard'),
-          api.get('/announcements', { params: { per_page: 8 } }).catch(() => ({ data: {} })),
-        ]);
-        const d = dashRes.data;
-        setFamily(unwrapResource(d.family));
-        setDistributions(unwrapResourceArray(d.current_distributions));
-        setAnnouncements(unwrapApiList(newsRes));
-      } catch {
-        setFamily(null);
-        setDistributions([]);
-        setAnnouncements([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  const handlePushToggle = async () => {
-    setPushState('loading');
-    try {
-      if (pushEnabled) {
-        await disablePush();
-      } else {
-        await enablePush();
-      }
-      await refreshPush();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setPushState('idle');
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout(`/${campSlug}/login`);
-  };
+  const monthlyAmount = sub?.monthly_amount_ils ?? 50;
+  const { family, distributions, announcements, loading, unreadCount } = useFamilyFeed();
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
+      <FamilyShell title="ملفي" subtitle={camp?.name} maxWidth="max-w-3xl">
+        <PageSpinner label="جاري تحميل البيانات" />
+      </FamilyShell>
     );
   }
 
-  const greetingName = user?.name || family?.head_name || 'رب الأسرة';
+  const greetingName = familyUser?.name || family?.head_name || 'رب الأسرة';
   const members = Array.isArray(family?.members) ? family.members : [];
+  const pending = (distributions || []).filter((d) => d.status === 'pending');
+  const received = (distributions || []).filter((d) => d.status === 'received');
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50">
-      <Header title="لوحة رب الأسرة" subtitle={camp?.name} />
+    <FamilyShell title={greetingName} subtitle={camp?.name} maxWidth="max-w-3xl">
+      {inGrace ? (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          اشتراك المخيم منتهٍ — فترة سماح. سداد {monthlyAmount} شيكل شهرياً للتجديد عبر إدارة المخيم.
+          {sub?.notice_image_url ? (
+            <div className="mt-3 flex justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={sub.notice_image_url}
+                alt="إشعار الدفع"
+                className="max-h-72 w-auto max-w-full object-contain"
+              />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
-      <div className="border-b border-slate-200 bg-white px-4 py-3" dir="rtl">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-slate-600">
-            مرحباً <span className="font-bold text-slate-900">{greetingName}</span>
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/${campSlug}`}
-              className="rounded-full px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/10"
-            >
-              الرئيسية
-            </Link>
-            <Link
-              href={`/${campSlug}/news`}
-              className="rounded-full px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/10"
-            >
-              أخبار المخيم
-            </Link>
-            <Link
-              href={`/${campSlug}/family/change-requests`}
-              className="rounded-full px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/10"
-            >
-              طلبات التعديل
-            </Link>
-            <Button type="button" variant="outline" size="sm" onClick={handleLogout}>
-              خروج
-            </Button>
+      <section className="overflow-hidden rounded-xl bg-white shadow-sm">
+        <div className="h-36 bg-gradient-to-l from-[#1877F2] to-primary sm:h-40 md:h-48" />
+        <div className="px-3 pb-4 sm:px-4">
+          <div className="-mt-10 sm:-mt-12">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-sm sm:h-24 sm:w-24 sm:text-4xl md:h-28 md:w-28">
+              {initials(greetingName)}
+            </div>
+            <div className="mt-3 min-w-0">
+              <h1 className="break-words text-xl font-bold leading-snug text-foreground sm:text-2xl">
+                {greetingName}
+              </h1>
+              <p className="mt-0.5 break-words text-sm text-[#65676B]">{camp?.name || 'الأسرة'}</p>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Link
+                href={`/${campSlug}/family/change-request`}
+                className={`inline-flex min-h-10 items-center justify-center rounded-lg bg-[#E4E6EB] px-2 text-center text-sm font-semibold text-foreground sm:px-3 ${
+                  inGrace ? 'pointer-events-none opacity-50' : 'hover:bg-[#d8dadf]'
+                }`}
+              >
+                تعديل الملف
+              </Link>
+              <Link
+                href={`/${campSlug}/family/change-requests`}
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-[#E4E6EB] px-2 text-center text-sm font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3"
+              >
+                <IconClipboard className="h-4 w-4 shrink-0" />
+                الطلبات
+              </Link>
+            </div>
           </div>
+        </div>
+      </section>
+
+      {pending.length > 0 ? (
+        <Link
+          href={`/${campSlug}/family/notifications`}
+          className="mt-4 flex items-start gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-primary/20 hover:bg-primary/5"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <IconPackage className="h-6 w-6" />
+          </span>
+          <div className="min-w-0">
+            <p className="font-bold text-foreground">طرد بانتظارك</p>
+            <p className="mt-0.5 text-sm text-[#65676B]">
+              {pending.length === 1
+                ? `لديك «${pending[0].package_type?.name || pending[0].package_label || 'طرد مساعدات'}» بانتظار الاستلام.`
+                : `لديك ${pending.length} طرود بانتظار الاستلام من لجنة المخيم.`}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-primary">عرض الإشعارات</p>
+          </div>
+        </Link>
+      ) : null}
+
+      {unreadCount > 0 && pending.length === 0 ? (
+        <Link
+          href={`/${campSlug}/family/notifications`}
+          className="mt-4 flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm hover:bg-black/4"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <IconBell className="h-6 w-6" />
+          </span>
+          <div>
+            <p className="font-bold text-foreground">لديك إشعارات جديدة</p>
+            <p className="text-sm text-[#65676B]">{unreadCount} تنبيه بانتظارك</p>
+          </div>
+        </Link>
+      ) : null}
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start">
+        <section className="rounded-xl bg-white p-4 shadow-sm">
+          <h2 className="mb-3 text-lg font-bold">حول</h2>
+          <dl className="space-y-2.5 text-sm">
+            {FAMILY_FIELD_ORDER.map((key) => (
+              <div key={key} className="flex justify-between gap-3 border-b border-black/6 pb-2 last:border-0 last:pb-0">
+                <dt className="text-[#65676B]">{FAMILY_FIELD_LABELS[key]}</dt>
+                <dd
+                  className={
+                    key.includes('id') || key === 'phone' || key === 'login_serial'
+                      ? 'font-mono tabular-nums font-medium'
+                      : 'font-medium'
+                  }
+                >
+                  {familyFieldDisplay(key, family?.[key])}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          {received.length > 0 ? (
+            <p className="mt-4 text-xs text-[#65676B]">
+              آخر تسليم: {received[0].package_type?.name || received[0].package_label || 'طرد'} — يظهر في الإشعارات.
+            </p>
+          ) : null}
+        </section>
+
+        <div className="space-y-4">
+          <section className="rounded-xl bg-white p-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold">أفراد الأسرة</h2>
+              <span className="text-sm text-[#65676B]">{members.length}</span>
+            </div>
+            {members.length > 0 ? (
+              <ul className="grid grid-cols-2 gap-2">
+                {members.map((m) => (
+                  <li key={m.id} className="rounded-lg bg-[#F0F2F5] p-3">
+                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
+                      {initials(m.name)}
+                    </div>
+                    <p className="truncate text-sm font-semibold">{m.name || 'بدون اسم'}</p>
+                    <p className="truncate text-xs text-[#65676B]">
+                      {m.relationship || 'غير محدد'}
+                      {m.gender ? ` · ${genderLabel(m.gender)}` : ''}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState description="لا يوجد أفراد مسجلون لهذه الأسرة." />
+            )}
+          </section>
+
+          <section className="rounded-xl bg-white p-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold">آخر الأخبار</h2>
+              <Link href={`/${campSlug}/news`} className="text-sm font-semibold text-primary hover:underline">
+                عرض الكل
+              </Link>
+            </div>
+            {announcements.length > 0 ? (
+              <ul className="space-y-2">
+                {announcements.slice(0, 3).map((a) => (
+                  <li key={a.id}>
+                    <Link href={`/${campSlug}/news#post-${a.id}`} className="block rounded-lg p-2 hover:bg-[#F0F2F5]">
+                      <p className="font-semibold text-foreground">{a.title}</p>
+                      <p className="mt-0.5 line-clamp-2 text-sm text-[#65676B]">{a.content}</p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-[#65676B]">لا توجد أخبار جديدة.</p>
+            )}
+          </section>
         </div>
       </div>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 md:py-12" dir="rtl">
-        <div className="mb-8 rounded-4xl border border-slate-100 bg-white p-6 shadow-sm md:p-8">
-          <h1 className="text-2xl font-bold text-slate-900">لوحة رب الأسرة</h1>
-          <p className="mt-1 text-slate-500">متابعة الطرود والبيانات المسجّلة.</p>
-        </div>
+      <InstantNotificationsCard />
 
-        {inGrace ? (
-          <div className="mb-8 overflow-hidden rounded-3xl border-2 border-amber-300 bg-amber-50 shadow-sm" dir="rtl">
-            <div className="border-b border-amber-200 bg-amber-100/80 px-4 py-3">
-              <p className="text-center text-sm font-bold text-amber-950">
-                اشتراك المخيم في المنصة منتهٍ — فترة سماح: يرجى سداد {monthlyAmount} شيكل شهرياً للتجديد. بعض الميزات
-                معطّلة حتى يُحدَّث الاشتراك من إدارة المخيم.
-              </p>
-            </div>
-            {sub?.notice_image_url ? (
-              <div className="relative flex justify-center bg-white p-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={sub.notice_image_url}
-                  alt="إشعار الدفع"
-                  className="max-h-72 w-auto max-w-full object-contain"
-                />
-              </div>
-            ) : (
-              <p className="px-4 py-4 text-center text-sm text-amber-900">
-                ستظهر هنا صورة إشعار الدفع عندما ترفعها إدارة المخيم.
-              </p>
-            )}
-          </div>
-        ) : null}
-
-        <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm opacity-100">
-          <h2 className="text-lg font-bold text-slate-900">إشعارات الهاتف</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            فعّل إشعارات المتصفح لتصلك عند نشر خبر جديد أو عند وجود طرد بانتظار الاستلام.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {pushSupported() ? (
-              <>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={pushEnabled ? 'outline' : 'primary'}
-                  disabled={pushState === 'loading' || inGrace}
-                  onClick={handlePushToggle}
-                >
-                  {pushState === 'loading'
-                    ? '…'
-                    : pushEnabled
-                      ? 'إلغاء الإشعارات'
-                      : 'تفعيل الإشعارات'}
-                </Button>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                    pushEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  {pushEnabled ? 'مفعّلة' : 'غير مفعّلة'}
-                </span>
-              </>
-            ) : (
-              <p className="text-sm text-slate-500">المتصفح لا يدعم إشعارات الدفع على هذا الجهاز.</p>
-            )}
-            {inGrace ? (
-              <p className="mt-3 text-xs font-medium text-amber-800">
-                تفعيل الإشعارات غير متاح خلال فترة السماح حتى يُجدَّد الاشتراك.
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="space-y-8 lg:col-span-2">
-            <section>
-              <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900">
-                <span>📦</span> الطرود
-              </h2>
-              {distributions.length > 0 ? (
-                <div className="space-y-4">
-                  {distributions.map((d) => (
-                    <Card
-                      key={d.id}
-                      className="flex flex-col gap-3 rounded-2xl border-none bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div>
-                        <p className="font-bold text-slate-900">
-                          {d.package_type?.name || d.package_label || 'طرد مساعدات'}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          بتاريخ: {formatDate(d.created_at)}
-                          {d.camp_filter_record?.name ? ` — ${d.camp_filter_record.name}` : ''}
-                        </p>
-                      </div>
-                      <Badge variant={d.status === 'received' ? 'primary' : 'secondary'}>
-                        {distLabel(d)}
-                      </Badge>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
-                  <p className="text-slate-500">لا يوجد طرد قيد الانتظار حالياً.</p>
-                </div>
-              )}
-            </section>
-
-            <section>
-              <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900">
-                <span>📢</span> تنبيهات هامة
-              </h2>
-              {announcements.length > 0 ? (
-                <div className="space-y-4">
-                  {announcements.map((a) => (
-                    <Card key={a.id} className="rounded-2xl border-none bg-white p-5 shadow-sm">
-                      <h3 className="font-bold text-slate-900">{a.title}</h3>
-                      <p className="mt-2 line-clamp-3 text-sm text-slate-600">{a.content}</p>
-                      <p className="mt-3 text-[10px] text-slate-400">{formatDate(a.published_at || a.created_at)}</p>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
-                  <p className="text-slate-500">لا توجد تنبيهات جديدة.</p>
-                </div>
-              )}
-            </section>
-
-            <section>
-              <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-900">
-                <span>👨‍👩‍👧‍👦</span> أفراد الأسرة
-              </h2>
-              {members.length > 0 ? (
-                <div className="space-y-3">
-                  {members.map((m) => (
-                    <Card key={m.id} className="rounded-2xl border-none bg-white p-5 shadow-sm">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-bold text-slate-900">{m.name || 'بدون اسم'}</p>
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
-                          {m.relationship || 'غير محدد'}
-                        </span>
-                      </div>
-                      <div className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
-                        <p>الهوية: <span className="font-mono">{m.national_id || '—'}</span></p>
-                        <p>تاريخ الميلاد: <span>{m.date_of_birth || '—'}</span></p>
-                        <p>العمر: <span>{m.age ?? '—'}</span></p>
-                        <p>الجنس: <span>{m.gender || '—'}</span></p>
-                        <p>الحالة الصحية: <span>{m.health_status || '—'}</span></p>
-                        <p>مستوى التعليم: <span>{m.education_level || '—'}</span></p>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
-                  <p className="text-slate-500">لا يوجد أفراد مسجلون لهذه الأسرة.</p>
-                </div>
-              )}
-            </section>
-          </div>
-
-          <div className="space-y-8">
-            <section className="rounded-4xl border border-slate-100 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 border-b border-slate-100 pb-2 text-lg font-bold text-slate-900">
-                بيانات الأسرة المسجّلة
-              </h2>
-              <div className="space-y-3 text-sm">
-                {FAMILY_FIELD_ORDER.map((key) => (
-                  <div key={key} className="flex justify-between gap-2">
-                    <span className="text-slate-500">{FAMILY_FIELD_LABELS[key]}</span>
-                    <span className={key.includes('id') || key === 'phone' || key === 'login_serial' ? 'font-mono font-medium' : 'font-medium'}>
-                      {family?.[key] ?? '—'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section
-              className={`rounded-4xl border border-primary/10 bg-primary/5 p-6 ${inGrace ? 'opacity-60' : ''}`}
-            >
-              <h2 className="mb-2 text-lg font-bold text-primary">طلب تعديل البيانات</h2>
-              <p className="mb-4 text-xs text-slate-600">
-                تُحفظ طلباتك في سجل حتى تُراجعها الإدارة وتقبلها أو ترفضها.
-              </p>
-              {inGrace ? (
-                <p className="mb-4 rounded-xl bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-950">
-                  طلبات التعديل معطّلة خلال فترة السماح — سدّد {monthlyAmount} شيكل للتجديد عبر إدارة المخيم.
-                </p>
-              ) : null}
-              <div className="flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full rounded-xl border-primary/30 py-3 text-sm font-bold text-primary"
-                  onClick={() => router.push(`/${campSlug}/family/change-requests`)}
-                >
-                  عرض سجل الطلبات
-                </Button>
-                <Button
-                  type="button"
-                  className="w-full rounded-xl py-3 text-sm font-bold shadow-sm"
-                  disabled={inGrace}
-                  onClick={() => router.push(`/${campSlug}/family/change-request`)}
-                >
-                  إرسال طلب تعديل جديد
-                </Button>
-              </div>
-            </section>
-          </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+      <div className="mt-4 lg:hidden">
+        <LogoutButton
+          className="w-full rounded-xl"
+          onLogout={() => logoutFamily(`/${campSlug}/login`)}
+        />
+      </div>
+    </FamilyShell>
   );
 }

@@ -11,23 +11,40 @@ export const config = {
      * - _next/image (image optimization files)
      * - icon.png, apple-icon.png, favicon.ico, manifest.json, sw.js (public files)
      */
-    '/((?!api|_next/static|_next/image|icon.png|apple-icon.png|taibaLogo.png|favicon.ico|manifest.json|sw.js).*)',
+    '/((?!api|storage|_next/static|_next/image|icon.png|apple-icon.png|taibaLogo.png|favicon.ico|manifest.json|sw.js).*)',
   ],
 };
+
+function hostWithoutPort(hostname) {
+  if (!hostname) return 'localhost';
+  if (hostname.startsWith('[')) {
+    const end = hostname.indexOf(']');
+    return end >= 0 ? hostname.slice(1, end) : hostname;
+  }
+  const colon = hostname.lastIndexOf(':');
+  if (colon > 0 && hostname.indexOf(':') === colon) {
+    return hostname.slice(0, colon);
+  }
+  return hostname;
+}
+
+/** توجيه نطاق فرعي فقط لـ {مخيم}.localhost — الباقي مسار /{slug} (واي فاي، نفق، استضافة). */
+function isCampSubdomainHost(host) {
+  return host.endsWith('.localhost') && host !== 'localhost';
+}
 
 export default function proxy(req) {
   const url = req.nextUrl;
 
   // Get hostname of request (e.g. camp1.localhost:3000)
   const hostname = req.headers.get('host') || 'localhost:3000';
+  const host = hostWithoutPort(hostname);
 
   // Extract subdomain
   const searchParams = url.searchParams.toString();
   const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ''}`;
 
-  // Check if we are on the main root domain (no subdomain)
-  const isRootDomain =
-    hostname === 'localhost:3000' || hostname === '127.0.0.1:3000' || hostname === 'taiba.com';
+  const isRootDomain = !isCampSubdomainHost(host);
 
   if (isRootDomain) {
     const p = url.pathname;
@@ -58,8 +75,7 @@ export default function proxy(req) {
     return NextResponse.next();
   }
 
-  // Get the first part of the hostname
-  const subdomain = hostname.split('.')[0];
+  const subdomain = host.split('.')[0];
 
   // Rewrite to the specific camp directory
   return NextResponse.rewrite(new URL(`/${subdomain}${path}`, req.url));

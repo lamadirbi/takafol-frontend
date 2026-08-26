@@ -3,48 +3,126 @@
 import Link from 'next/link';
 import CampLogo from '@/components/shared/CampLogo';
 import { useCamp } from '@/context/CampContext';
+import { useAuth } from '@/hooks/useAuth';
+import { isGlobalSuperAdmin } from '@/lib/authSession';
+import { IconMail, IconWhatsApp } from '@/components/ui/Icons';
+
+const SUPPORT_EMAIL = 'radartech85@gmail.com';
+const SUPPORT_WA = '0592533678';
+
+function waDigits(s) {
+  return String(s || '').replace(/\D/g, '');
+}
+
+function waMeNumber(s) {
+  let digits = waDigits(s);
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.startsWith('0')) digits = `970${digits.slice(1)}`;
+  return digits;
+}
+
+function FooterLink({ href, children, external = false }) {
+  const className =
+    'inline-flex min-h-11 items-center text-sm text-muted-foreground transition-colors duration-(--duration-ui) ease-(--ease-out) hover:text-primary';
+
+  if (external) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
+}
 
 export default function Footer() {
   const { camp } = useCamp() || {};
-  const campName = camp?.name || 'تَكافل — مخيم طيبة التربوي';
+  const { familyUser, adminUser } = useAuth();
+  const campName = camp?.name || 'تَكافل';
   const base = camp?.slug ? `/${camp.slug}` : '';
+  const year = new Date().getFullYear();
+  const supportHref = `https://wa.me/${waMeNumber(SUPPORT_WA)}`;
+  const showAllCamps = isGlobalSuperAdmin(adminUser);
+
+  const navLinks = camp?.slug
+    ? [
+        { href: base, label: 'صفحة المخيم' },
+        { href: `${base}/news`, label: 'أخبار المخيم' },
+        familyUser
+          ? { href: `${base}/family/dashboard`, label: 'حسابي' }
+          : { href: `${base}/login`, label: 'دخول العائلات' },
+        ...(showAllCamps ? [{ href: '/', label: 'كل المخيمات' }] : []),
+      ]
+    : showAllCamps
+      ? [{ href: '/', label: 'كل المخيمات' }]
+      : [];
 
   return (
-    <footer className="mt-auto shrink-0 border-t border-slate-200/90 bg-white">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 md:flex-row md:items-start md:justify-between">
-        <div className="flex flex-col items-start gap-3" dir="rtl">
-          <CampLogo
-            height={80}
-            width={240}
-            className="max-h-20 max-w-[16rem] object-contain sm:max-h-24"
-          />
-          <p className="text-base font-bold text-slate-900">{campName}</p>
-          <p className="max-w-sm text-sm leading-relaxed text-slate-600">
-            منصة موثوقة لتنظيم المساعدات والتواصل بين اللجنة والعائلات.
+    <footer className="mt-auto shrink-0 border-t border-black/8 bg-white" dir="rtl">
+
+      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="sm:col-span-2 lg:col-span-1">
+          <CampLogo height={40} width={140} className="max-h-10 max-w-[9rem] object-contain" />
+          <p className="mt-3 text-sm font-semibold text-foreground">{campName}</p>
+          <p className="mt-1 max-w-sm text-sm leading-relaxed text-muted-foreground">
+            سجل العائلات وتوزيع الطرود بين اللجنة والأسر، بكرامة وشفافية.
           </p>
         </div>
-        <nav
-          className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-slate-600"
-          dir="rtl"
-        >
-          <Link className="transition hover:text-primary" href={`${base || '/'}#about`}>
-            تنظيم البيانات
-          </Link>
-          <Link className="transition hover:text-primary" href={`${base || '/'}#support`}>
-            التواصل
-          </Link>
-          <Link className="transition hover:text-primary" href={`${base || '/'}#justice`}>
-            عدالة التوزيع
-          </Link>
-          <Link className="transition hover:text-primary" href={base ? `${base}/news` : '/news'}>
-            أخبار المخيم
-          </Link>
-          <Link className="text-slate-400 transition hover:text-primary" href={base ? `${base}/login/admin` : '/login/admin'}>
-            دخول الإدارة
-          </Link>
+
+        {navLinks.length ? (
+        <nav aria-label="روابط الفوتر">
+          <p className="text-[length:var(--text-caption)] tracking-[0.14em] text-muted-foreground">روابط</p>
+          <ul className="mt-2 flex flex-col">
+            {navLinks.map((item) => (
+              <li key={item.href}>
+                <FooterLink href={item.href}>{item.label}</FooterLink>
+              </li>
+            ))}
+          </ul>
         </nav>
-        <div className="text-left text-sm text-slate-600 md:pt-2">
-          <p dir="ltr">radartech85@gmail.com</p>
+        ) : null}
+
+        <div>
+          <p className="text-[length:var(--text-caption)] tracking-[0.14em] text-muted-foreground">تواصل</p>
+          <ul className="mt-2 flex flex-col">
+            <li>
+              <a
+                href={supportHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground transition-colors duration-(--duration-ui) ease-(--ease-out) hover:text-primary"
+              >
+                <IconWhatsApp className="h-4 w-4 text-[#128C7E]" />
+                <span>
+                  واتساب{' '}
+                  <span dir="ltr" className="tabular-nums">
+                    {SUPPORT_WA}
+                  </span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                href={`mailto:${SUPPORT_EMAIL}`}
+                className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground transition-colors duration-(--duration-ui) ease-(--ease-out) hover:text-primary"
+              >
+                <IconMail className="h-4 w-4 text-primary" />
+                <span dir="ltr">{SUPPORT_EMAIL}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="border-t border-black/8 bg-[#F0F2F5]">
+        <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>© {year} تَكافل — جميع الحقوق محفوظة</p>
+          <p>{camp?.slug ? campName : 'منصة سجل المخيمات والمساعدات'}</p>
         </div>
       </div>
     </footer>

@@ -3,18 +3,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import Sidebar from '@/components/layout/Sidebar';
-import AdminMobileNav from '@/components/layout/AdminMobileNav';
+import AdminShell from '@/components/layout/AdminShell';
 import Table from '@/components/ui/Table';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Modal from '@/components/ui/Modal';
+import PageHeading from '@/components/ui/PageHeading';
+import Select from '@/components/ui/Select';
+import Textarea from '@/components/ui/Textarea';
 import ChangeRequestPayloadDetails from '@/components/shared/ChangeRequestPayloadDetails';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
+import { useNotice } from '@/context/NoticeContext';
 import { formatDate, getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
 
 function statusLabel(s) {
@@ -36,6 +37,7 @@ export default function AdminChangeRequestsPage() {
   const { campSlug } = useParams();
   const base = campSlug ? `/${campSlug}` : '';
   const { camp } = useCamp();
+  const showNotice = useNotice();
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +86,7 @@ export default function AdminChangeRequestsPage() {
       setNote('');
       load();
     } catch (e) {
-      alert(getApiErrorMessage(e, 'تعذر تنفيذ الإجراء.'));
+      showNotice(getApiErrorMessage(e, 'تعذر تنفيذ الإجراء.'));
     } finally {
       setSubmitting(false);
     }
@@ -176,58 +178,11 @@ export default function AdminChangeRequestsPage() {
   ];
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 md:flex-row">
-      <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header title="طلبات تعديل بيانات العائلات" subtitle={camp?.name} />
-        <AdminMobileNav />
-
-        <main className="flex-1 overflow-y-auto p-4 md:p-8" dir="rtl">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">طلبات التعديل</h1>
-              <p className="mt-1 text-sm text-slate-600">
-                طلبات رب الأسرة لتعديل البيانات؛ راجع ثم اقبل أو ارفض. عند القبول تُطبَّق التعديلات على السجل.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="text-sm text-slate-700">
-                تصفية:
-                <select
-                  className="mr-2 rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                  value={filterStatus}
-                  onChange={(e) => {
-                    setFilterStatus(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="">الكل</option>
-                  <option value="pending">قيد المراجعة</option>
-                  <option value="approved">مقبول</option>
-                  <option value="rejected">مرفوض</option>
-                </select>
-              </label>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <Table
-              columns={columns}
-              rows={items}
-              loading={loading}
-              emptyMessage="لا توجد طلبات."
-              page={page}
-              pageSize={pageSize}
-              total={total}
-              onPageChange={setPage}
-            />
-          </div>
-
-        </main>
-
-        <Footer />
-      </div>
-
+    <AdminShell
+      title="طلبات تعديل بيانات العائلات"
+      subtitle={camp?.name}
+      extras={
+        <>
       <Modal
         open={Boolean(detailsRow)}
         title={detailsRow ? `تفاصيل طلب التعديل #${detailsRow.id}` : ''}
@@ -235,7 +190,7 @@ export default function AdminChangeRequestsPage() {
         className="max-w-2xl"
       >
         {detailsRow ? (
-          <div className="max-h-[70vh] overflow-y-auto rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+          <div className="max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-muted/50 p-3">
             <ChangeRequestPayloadDetails payload={detailsRow.payload} />
           </div>
         ) : null}
@@ -250,16 +205,13 @@ export default function AdminChangeRequestsPage() {
               <p>
                 العائلة: <strong>{actionRow.family?.head_name || `#${actionRow.family_id}`}</strong>
               </p>
-              <label className="block text-sm">
-                ملاحظة للعائلة (اختياري)
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  rows={3}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                  placeholder="تظهر للعائلة عند الرد"
-                />
-              </label>
+              <Textarea
+                label="ملاحظة للعائلة (اختياري)"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={3}
+                placeholder="تظهر للعائلة عند الرد"
+              />
             </div>
           ) : (
             ''
@@ -278,6 +230,42 @@ export default function AdminChangeRequestsPage() {
           }
         }}
       />
-    </div>
+        </>
+      }
+    >
+          <PageHeading
+            title="طلبات التعديل"
+            description="طلبات رب الأسرة لتعديل البيانات؛ راجع ثم اقبل أو ارفض. عند القبول تُطبَّق التعديلات على السجل."
+            actions={
+              <Select
+                id="filter-status"
+                label="تصفية"
+                value={filterStatus}
+                onChange={(e) => {
+                  setFilterStatus(e.target.value);
+                  setPage(1);
+                }}
+                className="w-44"
+                options={[
+                  { value: '', label: 'الكل' },
+                  { value: 'pending', label: 'قيد المراجعة' },
+                  { value: 'approved', label: 'مقبول' },
+                  { value: 'rejected', label: 'مرفوض' },
+                ]}
+              />
+            }
+          />
+
+          <Table
+            columns={columns}
+            rows={items}
+            loading={loading}
+            emptyMessage="لا توجد طلبات."
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={setPage}
+          />
+    </AdminShell>
   );
 }

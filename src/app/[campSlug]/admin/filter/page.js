@@ -3,15 +3,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import Sidebar from '@/components/layout/Sidebar';
-import AdminMobileNav from '@/components/layout/AdminMobileNav';
+import AdminShell from '@/components/layout/AdminShell';
 import CampFilterFields from '@/components/admin/CampFilterFields';
 import Table from '@/components/ui/Table';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import Alert from '@/components/ui/Alert';
+import PageHeading from '@/components/ui/PageHeading';
+import Spinner from '@/components/ui/Spinner';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { cn, getApiErrorMessage } from '@/lib/utils';
@@ -247,51 +247,45 @@ export default function AdminFilterPage() {
   const canSave = recordName.trim().length > 0;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 md:flex-row">
-      <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header title="فلترة العائلات والأفراد" subtitle={camp?.name} />
-        <AdminMobileNav />
-
-        <main className="flex-1 overflow-y-auto p-4 md:p-8" dir="rtl">
+    <AdminShell title="فلترة العائلات والأفراد" subtitle={camp?.name}>
           <div className="mx-auto max-w-6xl space-y-8">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">فلترة حسب العائلة أو الأفراد</h1>
-              <p className="mt-1 text-slate-600">
-                استخدم «تطبيق الفلترة» لمعاينة مؤقتة دون حفظ. لحفظ السجل اكتب اسماً ثم «حفظ السجل» للانتقال
-                لأرشيف الفلترة.
-              </p>
-            </div>
+            <PageHeading
+              className="mb-0"
+              title="فلترة حسب العائلة أو الأفراد"
+              description="استخدم «تطبيق الفلترة» لمعاينة مؤقتة دون حفظ. لحفظ السجل اكتب اسماً ثم «حفظ السجل» للانتقال لأرشيف الفلترة."
+            />
 
-            <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+            <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-1 shadow-sm" role="tablist" aria-label="نوع الفلترة">
               <button
                 type="button"
+                aria-pressed={mode === 'family'}
                 onClick={() => {
                   setMode('family');
                   setError('');
                   setPreview(null);
                 }}
                 className={cn(
-                  'flex-1 rounded-xl px-4 py-3 text-sm font-bold transition md:flex-none md:px-8',
+                  'min-h-11 flex-1 rounded-xl px-4 py-3 text-sm font-bold transition-colors duration-200 md:flex-none md:px-8',
                   mode === 'family'
                     ? 'bg-primary text-white shadow-md'
-                    : 'text-slate-600 hover:bg-slate-50'
+                    : 'text-muted-foreground hover:bg-muted'
                 )}
               >
                 فلترة العائلات
               </button>
               <button
                 type="button"
+                aria-pressed={mode === 'members'}
                 onClick={() => {
                   setMode('members');
                   setError('');
                   setPreview(null);
                 }}
                 className={cn(
-                  'flex-1 rounded-xl px-4 py-3 text-sm font-bold transition md:flex-none md:px-8',
+                  'min-h-11 flex-1 rounded-xl px-4 py-3 text-sm font-bold transition-colors duration-200 md:flex-none md:px-8',
                   mode === 'members'
                     ? 'bg-primary text-white shadow-md'
-                    : 'text-slate-600 hover:bg-slate-50'
+                    : 'text-muted-foreground hover:bg-muted'
                 )}
               >
                 فلترة الأفراد
@@ -308,78 +302,26 @@ export default function AdminFilterPage() {
               applyDisabled={loading || saving}
             />
 
-            <Card className="border-slate-200/80 p-5 shadow-sm md:p-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                <label className="min-w-0 flex-1">
-                  <span className="text-sm font-semibold text-slate-800">اسم السجل (يُستخدم عند الحفظ فقط)</span>
-                  <Input
-                    className="mt-2 rounded-xl"
-                    placeholder="مثال: توزيع شهر رمضان — فئة الأيتام"
-                    value={recordName}
-                    onChange={(e) => setRecordName(e.target.value)}
-                    disabled={saving}
-                  />
-                  <p className="mt-2 text-xs text-slate-500">
-                    لا يُحفَظ شيء في الأرشيف حتى تضغط «حفظ السجل» بعد كتابة الاسم.
-                  </p>
-                </label>
-                <Button
-                  type="button"
-                  className="shrink-0 rounded-xl px-6 py-3 md:min-w-[200px]"
-                  disabled={!canSave || saving || loading}
-                  onClick={handleSave}
-                >
-                  {saving ? 'جاري الحفظ…' : 'حفظ السجل والانتقال للأرشيف'}
-                </Button>
-              </div>
-            </Card>
-
             <p className="text-center text-sm text-slate-500 md:text-start">
-              «تطبيق الفلترة» يعرض نتيجة مؤقتة. البحث أدناه يصفّي العرض فقط.
+              «تطبيق الفلترة» يعرض نتيجة مؤقتة. بعد المعاينة يمكنك حفظ السجل من الأسفل.
             </p>
 
-            {error ? (
-              <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                {error}
-              </p>
-            ) : null}
+            {error ? <Alert>{error}</Alert> : null}
 
             {loading ? (
-              <div className="flex items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-8 shadow-sm">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                <span className="text-sm font-medium text-slate-600">جاري المعاينة…</span>
+              <div className="flex items-center justify-center gap-3 rounded-2xl border border-border bg-card py-8 shadow-sm">
+                <Spinner className="h-10 w-10 text-primary" label="جاري المعاينة" />
+                <span className="text-sm font-medium text-muted-foreground">جاري المعاينة…</span>
               </div>
             ) : null}
 
             {preview && !loading ? (
               <div className="space-y-8">
-                <div
-                  className={
-                    mode === 'family'
-                      ? 'rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 text-center sm:text-right'
-                      : 'rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center shadow-sm sm:text-right'
-                  }
-                >
-                  {mode === 'family' ? (
-                    <>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">عدد العائلات</p>
-                      <p className="mt-1 text-3xl font-bold text-slate-900">{familyCount}</p>
-                      <p className="mt-1 text-xs text-slate-600">معاينة مؤقتة</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">عدد الأفراد</p>
-                      <p className="mt-1 text-3xl font-bold text-slate-900">{memberCount}</p>
-                      <p className="mt-1 text-xs text-slate-600">معاينة مؤقتة</p>
-                    </>
-                  )}
-                </div>
-
-                <Card className="overflow-hidden border-slate-200 shadow-sm">
-                  <div className="border-b border-slate-100 bg-slate-50/80 px-5 py-4">
-                    <h2 className="text-lg font-bold text-slate-900">معاينة النتيجة</h2>
-                    <p className="mt-1 text-sm text-slate-600">
-                      غير محفوظة في الأرشيف. اكتب اسماً أعلاه ثم «حفظ السجل والانتقال للأرشيف».
+                <Card className="overflow-hidden border-border shadow-sm">
+                  <div className="border-b border-border bg-muted/60 px-5 py-4">
+                    <h2 className="text-lg font-bold text-foreground">معاينة النتيجة</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      غير محفوظة في الأرشيف. بعد مراجعة الجدول اكتب اسماً ثم احفظ السجل.
                     </p>
                     {limitNote ? <p className="mt-2 text-xs text-amber-700">{limitNote}</p> : null}
                     <div className="mt-3 flex flex-wrap gap-3">
@@ -413,7 +355,7 @@ export default function AdminFilterPage() {
                     </div>
 
                     <section>
-                      <h3 className="mb-3 text-base font-bold text-slate-900">
+                      <h3 className="mb-3 text-base font-bold text-foreground">
                         {mode === 'family'
                           ? `العائلات المطابقة (${filteredFamilies.length}${resultSearch.trim() ? ` من ${familyCount}` : ''})`
                           : `الأفراد المطابقون (${filteredMemberRows.length}${resultSearch.trim() ? ` من ${memberCount}` : ''})`}
@@ -442,13 +384,57 @@ export default function AdminFilterPage() {
                     </section>
                   </div>
                 </Card>
+
+                <div
+                  className={
+                    mode === 'family'
+                      ? 'rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 text-center sm:text-right'
+                      : 'rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center shadow-sm sm:text-right'
+                  }
+                >
+                  {mode === 'family' ? (
+                    <>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">عدد العائلات</p>
+                      <p className="mt-1 text-3xl font-bold text-foreground">{familyCount}</p>
+                      <p className="mt-1 text-xs text-slate-600">معاينة مؤقتة</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">عدد الأفراد</p>
+                      <p className="mt-1 text-3xl font-bold text-foreground">{memberCount}</p>
+                      <p className="mt-1 text-xs text-slate-600">معاينة مؤقتة</p>
+                    </>
+                  )}
+                </div>
               </div>
             ) : null}
-          </div>
-        </main>
 
-        <Footer />
-      </div>
-    </div>
+            <Card className="border-slate-200/80 p-5 shadow-sm md:p-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <label className="min-w-0 flex-1">
+                  <span className="text-sm font-semibold text-slate-800">اسم السجل (يُستخدم عند الحفظ فقط)</span>
+                  <Input
+                    className="mt-2 rounded-xl"
+                    placeholder="مثال: توزيع شهر رمضان — فئة الأيتام"
+                    value={recordName}
+                    onChange={(e) => setRecordName(e.target.value)}
+                    disabled={saving}
+                  />
+                  <p className="mt-2 text-xs text-slate-500">
+                    لا يُحفَظ شيء في الأرشيف حتى تضغط «حفظ السجل» بعد كتابة الاسم.
+                  </p>
+                </label>
+                <Button
+                  type="button"
+                  className="shrink-0 rounded-xl px-6 py-3 md:min-w-[200px]"
+                  disabled={!canSave || saving || loading}
+                  onClick={handleSave}
+                >
+                  {saving ? 'جاري الحفظ…' : 'حفظ السجل والانتقال للأرشيف'}
+                </Button>
+              </div>
+            </Card>
+          </div>
+    </AdminShell>
   );
 }

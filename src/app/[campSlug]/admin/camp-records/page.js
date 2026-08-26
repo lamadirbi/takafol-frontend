@@ -3,22 +3,21 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import Sidebar from '@/components/layout/Sidebar';
-import AdminMobileNav from '@/components/layout/AdminMobileNav';
+import AdminShell from '@/components/layout/AdminShell';
 import Table from '@/components/ui/Table';
+import PageHeading from '@/components/ui/PageHeading';
 import CampFilterRecordViewModal from '@/components/admin/CampFilterRecordViewModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
-import { cn, formatDate, getApiErrorMessage, unwrapApiList } from '@/lib/utils';
+import { cn, formatDate, getApiErrorMessage, unwrapApiList, unwrapResource } from '@/lib/utils';
 
 function resultCount(row) {
   const snap = row?.snapshot;
   if (!snap) return '—';
   const scope = row?.criteria?.filter_scope || 'family';
   if (scope === 'members') {
+    if (snap.members_count != null) return snap.members_count;
     let n = 0;
     for (const f of snap.families || []) {
       n += (f.members || []).length;
@@ -34,6 +33,7 @@ export default function CampRecordsPage() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewRecord, setViewRecord] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -75,48 +75,57 @@ export default function CampRecordsPage() {
     }
   };
 
+  const openPreview = async (row) => {
+    setViewLoading(true);
+    try {
+      const res = await api.get(`/admin/camp-filter-records/${row.id}`);
+      setViewRecord(unwrapResource(res.data) ?? row);
+    } catch {
+      setViewRecord(row);
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
+  const actionBtn =
+    'inline-flex h-10 w-32 shrink-0 items-center justify-center rounded-lg px-2 text-sm font-semibold transition-colors';
+
   const columns = [
     { key: 'name', label: 'اسم السجل / الحملة' },
     {
       key: 'created_at',
       label: 'تاريخ الإنشاء',
+      className: 'min-w-[10rem] whitespace-nowrap',
       render: (row) => formatDate(row.created_at),
     },
     {
       key: 'results_count',
       label: 'عدد النتائج',
+      className: 'min-w-[8rem] whitespace-nowrap',
       render: (row) => resultCount(row),
     },
     {
       key: 'actions',
       label: 'إجراءات',
       render: (row) => (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <Link
             href={`${base}/admin/camp-records/${row.id}`}
-            className={cn(
-              'inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-xl border-2 border-primary bg-white px-3 py-1.5 text-sm font-semibold text-primary',
-              'shadow-sm transition hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
-            )}
+            className={cn(actionBtn, 'border border-primary bg-white text-primary hover:bg-primary/5')}
           >
             فتح السجل
           </Link>
           <button
             type="button"
-            className={cn(
-              'inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-xl border-2 border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700',
-              'shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400'
-            )}
-            onClick={() => setViewRecord(row)}
+            className={cn(actionBtn, 'bg-[#E4E6EB] text-foreground hover:bg-[#d8dadf] disabled:opacity-50')}
+            onClick={() => openPreview(row)}
+            disabled={viewLoading}
           >
             معاينة
           </button>
           <button
             type="button"
-            className={cn(
-              'inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-xl border-2 border-red-200 bg-white px-3 py-1.5 text-sm font-semibold text-red-700',
-              'shadow-sm transition hover:border-red-300 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500'
-            )}
+            className={cn(actionBtn, 'bg-red-50 text-red-700 hover:bg-red-100')}
             onClick={() => {
               setDeleteError('');
               setDeleteTarget(row);
@@ -130,47 +139,16 @@ export default function CampRecordsPage() {
   ];
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 md:flex-row">
-      <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header title="سجلات الفلترة" subtitle={camp?.name} />
-        <AdminMobileNav />
-
-        <main className="flex-1 overflow-y-auto p-4 md:p-8" dir="rtl">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">سجلات فلترة المخيم</h1>
-              <p className="mt-1 text-slate-500">
-                اضغط على سجل للانتقال إلى صفحة التوزيع والاستلام أو عرّف اللقطة سريعاً.
-              </p>
-            </div>
-            <Link
-              href={`${base}/admin/filter`}
-              className="inline-flex items-center rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
-            >
-              العودة للفلترة ←
-            </Link>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <Table
-              columns={columns}
-              rows={records}
-              loading={loading}
-              emptyMessage="لا توجد سجلات محفوظة حالياً."
-            />
-          </div>
-        </main>
-
-        <Footer />
-      </div>
-
+    <AdminShell
+      title="سجلات الفلترة"
+      subtitle={camp?.name}
+      extras={
+        <>
       <CampFilterRecordViewModal
         open={Boolean(viewRecord)}
         record={viewRecord}
         onClose={() => setViewRecord(null)}
       />
-
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         title="حذف سجل الفلترة؟"
@@ -189,6 +167,27 @@ export default function CampRecordsPage() {
           setDeleteError('');
         }}
       />
-    </div>
+        </>
+      }
+    >
+          <PageHeading
+            title="سجلات فلترة المخيم"
+            description="اضغط على سجل للانتقال إلى صفحة التوزيع والاستلام أو عرّف اللقطة سريعاً."
+            actions={
+              <Link
+                href={`${base}/admin/filter`}
+                className="inline-flex min-h-11 items-center rounded-2xl bg-secondary px-4 py-2 text-sm font-bold text-white transition-colors duration-200 hover:bg-[#166534]"
+              >
+                العودة للفلترة
+              </Link>
+            }
+          />
+          <Table
+            columns={columns}
+            rows={records}
+            loading={loading}
+            emptyMessage="لا توجد سجلات محفوظة حالياً."
+          />
+    </AdminShell>
   );
 }

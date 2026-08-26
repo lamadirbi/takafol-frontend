@@ -3,11 +3,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import Sidebar from '@/components/layout/Sidebar';
-import AdminMobileNav from '@/components/layout/AdminMobileNav';
+import AdminShell from '@/components/layout/AdminShell';
 import Badge from '@/components/ui/Badge';
+import Alert from '@/components/ui/Alert';
+import { PageSpinner } from '@/components/ui/EmptyState';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { formatDate, getApiErrorMessage, unwrapResource, unwrapResourceArray } from '@/lib/utils';
@@ -54,34 +53,24 @@ export default function AdminFamilyPortalViewPage() {
   );
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 md:flex-row">
-      <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header title="عرض طرود العائلة" subtitle={camp?.name} />
-        <AdminMobileNav />
-
-        <main className="flex-1 overflow-y-auto p-4 md:p-8" dir="rtl">
+    <AdminShell title="عرض طرود العائلة" subtitle={camp?.name}>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <Link
               href={`${base}/admin/families`}
-              className="text-sm font-semibold text-primary hover:underline"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline"
             >
               ← العودة لسجل العائلات
             </Link>
           </div>
 
-          {loading ? (
-            <div className="flex justify-center py-20">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-          ) : null}
+          {loading ? <PageSpinner /> : null}
 
-          {error ? <p className="text-red-700">{error}</p> : null}
+          {error ? <Alert>{error}</Alert> : null}
 
           {!loading && family ? (
             <>
-              <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h1 className="text-2xl font-bold text-slate-900">{family.head_name || 'عائلة'}</h1>
+              <div className="file-spine mb-6 border border-border bg-card p-6 shadow-sm">
+                <h1 className="text-2xl font-bold text-foreground">{family.head_name || 'عائلة'}</h1>
                 <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
                   <p>
                     <span className="text-slate-500">رقم الهوية: </span>
@@ -97,11 +86,11 @@ export default function AdminFamilyPortalViewPage() {
                   </p>
                 </div>
                 <p className="mt-4 text-xs text-slate-500">
-                  عرض يقرّب تجربة العائلة: الطرود المستلمة سابقاً والقيد بانتظار الاستلام ضمن هذا المخيم.
+                  الطرود المستلمة سابقاً والقيد بانتظار الاستلام ضمن هذا المخيم.
                 </p>
               </div>
 
-              <section className="mb-8 rounded-3xl border border-emerald-100 bg-emerald-50/40 p-6 shadow-sm">
+              <section className="file-spine mb-6 border border-emerald-100 bg-emerald-50/40 p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-emerald-900">طرود تم استلامها سابقاً</h2>
                 {received.length === 0 ? (
                   <p className="mt-3 text-sm text-slate-600">لا يوجد طرود مسجّلة كمستلمة بعد.</p>
@@ -113,7 +102,7 @@ export default function AdminFamilyPortalViewPage() {
                         className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-emerald-100 bg-white px-4 py-3"
                       >
                         <div>
-                          <p className="font-bold text-slate-900">
+                          <p className="font-bold text-foreground">
                             {d.package_type?.name || d.package_label || 'طرد'}
                           </p>
                           <p className="mt-1 text-xs text-slate-500">
@@ -128,7 +117,7 @@ export default function AdminFamilyPortalViewPage() {
                 )}
               </section>
 
-              <section className="mb-8 rounded-3xl border border-amber-100 bg-amber-50/30 p-6 shadow-sm">
+              <section className="file-spine mb-6 border border-amber-100 bg-amber-50/30 p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-amber-900">قيد الانتظار</h2>
                 {pending.length === 0 ? (
                   <p className="mt-3 text-sm text-slate-600">لا يوجد طرود بانتظار الاستلام.</p>
@@ -140,7 +129,7 @@ export default function AdminFamilyPortalViewPage() {
                         className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-amber-100 bg-white px-4 py-3"
                       >
                         <div>
-                          <p className="font-bold text-slate-900">
+                          <p className="font-bold text-foreground">
                             {d.package_type?.name || d.package_label || 'طرد'}
                           </p>
                           <p className="mt-1 text-xs text-slate-500">
@@ -156,8 +145,8 @@ export default function AdminFamilyPortalViewPage() {
               </section>
 
               {other.length > 0 ? (
-                <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900">حالات أخرى</h2>
+                <section className="file-spine border border-border bg-card p-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-foreground">حالات أخرى</h2>
                   <ul className="mt-4 space-y-3">
                     {other.map((d) => (
                       <li
@@ -173,10 +162,6 @@ export default function AdminFamilyPortalViewPage() {
               ) : null}
             </>
           ) : null}
-        </main>
-
-        <Footer />
-      </div>
-    </div>
+        </AdminShell>
   );
 }

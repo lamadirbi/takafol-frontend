@@ -1,5 +1,7 @@
 'use client';
 
+import { familyFieldDisplay } from '@/lib/memberOptions';
+
 const FAMILY_FIELD_LABELS = {
   head_name: 'اسم رب الأسرة',
   head_gender: 'جنس رب الأسرة',
@@ -23,34 +25,12 @@ const MEMBER_FIELD_LABELS = {
   date_of_birth: 'تاريخ الميلاد',
 };
 
-const SOCIAL_LABELS = {
-  married: 'متزوج',
-  widowed: 'أرمل',
-  separated: 'منفصل',
-  abandoned: 'مهجور',
-};
-
-function labelSocial(v) {
-  if (v == null || v === '') return '—';
-  return SOCIAL_LABELS[String(v)] ?? String(v);
-}
-
-function labelGender(v) {
-  if (v == null || v === '') return '—';
-  const s = String(v);
-  if (s === 'male') return 'ذكر';
-  if (s === 'female') return 'أنثى';
-  if (s === 'unknown') return 'غير محدد';
-  return s;
-}
-
 function formatValue(key, value) {
   if (value === undefined) return '—';
   if (value === null) return '— (إفراغ)';
-  if (key === 'head_gender' || key === 'gender') return labelGender(value);
-  if (key === 'social_status') return labelSocial(value);
   if (typeof value === 'object' && value !== null) return JSON.stringify(value);
-  return String(value);
+  const labeled = familyFieldDisplay(key, value);
+  return labeled;
 }
 
 function FieldRow({ label, children, memberName }) {

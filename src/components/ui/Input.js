@@ -1,39 +1,59 @@
 import { cn } from '@/lib/utils';
 
+const field =
+  'min-h-11 w-full rounded-[var(--radius-control)] border border-border bg-control px-3 py-2.5 text-sm text-foreground transition-[border-color,background-color,box-shadow] duration-(--duration-ui) ease-(--ease-out) placeholder:text-(--ink-3) focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/20';
+
 export default function Input({
   label,
   id,
   error,
+  hint,
   className,
   inputClassName,
   icon: Icon,
   ...props
 }) {
   const inputId = id || props.name;
+  const errorId = error && inputId ? `${inputId}-error` : undefined;
+  const hintId = hint && inputId ? `${inputId}-hint` : undefined;
+  const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined;
 
   return (
-    <label className={cn('flex flex-col gap-1.5 w-full', className)} htmlFor={inputId}>
+    <div className={cn('flex w-full flex-col gap-1.5', className)}>
       {label ? (
-        <span className="text-sm font-medium text-muted-foreground">{label}</span>
+        <label htmlFor={inputId} className="text-sm font-medium text-foreground">
+          {label}
+        </label>
       ) : null}
       <span className="relative flex items-center">
         {Icon ? (
-          <span className="pointer-events-none absolute start-3 text-muted-foreground">
-            <Icon className="h-4 w-4" aria-hidden />
+          <span className="pointer-events-none absolute inset-s-3 text-muted-foreground">
+            <Icon className="h-4 w-4" aria-hidden="true" />
           </span>
         ) : null}
         <input
           id={inputId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
           className={cn(
-            'w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
+            field,
             Icon ? 'ps-10' : '',
-            error ? 'border-red-500 focus:ring-red-200' : '',
+            error ? 'border-destructive focus-visible:ring-destructive/20' : '',
             inputClassName
           )}
           {...props}
         />
       </span>
-      {error ? <span className="text-xs text-red-600">{error}</span> : null}
-    </label>
+      {hint && !error ? (
+        <span id={hintId} className="text-xs text-muted-foreground">
+          {hint}
+        </span>
+      ) : null}
+      {error ? (
+        <span id={errorId} className="text-xs text-destructive" role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
   );
 }

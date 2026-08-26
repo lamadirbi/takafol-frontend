@@ -3,21 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Card } from '@/components/ui/Card';
 import BackButton from '@/components/ui/BackButton';
-import { useCamp } from '@/context/CampContext';
 import { getApiErrorMessage } from '@/lib/utils';
 import { loadAdminUsername, saveAdminUsername } from '@/lib/loginPrefs';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { campSlug } = useParams() || {};
-  const { camp } = useCamp();
-  const { adminLogin } = useAuth();
+  const { adminLogin, adminUser, adminLoading } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -29,6 +25,15 @@ export default function AdminLoginPage() {
     const u = loadAdminUsername();
     if (u) setUsername(u);
   }, []);
+
+  useEffect(() => {
+    if (adminLoading) return;
+    if (adminUser?.camp_id != null) {
+      router.replace(`/${campSlug}/admin/dashboard`);
+    } else if (adminUser?.is_super) {
+      router.replace('/super-admin');
+    }
+  }, [adminLoading, adminUser, campSlug, router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -48,98 +53,74 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-slate-900 p-4" dir="rtl">
-      <Card className="w-full max-w-md overflow-hidden rounded-4xl border-none bg-white shadow-2xl">
-        <div className="relative flex h-32 items-center justify-center bg-slate-800">
-          <div className="absolute left-4 top-4">
-            <BackButton fallbackHref={campSlug ? `/${campSlug}` : '/'} className="border-white/20 bg-white/10" />
-          </div>
-          <div className="absolute right-4 top-4 rounded border border-slate-700 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-widest text-slate-500">
-            Admin
-          </div>
-          {camp?.logo_path ? (
-            <Image
-              src={camp.logo_path}
-              alt={camp.name}
-              width={80}
-              height={80}
-              className="rounded-full bg-white p-2 shadow-lg"
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#F0F2F5] px-4 py-10" dir="rtl">
+      <div className="mb-4 w-full max-w-md">
+        <BackButton fallbackHref={campSlug ? `/${campSlug}` : '/'} />
+      </div>
+
+      <div className="w-full max-w-md rounded-xl bg-white px-6 py-7 shadow-md md:px-8">
+        <p className="text-xs font-bold text-primary">تَكافل</p>
+        <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground">
+          دخول الإدارة
+        </h1>
+        <p className="mt-1 text-sm text-[#65676B]">
+          اسم المستخدم وكلمة المرور المعتمدة للمسؤولين فقط.
+        </p>
+
+        <form onSubmit={handleLogin} className="mt-6 space-y-5" noValidate>
+          <Input
+            id="admin-username"
+            name="username"
+            label="اسم المستخدم"
+            type="text"
+            autoComplete="username"
+            placeholder="أدخل اسم المستخدم"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+
+          <Input
+            id="admin-password"
+            name="password"
+            label="كلمة المرور"
+            type="password"
+            autoComplete="current-password"
+            placeholder="أدخل كلمة المرور"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={rememberUser}
+              onChange={(e) => setRememberUser(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded-[2px] border-border text-primary"
             />
-          ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-lg">
-              <span className="text-2xl font-bold text-slate-800">تَكافل</span>
-            </div>
-          )}
+            <span>تذكر اسم المستخدم على هذا الجهاز.</span>
+          </label>
+
+          {error ? (
+            <p className="border border-destructive/30 bg-(--stamp-fill) p-3 text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <Button type="submit" disabled={loading} loading={loading} variant="primary" size="lg" className="w-full rounded-lg">
+            دخول الإدارة
+          </Button>
+        </form>
+
+        <div className="mt-6 border-t border-border pt-4 text-sm">
+          <Link href={`/${campSlug}/login`} className="font-medium text-muted-foreground hover:text-foreground">
+            دخول العائلات من صفحة العائلات
+          </Link>
         </div>
+      </div>
 
-        <div className="p-8 md:p-10">
-          <h1 className="text-center text-2xl font-bold text-slate-900">لوحة إدارة المخيم</h1>
-          <p className="mt-2 text-center text-sm text-slate-500">
-            دخول منفصل عن العائلات: اسم المستخدم وكلمة المرور المعتمدة للمسؤولين فقط.
-          </p>
-
-          <form onSubmit={handleLogin} className="mt-8 space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">اسم المستخدم</label>
-              <Input
-                type="text"
-                autoComplete="username"
-                placeholder="أدخل اسم المستخدم"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="mt-2 rounded-xl border-slate-200"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">كلمة المرور</label>
-              <Input
-                type="password"
-                autoComplete="current-password"
-                placeholder="أدخل كلمة المرور"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="mt-2 rounded-xl border-slate-200"
-              />
-            </div>
-
-            <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-600">
-              <input
-                type="checkbox"
-                checked={rememberUser}
-                onChange={(e) => setRememberUser(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-primary"
-              />
-              <span>تذكر اسم المستخدم على هذا الجهاز (لا نخزن كلمة المرور لأسباب أمنية).</span>
-            </label>
-
-            {error ? (
-              <p className="rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-medium text-red-600">
-                {error}
-              </p>
-            ) : null}
-
-            <Button
-              type="submit"
-              disabled={loading}
-              variant="primary"
-              className="w-full rounded-xl bg-slate-900 py-6 text-lg hover:bg-slate-800"
-            >
-              {loading ? 'جاري الدخول…' : 'دخول الإدارة'}
-            </Button>
-          </form>
-
-          <div className="mt-8 text-center text-sm">
-            <Link href={`/${campSlug}/login`} className="font-bold text-slate-500 transition-colors hover:text-primary">
-              دخول العائلات (هوية + الرقم من إدارة المخيم) من صفحة العائلات
-            </Link>
-          </div>
-        </div>
-      </Card>
-
-      <Link href={`/${campSlug}`} className="mt-8 text-sm text-slate-500 transition-colors hover:text-white">
+      <Link href={`/${campSlug}`} className="mt-8 text-sm text-muted-foreground hover:text-foreground">
         العودة للرئيسية
       </Link>
     </div>

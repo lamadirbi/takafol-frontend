@@ -3,15 +3,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import Sidebar from '@/components/layout/Sidebar';
-import AdminMobileNav from '@/components/layout/AdminMobileNav';
-import { Card } from '@/components/ui/Card';
+import AdminShell from '@/components/layout/AdminShell';
+import { FilePanel, LedgerStrip } from '@/components/ui/Card';
+import { IconCheck, IconCopy } from '@/components/ui/Icons';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
+import { useNotice } from '@/context/NoticeContext';
 import { formatDate, getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
-import Button from '@/components/ui/Button';
 
 const PAYMENT_METHODS = [
   {
@@ -26,28 +24,66 @@ const PAYMENT_METHODS = [
   },
 ];
 
-async function sumMembersAcrossPages() {
-  let page = 1;
-  let sum = 0;
-  let totalFamilies = 0;
-  const perPage = 200;
-  let hasMore = true;
-  while (hasMore) {
-    const res = await api.get('/admin/families', { params: { per_page: perPage, page } });
-    const { items, total } = unwrapPaginated(res);
-    totalFamilies = total;
-    sum += items.reduce((acc, f) => acc + (Number(f.total_members) || 0), 0);
-    hasMore = items.length > 0 && page * perPage < total;
-    page += 1;
+const SUB_STATUS_LABEL = {
+  active: 'نشط',
+  grace: 'فترة سماح',
+  locked: 'متوقف',
+  unlimited: 'بدون حد',
+};
+
+const NOTICE_STATUS = {
+  pending: { label: 'قيد المراجعة', className: 'text-warn' },
+  approved: { label: 'مقبول', className: 'text-secondary' },
+  rejected: { label: 'مرفوض', className: 'text-destructive' },
+};
+
+function formatDay(value) {
+  if (!value) return '—';
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const date = match
+    ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    : new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { dateStyle: 'long' }).format(date);
+}
+
+function CopyNumber({ value }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      const input = document.createElement('textarea');
+      input.value = value;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+    }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
   }
-  return { families: totalFamilies, members: sum };
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[var(--radius-control)] border border-border px-2.5 text-xs font-medium hover:bg-muted"
+      aria-label={`نسخ ${value}`}
+    >
+      {copied ? <IconCheck className="h-3.5 w-3.5" /> : <IconCopy className="h-3.5 w-3.5" />}
+      {copied ? 'تم النسخ' : 'نسخ'}
+    </button>
+  );
 }
 
 export default function AdminDashboardPage() {
   const { campSlug } = useParams();
-  const [stats, setStats] = useState({ families: 0, members: 0, announcements: 0 });
+  const [stats, setStats] = useState({ families: 0, members: 0 });
   const [loading, setLoading] = useState(true);
   const { camp, refreshCamp } = useCamp();
+  const showNotice = useNotice();
   const [renewalUploading, setRenewalUploading] = useState(false);
   const [renewalHistory, setRenewalHistory] = useState([]);
   const [renewalHistoryLoading, setRenewalHistoryLoading] = useState(false);
@@ -57,18 +93,10 @@ export default function AdminDashboardPage() {
   const fetchStats = useCallback(async () => {
     setLoading(true);
     try {
-      const [annRes, memberAgg] = await Promise.all([
-        api.get('/announcements', { params: { per_page: 1 } }),
-        sumMembersAcrossPages(),
-      ]);
-      const annMeta = annRes.data?.meta;
-      const annTotal =
-        typeof annMeta?.total === 'number' ? annMeta.total : unwrapPaginated(annRes).total;
-
+      const { data } = await api.get('/admin/dashboard-stats');
       setStats({
-        families: memberAgg.families,
-        members: memberAgg.members,
-        announcements: annTotal,
+        families: Number(data?.families) || 0,
+        members: Number(data?.members) || 0,
       });
     } catch (error) {
       console.error('Failed to fetch dashboard stats:', error);
@@ -103,7 +131,7 @@ export default function AdminDashboardPage() {
   }, [fetchRenewalHistory]);
 
   const sub = camp?.subscription;
-  const monthlyAmount = sub?.monthly_amount_ils ?? 15;
+  const monthlyAmount = sub?.monthly_amount_ils ?? 50;
 
   async function handleSubscriptionNoticeUpload(e) {
     const file = e.target.files?.[0];
@@ -116,218 +144,200 @@ export default function AdminDashboardPage() {
       await fetchRenewalHistory();
       await refreshCamp?.();
     } catch (err) {
-      alert(getApiErrorMessage(err, 'تعذر إرسال إشعار الدفع.'));
+      showNotice(getApiErrorMessage(err, 'تعذر إرسال إشعار الدفع.'));
     } finally {
       setRenewalUploading(false);
       e.target.value = '';
     }
   }
 
-  const statCards = [
-    { label: 'إجمالي العائلات', value: stats.families, icon: '👨‍👩‍👧', color: 'bg-blue-50 text-blue-600' },
-    { label: 'إجمالي الأفراد (حسب العدد المسجّل)', value: stats.members, icon: '👥', color: 'bg-green-50 text-green-600' },
-    { label: 'الإعلانات', value: stats.announcements, icon: '📢', color: 'bg-amber-50 text-amber-600' },
-  ];
+  const subSpine =
+    sub?.status === 'locked' ? 'stamp' : sub?.status === 'grace' ? 'warn' : 'carbon';
 
   const quickLinks = [
-    { href: `${base}/admin/families`, label: 'سجل العائلات', icon: '➕', desc: 'إضافة، تعديل، استيراد Excel' },
-    { href: `${base}/admin/filter`, label: 'فلترة المخيم', icon: '🔍', desc: 'عائلات أو أفراد وحفظ السجلات' },
-    { href: `${base}/admin/change-requests`, label: 'طلبات تعديل البيانات', icon: '📝', desc: 'مراجعة طلبات العائلات وقبولها أو رفضها' },
-    { href: `${base}/news`, label: 'أخبار المخيم', icon: '✉️', desc: 'نشر إعلان أو متابعة التفاعل' },
-    { href: `${base}/admin/camp-records`, label: 'سجلات الفلترة', icon: '📂', desc: 'السجلات المحفوظة والطرود' },
+    { href: `${base}/admin/families`, label: 'سجل العائلات', desc: 'إضافة، تعديل، استيراد Excel' },
+    { href: `${base}/admin/filter`, label: 'فلترة المخيم', desc: 'عائلات أو أفراد وحفظ السجلات' },
+    { href: `${base}/admin/change-requests`, label: 'طلبات تعديل البيانات', desc: 'مراجعة الطلبات وقبولها أو رفضها' },
+    { href: `${base}/admin/camp-records`, label: 'السجلات المحفوظة', desc: 'سجلات الفلترة والطرود المحفوظة' },
+    { href: `${base}/news`, label: 'أخبار المخيم', desc: 'نشر إعلان أو متابعة التفاعل' },
   ];
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 md:flex-row">
-      <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header title="الرئيسية" subtitle={camp?.name} />
-        <AdminMobileNav />
+    <AdminShell title="اليوم" subtitle={camp?.name}>
+      {sub && (sub.status === 'grace' || sub.status === 'locked') ? (
+        <FilePanel spine={subSpine} className="mb-5">
+          <p className="text-sm font-medium text-foreground">
+            {sub.status === 'locked' ? 'الاشتراك متوقف — العائلات محجوبة.' : 'فترة سماح: المميزات معطّلة للعائلات.'}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{sub.message}</p>
+        </FilePanel>
+      ) : null}
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8" dir="rtl">
-          <h1 className="mb-6 text-3xl font-bold text-slate-900">أهلاً بك في نظام الإدارة</h1>
+      <LedgerStrip
+        className="mb-5"
+        items={[
+          { label: 'العائلات', value: loading ? '…' : stats.families },
+          { label: 'الأفراد', value: loading ? '…' : stats.members, hint: 'حسب العدد المسجّل' },
+        ]}
+      />
 
-          {sub ? (
-            <section className="mb-8 rounded-3xl border-2 border-primary/25 bg-gradient-to-br from-primary/10 via-white to-amber-50/40 p-6 shadow-md md:p-8">
-              <h2 className="text-xl font-bold text-slate-900">اشتراك المنصّة والعائلات</h2>
-              <p className="mt-2 text-sm text-slate-700">
-                الاشتراك الشهري تكلفته <strong className="text-primary">{monthlyAmount} شيكل</strong>، ويتم عرض عداد لعدد
-                الأيام المتبقية في الاشتراك. عند انتهاء الاشتراك بدون تجديد تُحجَب مميزات الموقع عن العائلات. لتجديد
-                الاشتراك أرسل إشعار الدفع عبر الزر المخصص بالأسفل، وسيتم تجديد اشتراكك خلال 24 ساعة.
+      <section className="mb-8">
+        <h2 className="mb-3 text-[length:var(--text-caption)] font-medium tracking-[0.16em] text-muted-foreground">
+          ابدأ من هنا
+        </h2>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {quickLinks.map((q) => (
+            <Link
+              key={q.href}
+              href={q.href}
+              className="rounded-xl bg-white px-4 py-4 shadow-sm transition-colors hover:bg-[#F0F2F5]"
+            >
+              <span className="block font-semibold text-foreground">{q.label}</span>
+              <span className="mt-1 block text-xs text-muted-foreground">{q.desc}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {sub ? (
+        <details className="overflow-hidden border border-border bg-card open:bg-card">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium">
+            <span>اشتراك المنصة · {monthlyAmount} شيكل / شهر</span>
+            {sub.status === 'active' ? (
+              <span className="tabular-nums text-muted-foreground">{sub.days_until_expiry} يوماً متبقياً</span>
+            ) : sub.status === 'unlimited' ? (
+              <span className="text-muted-foreground">بدون حد</span>
+            ) : (
+              <span className="text-warn">يحتاج تجديداً</span>
+            )}
+          </summary>
+
+          <div className="border-t border-border">
+            <dl className="grid sm:grid-cols-3">
+              <div className="border-b border-border px-4 py-3 sm:border-b-0 sm:border-e">
+                <dt className="text-[length:var(--text-caption)] font-medium tracking-[0.12em] text-muted-foreground">
+                  الحالة
+                </dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">
+                  {SUB_STATUS_LABEL[sub.status] || sub.status}
+                </dd>
+              </div>
+              <div className="border-b border-border px-4 py-3 sm:border-b-0 sm:border-e">
+                <dt className="text-[length:var(--text-caption)] font-medium tracking-[0.12em] text-muted-foreground">
+                  صالح حتى
+                </dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">
+                  {sub.status === 'unlimited' ? 'غير محدد' : formatDay(sub.valid_until)}
+                </dd>
+              </div>
+              <div className="px-4 py-3">
+                <dt className="text-[length:var(--text-caption)] font-medium tracking-[0.12em] text-muted-foreground">
+                  المبلغ الشهري
+                </dt>
+                <dd className="mt-1 text-sm font-semibold tabular-nums text-foreground">
+                  {monthlyAmount} شيكل
+                </dd>
+              </div>
+            </dl>
+
+            {sub.status === 'unlimited' ? (
+              <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
+                {sub.message ||
+                  'لم يُضبط تاريخ انتهاء اشتراك لهذا المخيم بعد؛ لن يُطبَّق حظر على العائلات حتى يُحدَّد تاريخ من إدارة المنصة.'}
               </p>
+            ) : null}
 
-              {sub.status === 'unlimited' ? (
-                <p className="mt-4 rounded-2xl bg-white/80 px-4 py-3 text-sm text-slate-700 ring-1 ring-slate-200">
-                  {sub.message ||
-                    'لم يُضبط تاريخ انتهاء اشتراك لهذا المخيم بعد؛ لن يُطبَّق حظر على العائلات حتى يُحدَّد تاريخ من إدارة المنصة.'}
-                </p>
-              ) : null}
-
-              {sub.status === 'active' ? (
-                <div className="mt-6 flex flex-wrap items-stretch gap-4">
-                  <div className="min-w-[10rem] flex-1 rounded-2xl bg-white px-6 py-5 text-center shadow-sm ring-1 ring-primary/15">
-                    <p className="text-xs font-semibold text-slate-500">متبقي للاشتراك</p>
-                    <p className="mt-1 text-5xl font-black tabular-nums text-primary">{sub.days_until_expiry}</p>
-                    <p className="mt-1 text-sm text-slate-600">يوماً (حتى {sub.valid_until})</p>
-                  </div>
-                </div>
-              ) : null}
-
-              {sub.status === 'grace' ? (
-                <div className="mt-6 flex flex-wrap items-stretch gap-4">
-                  <div className="min-w-[10rem] flex-1 rounded-2xl bg-amber-100 px-6 py-5 text-center shadow-sm ring-2 ring-amber-300">
-                    <p className="text-xs font-bold text-amber-900">متبقي قبل إيقاف العائلات</p>
-                    <p className="mt-1 text-5xl font-black tabular-nums text-amber-950">
-                      {sub.days_until_hard_lock}
-                    </p>
-                    <p className="mt-1 text-sm text-amber-900/90">يوماً حتى {sub.hard_lock_at}</p>
-                  </div>
-                  <div className="min-w-[12rem] flex-1 rounded-2xl border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-950">
-                    <p className="font-bold">فترة سماح — المميزات معطّلة للعائلات</p>
-                    <p className="mt-1 text-xs">{sub.message}</p>
-                  </div>
-                </div>
-              ) : null}
-
-              {sub.status === 'locked' ? (
-                <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-950">
-                  <p className="font-bold">اشتراك منتهٍ وفترة السماح انتهت</p>
-                  <p className="mt-1">{sub.message}</p>
-                </div>
-              ) : null}
-
-              <div className="mt-8 border-t border-slate-200/80 pt-6">
-                <h3 className="text-sm font-bold text-slate-900">وسائل الدفع</h3>
-                <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  {PAYMENT_METHODS.map((item) => (
-                    <div key={item.method} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs">
-                      <p className="font-bold text-slate-900">{item.method}</p>
-                      <p className="mt-1 text-slate-700" dir="ltr">
-                        {item.number}
-                      </p>
-                      <p className="mt-1 text-slate-600">الاسم: {item.name}</p>
+            <section className="border-t border-border px-4 py-4">
+              <h3 className="text-sm font-semibold text-foreground">1. حوّل الاشتراك</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                اختر طريقة واحدة، ثم انسخ الرقم وحوّل {monthlyAmount} شيكل.
+              </p>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                {PAYMENT_METHODS.map((item) => (
+                  <div key={item.method} className="border border-border bg-muted/30 p-3">
+                    <p className="text-sm font-semibold text-foreground">{item.method}</p>
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[length:var(--text-caption)] text-muted-foreground">الرقم</p>
+                        <p className="mt-0.5 font-medium tabular-nums text-foreground" dir="ltr">
+                          {item.number}
+                        </p>
+                      </div>
+                      <CopyNumber value={item.number} />
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-8 border-t border-slate-200/80 pt-6">
-                <h3 className="text-sm font-bold text-slate-900">إرسال إشعار الدفع للإدارة العامة</h3>
-                <p className="mt-1 text-xs text-slate-600">
-                  ارفع صورة إشعار التحويل. سيصل الطلب مباشرة إلى إدارة المنصة مع اسم المخيم وتاريخ الإرسال.
-                </p>
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <label className="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">
-                    {renewalUploading ? 'جاري الإرسال…' : 'إرسال إشعار الدفع'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={renewalUploading}
-                      onChange={handleSubscriptionNoticeUpload}
-                    />
-                  </label>
-                </div>
-
-                <div className="mt-4">
-                  <h4 className="text-xs font-bold text-slate-900">سجل إشعارات الدفع المرسلة</h4>
-                  {renewalHistoryLoading ? (
-                    <p className="mt-2 text-xs text-slate-500">جاري تحميل السجل…</p>
-                  ) : renewalHistoryError ? (
-                    <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
-                      {renewalHistoryError}
-                    </p>
-                  ) : renewalHistory.length ? (
-                    <div className="mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white">
-                      <ul className="divide-y divide-slate-100">
-                        {renewalHistory.map((row) => (
-                          <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs">
-                            <div>
-                              <p className="font-semibold text-slate-900">{formatDate(row.created_at)}</p>
-                              <p className="text-slate-600">
-                                الحالة:{' '}
-                                {row.status === 'pending'
-                                  ? 'قيد المراجعة'
-                                  : row.status === 'approved'
-                                    ? 'مقبول'
-                                    : 'مرفوض'}
-                              </p>
-                            </div>
-                            {row.image_url ? (
-                              <a
-                                href={row.image_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="font-semibold text-primary underline"
-                              >
-                                عرض الإشعار
-                              </a>
-                            ) : null}
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="mt-3 border-t border-border pt-3">
+                      <p className="text-[length:var(--text-caption)] text-muted-foreground">اسم المستفيد</p>
+                      <p className="mt-0.5 text-sm font-medium text-foreground">{item.name}</p>
                     </div>
-                  ) : (
-                    <p className="mt-2 text-xs text-slate-500">لا يوجد إشعارات مرسلة بعد.</p>
-                  )}
-                </div>
-
-              </div>
-            </section>
-          ) : null}
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {statCards.map((stat, i) => (
-              <Card key={i} className="flex items-center gap-6 rounded-3xl border-none p-6 shadow-sm">
-                <div className={`flex h-16 w-16 items-center justify-center rounded-2xl text-2xl ${stat.color}`}>
-                  {stat.icon}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-500">{stat.label}</p>
-                  <p className="mt-1 text-3xl font-bold text-slate-900">
-                    {loading ? '…' : stat.value}
-                  </p>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          <div className="mt-12 grid gap-8 lg:grid-cols-2">
-            <section className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
-              <h2 className="mb-6 text-xl font-bold text-slate-900">روابط سريعة</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {quickLinks.map((q) => (
-                  <Link
-                    key={q.href}
-                    href={q.href}
-                    className="flex flex-col rounded-2xl border border-slate-200 p-5 text-center transition-all hover:border-primary hover:bg-primary/5"
-                  >
-                    <span className="mb-2 text-2xl">{q.icon}</span>
-                    <span className="font-bold text-slate-800">{q.label}</span>
-                    <span className="mt-1 text-xs text-slate-500">{q.desc}</span>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
-              <h2 className="mb-6 text-xl font-bold text-slate-900">حالة النظام</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 text-sm">
-                  <span className="text-slate-600">اتصال قاعدة البيانات</span>
-                  <span className="font-bold text-green-600">متصل</span>
-                </div>
-                <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 text-sm">
-                  <span className="text-slate-600">المخيم الحالي</span>
-                  <span className="font-bold text-primary">{camp?.name || '—'}</span>
-                </div>
-              </div>
+            <section className="border-t border-border px-4 py-4">
+              <h3 className="text-sm font-semibold text-foreground">2. أرسل صورة التحويل</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                ارفع صورة الإشعار ليصل الطلب لإدارة المنصة. لا يُجدَّد الاشتراك تلقائياً قبل المراجعة.
+              </p>
+              <label className="mt-3 inline-flex min-h-11 cursor-pointer items-center rounded-[var(--radius-control)] border border-border bg-card px-4 text-sm font-medium hover:bg-muted">
+                {renewalUploading ? 'جاري الإرسال…' : 'رفع صورة التحويل'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={renewalUploading}
+                  onChange={handleSubscriptionNoticeUpload}
+                />
+              </label>
+            </section>
+
+            <section className="border-t border-border px-4 py-4">
+              <h3 className="text-[length:var(--text-caption)] font-medium tracking-[0.12em] text-muted-foreground">
+                سجل الإشعارات
+              </h3>
+              {renewalHistoryLoading ? (
+                <p className="mt-2 text-xs text-muted-foreground">جاري تحميل السجل…</p>
+              ) : renewalHistoryError ? (
+                <p className="mt-2 border border-destructive/30 bg-(--stamp-fill) px-3 py-2 text-xs text-destructive">
+                  {renewalHistoryError}
+                </p>
+              ) : renewalHistory.length ? (
+                <ul className="mt-2 divide-y divide-border border border-border">
+                  {renewalHistory.map((row) => {
+                    const notice = NOTICE_STATUS[row.status] || NOTICE_STATUS.pending;
+                    return (
+                      <li key={row.id} className="px-3 py-3 text-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p className="font-medium text-foreground">{formatDate(row.created_at)}</p>
+                            <p className={notice.className}>{notice.label}</p>
+                          </div>
+                        </div>
+                        <div className="mt-2 overflow-hidden rounded-lg bg-[#F0F2F5]">
+                          {row.image_url ? (
+                            <a href={row.image_url} target="_blank" rel="noreferrer" className="block">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={row.image_url}
+                                alt="إشعار التحويل"
+                                className="mx-auto max-h-56 w-full object-contain"
+                              />
+                            </a>
+                          ) : (
+                            <p className="px-3 py-8 text-center text-[#65676B]">لا توجد صورة مرفقة</p>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="mt-2 text-xs text-muted-foreground">لا يوجد إشعارات مرسلة بعد.</p>
+              )}
             </section>
           </div>
-        </main>
-
-        <Footer />
-      </div>
-    </div>
+        </details>
+      ) : null}
+    </AdminShell>
   );
 }

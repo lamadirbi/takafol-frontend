@@ -6,7 +6,7 @@ import { useCamp } from '@/context/CampContext';
 
 const icons = {
   about: (
-    <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         stroke="currentColor"
         strokeWidth="1.75"
@@ -17,7 +17,7 @@ const icons = {
     </svg>
   ),
   support: (
-    <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         stroke="currentColor"
         strokeWidth="1.75"
@@ -28,7 +28,7 @@ const icons = {
     </svg>
   ),
   justice: (
-    <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         stroke="currentColor"
         strokeWidth="1.75"
@@ -39,7 +39,7 @@ const icons = {
     </svg>
   ),
   news: (
-    <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         stroke="currentColor"
         strokeWidth="1.75"
@@ -91,24 +91,18 @@ export default function HomePillarsStrip() {
   );
 
   return (
-    <section
-      className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm md:p-8"
-      aria-label="محاور المنصة"
-      dir="rtl"
-    >
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <section aria-label="محاور المنصة" dir="rtl">
+      <div className="divide-y divide-border border border-border bg-card">
         {pillars.map((p) => (
           <Link
             key={p.key}
             href={p.href}
-            className="group flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-5 transition hover:border-primary/25 hover:bg-white hover:shadow-md"
+            className="file-spine flex items-start gap-3 px-4 py-4 transition-colors duration-(--duration-ui) ease-(--ease-out) hover:bg-muted/50"
           >
-            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:bg-primary/15">
-              {p.icon}
-            </span>
+            <span className="mt-0.5 text-primary">{p.icon}</span>
             <div>
-              <h3 className="text-base font-bold text-slate-900">{p.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">{p.desc}</p>
+              <h3 className="text-sm font-semibold text-foreground">{p.title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
             </div>
           </Link>
         ))}

@@ -37,7 +37,7 @@ export function unwrapPaginated(response) {
     : Array.isArray(body)
       ? body
       : [];
-  const total = body.meta?.total ?? items.length;
+  const total = body.meta?.total ?? body.total ?? items.length;
   return { items, total, meta: body.meta ?? null };
 }
 
@@ -52,6 +52,21 @@ export function formatDate(value) {
   } catch {
     return String(value);
   }
+}
+
+/** وقت نسبي مألوف (مثل المنشورات) */
+export function formatRelativeTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  const sec = Math.round((Date.now() - date.getTime()) / 1000);
+  if (sec < 45) return 'الآن';
+  if (sec < 3600) return `منذ ${Math.max(1, Math.floor(sec / 60))} د`;
+  if (sec < 86400) return `منذ ${Math.floor(sec / 3600)} س`;
+  const days = Math.floor(sec / 86400);
+  if (days === 1) return 'أمس';
+  if (days < 7) return `منذ ${days} أيام`;
+  return new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { dateStyle: 'medium' }).format(date);
 }
 
 /** استخراج أول رسالة خطأ من استجابة Laravel (422 / 401 …) أو Axios */

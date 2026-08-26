@@ -68,7 +68,7 @@ export default function CampFilterRecordViewModal({ open, record, onClose }) {
       className="max-w-4xl overflow-hidden"
     >
       <div className="max-h-[75vh] space-y-4 overflow-y-auto p-1" dir="rtl">
-        <div className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
+        <div className="rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">
           <p>
             <span className="font-semibold">تاريخ الإنشاء:</span> {formatDate(record.created_at)}
           </p>

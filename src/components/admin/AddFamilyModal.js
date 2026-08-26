@@ -84,7 +84,7 @@ export default function AddFamilyModal({ open, onClose, onCreated, onSaved }) {
     <Modal open={open} onClose={onClose} title="إضافة عائلة جديدة" className="max-w-xl">
       <form onSubmit={handleSubmit} className="space-y-3" dir="rtl">
         {error ? (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>
+          <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">{error}</p>
         ) : null}
         <Input
           label="رقم هوية رب الأسرة (للدخول)"
@@ -147,8 +147,8 @@ export default function AddFamilyModal({ open, onClose, onCreated, onSaved }) {
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
             إلغاء
           </Button>
-          <Button type="submit" disabled={submitting}>
-            {submitting ? 'جاري الحفظ…' : 'حفظ العائلة'}
+          <Button type="submit" disabled={submitting} loading={submitting}>
+            حفظ العائلة
           </Button>
         </div>
       </form>

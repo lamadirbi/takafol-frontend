@@ -25,32 +25,32 @@ export default function SupportSection() {
   return (
     <section
       id="support"
-      className="scroll-mt-28 rounded-3xl border border-slate-200/90 bg-white p-8 shadow-sm md:p-10"
+      className="file-spine scroll-mt-28 border border-border bg-card px-5 py-6"
       dir="rtl"
     >
-      <h2 className="text-xl font-bold text-slate-900 md:text-2xl">الدعم</h2>
+      <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">الدعم</h2>
       {note ? (
-        <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600 whitespace-pre-wrap">
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
           {note}
         </p>
       ) : (
-        <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600">
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
           لأي استفسار عن الطرود أو الحساب، تواصل مع اللجنة عبر القنوات الرسمية للمخيم.
         </p>
       )}
       {phone ? (
-        <p className="mt-3 text-base font-medium text-slate-900" dir="ltr">
-          <span className="text-slate-600" dir="rtl">
+        <p className="mt-3 text-sm font-medium text-foreground" dir="ltr">
+          <span className="text-muted-foreground" dir="rtl">
             هاتف:{' '}
           </span>
-          <a className="text-primary hover:underline" href={`tel:${phone.replace(/\s/g, '')}`}>
+          <a className="text-primary underline-offset-4 hover:underline" href={`tel:${phone.replace(/\s/g, '')}`}>
             {phone}
           </a>
         </p>
       ) : null}
-      <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600">
+      <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
         يمكنك متابعة{' '}
-        <Link className="font-semibold text-primary underline-offset-4 hover:underline" href={newsHref}>
+        <Link className="font-medium text-primary underline-offset-4 hover:underline" href={newsHref}>
           صفحة الأخبار
         </Link>{' '}
         لآخر التحديثات.

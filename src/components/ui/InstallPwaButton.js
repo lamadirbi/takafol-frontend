@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { IconDownload } from '@/components/ui/Icons';
 
 function isIOS() {
   if (typeof window === 'undefined') return false;
@@ -26,7 +27,7 @@ async function waitForServiceWorkerReady() {
   }
 }
 
-export default function InstallPwaButton({ className }) {
+export default function InstallPwaButton({ className, variant = 'button', onClick: onClickProp }) {
   /** @type {React.MutableRefObject<Event | null>} */
   const deferredPromptRef = useRef(null);
   const [hasDeferredPrompt, setHasDeferredPrompt] = useState(false);
@@ -72,6 +73,7 @@ export default function InstallPwaButton({ className }) {
   const showForIOS = ios && !isStandalone();
 
   const onClick = async () => {
+    onClickProp?.();
     setHint('');
 
     let promptEvent = deferredPromptRef.current || window.deferredPrompt;
@@ -143,24 +145,32 @@ export default function InstallPwaButton({ className }) {
         disabled={installing}
         onClick={onClick}
         className={cn(
-          'rounded-full px-3 py-2 text-sm font-semibold transition-colors outline-none',
-          'border border-white/25 bg-white/5 text-white/95 hover:bg-white/12 hover:ring-1 hover:ring-white/30',
+          'inline-flex min-h-11 items-center outline-none transition-[background-color,border-color,color] duration-(--duration-ui) ease-(--ease-out)',
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
           'disabled:pointer-events-none disabled:opacity-70',
+          variant === 'nav'
+            ? 'w-full justify-start gap-3 rounded-xl border-0 bg-transparent px-2 py-2 text-sm hover:bg-black/5'
+            : 'rounded-lg border-0 bg-[#E4E6EB] px-3 py-2 text-sm font-medium text-foreground hover:bg-[#d8dadf]',
           !hasDeferredPrompt && !showForIOS ? 'opacity-90' : null,
           className
         )}
         aria-label="تثبيت الموقع"
         title="تثبيت الموقع"
       >
+        {variant === 'nav' ? (
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E4E6EB]">
+            <IconDownload className="h-5 w-5" />
+          </span>
+        ) : null}
         {installing ? 'جاري فتح التثبيت…' : 'تثبيت الموقع'}
       </button>
       {hint ? (
-        <div className="fixed inset-x-4 bottom-4 z-60 mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-sm text-slate-800 shadow-lg backdrop-blur">
+        <div className="fixed inset-x-4 bottom-4 z-60 mx-auto max-w-2xl rounded-[var(--radius-card)] border border-border bg-card px-4 py-3 text-sm text-foreground">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <p className="min-w-0 flex-1">{hint}</p>
             <button
               type="button"
-              className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="shrink-0 rounded-[var(--radius-control)] border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
               onClick={() => setHint('')}
             >
               إغلاق

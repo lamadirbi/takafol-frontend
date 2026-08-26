@@ -238,7 +238,7 @@ export default function AdminFamilyManageModal({ open, onClose, familyId, onSave
         <p className="text-sm text-muted-foreground">جاري التحميل…</p>
       ) : null}
       {error ? (
-        <p className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>
+        <p className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">{error}</p>
       ) : null}
 
       {form ? (

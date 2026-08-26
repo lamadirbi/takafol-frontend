@@ -5,7 +5,7 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#1d4ed8',
+          DEFAULT: '#1568a8',
           foreground: '#ffffff',
         },
         secondary: {
@@ -13,12 +13,12 @@ module.exports = {
           foreground: '#ffffff',
         },
         accent: {
-          DEFAULT: '#fb7185',
-          foreground: '#0f172a',
+          DEFAULT: '#2563eb',
+          foreground: '#ffffff',
         },
         muted: {
-          DEFAULT: '#f1f5f9',
-          foreground: '#475569',
+          DEFAULT: '#c5e0f4',
+          foreground: '#2d5574',
         },
       },
     },

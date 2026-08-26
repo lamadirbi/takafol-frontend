@@ -3,9 +3,23 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { getApiErrorMessage } from '@/lib/utils';
-import InstallPwaButton from '@/components/ui/InstallPwaButton';
+import PublicShell from '@/components/layout/PublicShell';
+import Footer from '@/components/layout/Footer';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
+import Spinner from '@/components/ui/Spinner';
+import { IconSearch, IconWhatsApp } from '@/components/ui/Icons';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  REALM_ADMIN,
+  REALM_FAMILY,
+  getAuthCampSlug,
+  isGlobalSuperAdmin,
+} from '@/lib/authSession';
 
 const SUPPORT_WA =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP) || '970592533678';
@@ -27,6 +41,11 @@ function waDigits(s) {
 }
 
 export default function GlobalHomePage() {
+  const router = useRouter();
+  const { adminUser, familyUser, adminLoading, familyLoading } = useAuth();
+  const isSuper = isGlobalSuperAdmin(adminUser);
+  const authReady = !adminLoading && !familyLoading;
+
   const [camps, setCamps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,7 +62,24 @@ export default function GlobalHomePage() {
   const [formErr, setFormErr] = useState('');
 
   useEffect(() => {
+    if (!authReady) return;
+    if (isSuper) return;
+    const slug = getAuthCampSlug(REALM_FAMILY) || getAuthCampSlug(REALM_ADMIN);
+    if (slug) router.replace(`/${slug}`);
+  }, [authReady, isSuper, familyUser, adminUser, router]);
+
+  useEffect(() => {
+    if (!authReady) return undefined;
+    if (!isSuper) {
+      const slug = getAuthCampSlug(REALM_FAMILY) || getAuthCampSlug(REALM_ADMIN);
+      if (slug) {
+        setCamps([]);
+        setLoading(false);
+        return undefined;
+      }
+    }
     const fetchCamps = async () => {
+      setLoading(true);
       try {
         const response = await api.get('/camps');
         setCamps(response.data);
@@ -56,7 +92,7 @@ export default function GlobalHomePage() {
     };
 
     fetchCamps();
-  }, []);
+  }, [authReady, isSuper]);
 
   async function handleRequestSubmit(e) {
     e.preventDefault();
@@ -71,7 +107,7 @@ export default function GlobalHomePage() {
         message: form.message.trim() || undefined,
       });
       setFormMsg(
-        'تم إرسال طلبك. عند تفعيل مخيمك سيتم منحك 14 يوم تجربة مجانية لإضافة العائلات وتجربة النظام. بعد ذلك يظهر عدّاد تجديد الاشتراك في لوحة إدارة المخيم.'
+        'تم إرسال طلبك. عند تفعيل مخيمك يُفتح الحساب لمدة 14 يوماً لإضافة العائلات واستخدام المنصة. بعد ذلك يظهر عدّاد تجديد الاشتراك في لوحة إدارة المخيم.'
       );
       setForm({
         applicant_name: '',
@@ -93,243 +129,220 @@ export default function GlobalHomePage() {
     : camps;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 font-sans text-slate-800" dir="rtl">
-      <div className="w-full bg-slate-900 px-4 py-3">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <Link
-            href="/super-admin/login"
-            className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20"
-          >
-            إدارة المنصة (تأسيس المخيمات)
-          </Link>
-          <div className="flex flex-wrap items-center gap-2">
-            <InstallPwaButton className="rounded-lg border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 hover:ring-0" />
-            <a
-              href={supportHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
-            >
-              واتساب للتواصل
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 md:py-14">
-        <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-primary md:text-5xl">تَكافل</h1>
-          <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 md:text-lg">
-            منصة لإدارة المساعدات والمخيمات بشفافية. اختر مخيماً مسجّلاً للدخول، أو أرسل طلباً لتسجيل
-            مخيمك الجديد.
-          </p>
-        </div>
-
-        <section className="mt-10">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8" dir="rtl">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-extrabold text-slate-900">المخيمات المسجّلة</h2>
-                <p className="mt-1 text-sm text-slate-600">
-                  اختر المخيم ثم ادخل كـ عائلة أو إدارة، أو افتح صفحة المخيم الرئيسية.
-                </p>
-              </div>
-              <div className="w-full sm:w-80">
-                <label className="block text-sm font-semibold text-slate-700">بحث عن مخيم</label>
-                <input
-                  value={campQuery}
-                  onChange={(e) => setCampQuery(e.target.value)}
-                  placeholder="اكتب اسم المخيم أو الـ slug"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-                />
-              </div>
+    <PublicShell>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:py-8" dir="rtl">
+        {isSuper ? (
+        <section id="camps">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-[length:var(--text-h2)] font-semibold tracking-tight">كل المخيمات</h1>
+              <p className="mt-1 text-sm text-muted-foreground">ظاهر لإدارة المنصة فقط.</p>
             </div>
+            <div className="w-full sm:w-80">
+              <Input
+                label="بحث عن مخيم"
+                id="camp-search"
+                value={campQuery}
+                onChange={(e) => setCampQuery(e.target.value)}
+                placeholder="اكتب اسم المخيم أو الرابط المختصر"
+                icon={IconSearch}
+              />
+            </div>
+          </div>
 
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              </div>
-            ) : error ? (
-              <div className="mt-6 mx-auto max-w-lg rounded-2xl border border-red-100 bg-red-50 p-6 text-center text-red-700">
-                {error}
-              </div>
-            ) : filteredCamps.length === 0 ? (
-              <p className="mt-6 text-center text-slate-500">
-                {q ? 'لا يوجد مخيم مطابق لبحثك.' : 'لا توجد مخيمات مفعلة حالياً.'}
-              </p>
-            ) : (
-              <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                <ul className="divide-y divide-slate-100">
-                  {filteredCamps.map((camp) => (
-                  <li
-                    key={camp.id}
-                    className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition hover:bg-slate-50"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100">
-                        {camp.logo_path ? (
-                          <Image
-                            src={camp.logo_path}
-                            alt=""
-                            width={40}
-                            height={40}
-                            className="h-full w-full object-contain"
-                          />
-                        ) : null}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold text-slate-900">{camp.name}</p>
-                        <p className="font-mono text-xs text-slate-500" dir="ltr">
-                          /{camp.slug}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 flex-wrap gap-2">
-                      <Link
-                        href={`/${camp.slug}`}
-                        className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        صفحة المخيم
-                      </Link>
-                      {camp.families_portal_locked ? (
-                        <span
-                          className="cursor-not-allowed rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900"
-                          title="دخول العائلات معطّل حتى يُجدَّد اشتراك المخيم"
-                        >
-                          دخول عائلة (معلق)
-                        </span>
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <Spinner className="h-10 w-10 text-primary" label="جاري تحميل المخيمات" />
+            </div>
+          ) : error ? (
+            <div className="mx-auto mt-8 max-w-lg border border-destructive/30 bg-(--stamp-fill) p-5 text-center text-destructive" role="alert">
+              {error}
+            </div>
+          ) : filteredCamps.length === 0 ? (
+            <p className="mt-10 text-center text-muted-foreground">
+              {q ? 'لا يوجد مخيم مطابق لبحثك.' : 'لا توجد مخيمات مفعلة حالياً.'}
+            </p>
+          ) : (
+            <div className="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
+              {filteredCamps.map((camp, i) => (
+                <article key={camp.id} className={`flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between ${i > 0 ? 'border-t border-black/8' : ''}`}>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-black/10 bg-[#F0F2F5]">
+                      {camp.logo_path ? (
+                        <Image
+                          src={camp.logo_path}
+                          alt=""
+                          width={44}
+                          height={44}
+                          className="h-full w-full object-contain"
+                        />
                       ) : (
-                        <Link
-                          href={`/${camp.slug}/login`}
-                          className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-                        >
-                          دخول عائلة
-                        </Link>
+                        <span className="text-sm font-semibold text-primary">ت</span>
                       )}
-                      <Link
-                        href={`/${camp.slug}/login/admin`}
-                        className="rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-white hover:opacity-95"
-                      >
-                        دخول الإدارة
-                      </Link>
                     </div>
-                  </li>
-                ))}
-              </ul>
+                    <div className="min-w-0">
+                      <h3 className="truncate font-semibold text-foreground">{camp.name}</h3>
+                      <p className="font-mono text-xs tabular-nums text-muted-foreground" dir="ltr">
+                        /{camp.slug}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/${camp.slug}`}
+                      className="inline-flex min-h-11 items-center px-2.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      صفحة المخيم
+                    </Link>
+                    <Link
+                      href={`/super-admin/camps`}
+                      className="inline-flex min-h-11 items-center px-2.5 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      إدارة المنصة
+                    </Link>
+                  </div>
+                </article>
+              ))}
             </div>
           )}
-          </div>
         </section>
+        ) : (
+        <section id="camps">
+          <h1 className="text-[length:var(--text-h2)] font-semibold tracking-tight">تَكافل</h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+            منصة سجل العائلات وتوزيع المساعدات. اختاري مخيمك للدخول، أو سجّلي مخيماً جديداً من الطلب أدناه.
+          </p>
+          {loading ? (
+            <div className="flex justify-center py-10">
+              <Spinner className="h-10 w-10 text-primary" label="جاري تحميل المخيمات" />
+            </div>
+          ) : error ? (
+            <div className="mx-auto mt-6 max-w-lg border border-destructive/30 bg-(--stamp-fill) p-5 text-center text-destructive" role="alert">
+              {error}
+            </div>
+          ) : filteredCamps.length === 0 ? (
+            <p className="mt-6 text-sm text-muted-foreground">لا توجد مخيمات مفعلة حالياً. يمكنك طلب تسجيل مخيم من النموذج أدناه.</p>
+          ) : (
+            <div className="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
+              {filteredCamps.map((camp, i) => (
+                <Link
+                  key={camp.id}
+                  href={`/${camp.slug}`}
+                  className={`flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#F0F2F5] ${i > 0 ? 'border-t border-black/8' : ''}`}
+                >
+                  <span className="font-semibold text-foreground">{camp.name}</span>
+                  <span className="text-sm font-semibold text-primary">دخول</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+        )}
 
-        <div className="mt-12 grid gap-10 lg:grid-cols-2 lg:items-start">
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-            <h2 className="text-lg font-bold text-slate-900">طلب تسجيل مخيم جديد</h2>
-            <p className="mt-2 text-sm text-slate-600">
+        <details className="mt-10 overflow-hidden rounded-xl bg-white shadow-sm">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center px-4 text-sm font-semibold">
+            طلب تسجيل مخيم / تواصل / دفع
+          </summary>
+          <div className="grid gap-8 border-t border-black/8 p-4 lg:grid-cols-2 lg:items-start">
+          <section className="rounded-xl bg-[#F0F2F5] p-5 md:p-6">
+            <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">طلب تسجيل مخيم جديد</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
               املأ البيانات وسنتواصل معك عبر واتساب لإنشاء الحساب وإرسال رابط المخيم بعد التجهيز.
             </p>
-            <form onSubmit={handleRequestSubmit} className="mt-6 space-y-4">
+            <form onSubmit={handleRequestSubmit} className="mt-5 space-y-4">
               {formErr ? (
-                <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                <p className="border border-destructive/30 bg-(--stamp-fill) px-3 py-2 text-sm text-destructive" role="alert">
                   {formErr}
                 </p>
               ) : null}
               {formMsg ? (
-                <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                <p className="border border-secondary/30 bg-(--mark-fill) px-3 py-2 text-sm text-secondary" role="status">
                   {formMsg}
                 </p>
               ) : null}
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">اسم صاحب الطلب</span>
-                <input
-                  required
-                  value={form.applicant_name}
-                  onChange={(e) => setForm((f) => ({ ...f, applicant_name: e.target.value }))}
-                  className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">اسم المخيم المقترح</span>
-                <input
-                  required
-                  value={form.camp_name}
-                  onChange={(e) => setForm((f) => ({ ...f, camp_name: e.target.value }))}
-                  className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">رقم واتساب للتواصل</span>
-                <input
-                  required
-                  type="tel"
-                  inputMode="tel"
-                  placeholder="مثال: 9665xxxxxxxx"
-                  value={form.whatsapp_phone}
-                  onChange={(e) => setForm((f) => ({ ...f, whatsapp_phone: e.target.value }))}
-                  className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
-                  dir="ltr"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">ملاحظات (اختياري)</span>
-                <textarea
-                  rows={3}
-                  value={form.message}
-                  onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-                  className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-white shadow-sm hover:opacity-95 disabled:opacity-50"
-              >
-                {submitting ? 'جاري الإرسال…' : 'إرسال الطلب'}
-              </button>
+              <Input
+                required
+                id="applicant_name"
+                name="applicant_name"
+                label="اسم صاحب الطلب"
+                value={form.applicant_name}
+                onChange={(e) => setForm((f) => ({ ...f, applicant_name: e.target.value }))}
+                autoComplete="name"
+              />
+              <Input
+                required
+                id="camp_name"
+                name="camp_name"
+                label="اسم المخيم المقترح"
+                value={form.camp_name}
+                onChange={(e) => setForm((f) => ({ ...f, camp_name: e.target.value }))}
+              />
+              <Input
+                required
+                id="whatsapp_phone"
+                name="whatsapp_phone"
+                type="tel"
+                inputMode="tel"
+                label="رقم واتساب للتواصل"
+                placeholder="مثال: 9665xxxxxxxx"
+                value={form.whatsapp_phone}
+                onChange={(e) => setForm((f) => ({ ...f, whatsapp_phone: e.target.value }))}
+                dir="ltr"
+                autoComplete="tel"
+              />
+              <Textarea
+                id="message"
+                name="message"
+                label="ملاحظات (اختياري)"
+                rows={3}
+                value={form.message}
+                onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+              />
+              <Button type="submit" disabled={submitting} loading={submitting} className="w-full">
+                إرسال الطلب
+              </Button>
             </form>
           </section>
 
-          <section className="rounded-3xl border border-emerald-100 bg-emerald-50/50 p-6 md:p-8">
-            <h2 className="text-lg font-bold text-emerald-900">تواصل عبر واتساب</h2>
-            <p className="mt-2 text-sm text-slate-700">
-              لاستفسارات تأسيس المخيمات أو الدعم الفني، راسلنا على واتساب وسنرد بأقرب وقت.
+          <section className="rounded-xl bg-[#F0F2F5] p-5 md:p-6">
+            <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">تواصل عبر واتساب</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              لاستفسارات تأسيس المخيمات أو الدعم الفني، راسلنا على واتساب.
             </p>
             <a
               href={supportHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-700"
+              className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] bg-[#25D366] py-3 text-sm font-semibold text-[#064e3b] transition-[filter] duration-(--duration-press) ease-(--ease-out) hover:brightness-[0.96]"
             >
+              <IconWhatsApp className="h-5 w-5" />
               فتح واتساب
             </a>
-            <p className="mt-3 text-xs text-slate-500" dir="ltr">
+            <p className="mt-3 text-xs text-muted-foreground" dir="ltr">
               {supportHref}
             </p>
           </section>
         </div>
 
-        <section className="mt-10 rounded-3xl border border-amber-200 bg-amber-50/70 p-6 shadow-sm md:p-8" dir="rtl">
-          <h2 className="text-lg font-bold text-amber-950">وسائل الدفع</h2>
-          <p className="mt-2 text-sm text-amber-900">
-            يمكن إرسال إشعار الدفع عبر الطرق التالية:
-          </p>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <section className="border-t border-black/8 p-4" dir="rtl">
+          <h2 className="text-sm font-semibold">وسائل الدفع</h2>
+          <p className="mt-1 text-sm text-muted-foreground">يمكن إرسال إشعار الدفع عبر الطرق التالية:</p>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
             {PAYMENT_METHODS.map((item) => (
-              <div key={item.method} className="rounded-2xl border border-amber-200 bg-white px-4 py-3 text-sm">
-                <p className="font-bold text-slate-900">{item.method}</p>
-                <p className="mt-1 text-slate-700" dir="ltr">
+              <div key={item.method} className="text-sm">
+                <p className="font-medium text-foreground">{item.method}</p>
+                <p className="mt-0.5 tabular-nums text-muted-foreground" dir="ltr">
                   {item.number}
                 </p>
-                <p className="mt-1 text-slate-600">الاسم: {item.name}</p>
+                <p className="text-muted-foreground">الاسم: {item.name}</p>
               </div>
             ))}
           </div>
         </section>
+        </details>
       </main>
 
-      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500" dir="rtl">
-        <div>تَكافل — تنظيم المساعدات بكرامة</div>
-        <div className="mt-1 text-slate-600" dir="ltr">radartech85@gmail.com</div>
-      </footer>
-    </div>
+      <Footer />
+    </PublicShell>
   );
 }

@@ -6,19 +6,27 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Card } from '@/components/ui/Card';
+import Spinner from '@/components/ui/Spinner';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { getApiErrorMessage } from '@/lib/utils';
 import { loadFamilyLogin, saveFamilyLogin } from '@/lib/loginPrefs';
+import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
 
 export default function FamilyLoginPage() {
   const router = useRouter();
   const { campSlug } = useParams();
   const { camp, loading: campLoading } = useCamp();
-  const { login } = useAuth();
+  const { login, familyUser, familyLoading } = useAuth();
   const [subscriptionReason, setSubscriptionReason] = useState(false);
   const portalLocked = Boolean(camp?.families_portal_locked);
+
+  useEffect(() => {
+    if (familyLoading) return;
+    if (familyUser) {
+      router.replace(`/${campSlug}/family/dashboard`);
+    }
+  }, [familyLoading, familyUser, campSlug, router]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -64,123 +72,110 @@ export default function FamilyLoginPage() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-slate-50 p-4" dir="rtl">
-      <Card className="w-full max-w-md overflow-hidden rounded-[2rem] border-none shadow-2xl">
-        <div className="relative flex h-32 items-center justify-center bg-primary">
-          {camp?.logo_path ? (
-            <Image
-              src={camp.logo_path}
-              alt={camp.name}
-              width={80}
-              height={80}
-              className="rounded-full bg-white p-2 shadow-lg"
-            />
-          ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-lg">
-              <span className="text-2xl font-bold text-primary">تَكافل</span>
-            </div>
-          )}
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#F0F2F5] px-4 py-10" dir="rtl">
+      <div className="mb-6 flex flex-col items-center text-center">
+        <div className="mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-black/10 bg-white shadow-sm">
+          <Image
+            src={camp?.logo_path || DEFAULT_BRAND_LOGO}
+            alt={camp?.name || 'تَكافل'}
+            width={64}
+            height={64}
+            className="h-full w-full object-contain"
+            priority
+          />
         </div>
+        <p className="text-3xl font-bold text-primary">تَكافل</p>
+        <p className="mt-1 text-sm text-[#65676B]">{camp?.name || 'دخول العائلات'}</p>
+      </div>
 
-        <div className="p-8 md:p-10">
-          <h1 className="text-center text-2xl font-bold text-slate-900">دخول العائلات (رب الأسرة)</h1>
-          <p className="mt-2 text-center text-sm text-slate-500">
-            رقم الهوية والرقم الذي حصلت عليه من إدارة المخيم. دخول اللجنة من صفحة منفصلة.
+      <div className="w-full max-w-md rounded-xl bg-white px-6 py-7 shadow-md md:px-8">
+        <h1 className="text-xl font-bold text-foreground">تسجيل الدخول</h1>
+        <p className="mt-1 text-sm text-[#65676B]">
+          رقم الهوية والرقم الصادر من إدارة المخيم.
+        </p>
+
+        {subscriptionReason ? (
+          <p className="mt-4 border border-warn/30 bg-(--warn-fill) px-3 py-2 text-sm text-warn" role="status">
+            انتهى اشتراك المخيم أو لم يُجدَّد بعد. لا يمكن الدخول حتى يُحدَّث من إدارة المنصة أو إدارة المخيم.
           </p>
+        ) : null}
 
-          {subscriptionReason ? (
-            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-950">
-              انتهى اشتراك المخيم أو لم يُجدَّد بعد. لا يمكن الدخول حتى يُحدَّث من إدارة المنصة أو إدارة المخيم.
+        {campLoading ? (
+          <div className="mt-8 flex justify-center py-6">
+            <Spinner className="h-8 w-8 text-primary" label="جاري التحميل" />
+          </div>
+        ) : null}
+
+        {!campLoading && portalLocked ? (
+          <div className="mt-6 border border-warn/30 bg-(--warn-fill) px-4 py-3 text-sm text-warn" role="status">
+            <p className="font-medium">دخول العائلات غير متاح حالياً</p>
+            <p className="mt-1 text-muted-foreground">
+              اشتراك المخيم غير مفعّل أو انتهت فترة التجديد. راجع إدارة المخيم.
+            </p>
+          </div>
+        ) : null}
+
+        <form onSubmit={handleLogin} className="mt-6 space-y-5" noValidate>
+          <Input
+            id="nationalId"
+            name="nationalId"
+            label="رقم الهوية"
+            type="text"
+            inputMode="numeric"
+            autoComplete="username"
+            placeholder="أدخل رقم الهوية"
+            value={nationalId}
+            onChange={(e) => setNationalId(e.target.value)}
+            required
+            disabled={portalLocked || campLoading}
+          />
+
+          <Input
+            id="serial"
+            name="serial"
+            label="الرقم من إدارة المخيم"
+            type="text"
+            inputMode="numeric"
+            maxLength={3}
+            placeholder="مثال: 009"
+            value={serial}
+            onChange={(e) => setSerial(e.target.value.replace(/\D/g, '').slice(0, 3))}
+            required
+            disabled={portalLocked || campLoading}
+            inputClassName="font-mono tabular-nums"
+            hint="3 أرقام (يُكمَّل بالأصفار إن لزم، مثل 009)."
+          />
+
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              disabled={portalLocked || campLoading}
+              className="mt-1 h-4 w-4 rounded-[2px] border-border text-primary"
+            />
+            <span>تذكر بيانات الدخول على هذا الجهاز.</span>
+          </label>
+
+          {error ? (
+            <p className="border border-destructive/30 bg-(--stamp-fill) p-3 text-sm text-destructive" role="alert">
+              {error}
             </p>
           ) : null}
 
-          {campLoading ? (
-            <div className="mt-8 flex justify-center py-6">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-          ) : null}
+          <Button
+            type="submit"
+            disabled={loading || portalLocked || campLoading}
+            loading={loading}
+            className="w-full rounded-lg"
+            size="lg"
+          >
+            {portalLocked ? 'الدخول معطّل' : 'دخول'}
+          </Button>
+        </form>
+      </div>
 
-          {!campLoading && portalLocked ? (
-            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-950">
-              <p className="font-semibold">دخول العائلات غير متاح حالياً</p>
-              <p className="mt-1 text-amber-900/90">
-                اشتراك المخيم في المنصة غير مفعّل أو انتهت فترة التجديد الشهرية. راجع إدارة المخيم أو تواصل مع
-                منصة تَكافل لاستكمال الدفع.
-              </p>
-            </div>
-          ) : null}
-
-          <form onSubmit={handleLogin} className="mt-8 space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">رقم الهوية</label>
-              <Input
-                type="text"
-                inputMode="numeric"
-                autoComplete="username"
-                placeholder="أدخل رقم الهوية"
-                value={nationalId}
-                onChange={(e) => setNationalId(e.target.value)}
-                required
-                disabled={portalLocked || campLoading}
-                className="mt-2 rounded-xl"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">الرقم من إدارة المخيم</label>
-              <Input
-                type="text"
-                inputMode="numeric"
-                maxLength={3}
-                placeholder="مثال: 009"
-                value={serial}
-                onChange={(e) => setSerial(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                required
-                disabled={portalLocked || campLoading}
-                className="mt-2 rounded-xl font-mono"
-              />
-              <p className="mt-1 text-xs text-slate-500">3 أرقام (يُكمَّل بالأصفار إن لزم، مثل 009).</p>
-            </div>
-
-            <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-600">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                disabled={portalLocked || campLoading}
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-primary"
-              />
-              <span>تذكر بيانات الدخول على هذا الجهاز لحفظ رقم الهوية والرقم محلياً (دون كلمة مرور منفصلة).</span>
-            </label>
-
-            {error ? (
-              <p className="rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-medium text-red-600">
-                {error}
-              </p>
-            ) : null}
-
-            <Button
-              type="submit"
-              disabled={loading || portalLocked || campLoading}
-              className="w-full rounded-xl py-6 text-lg shadow-lg shadow-primary/20"
-            >
-              {loading ? 'جاري الدخول…' : portalLocked ? 'الدخول معطّل' : 'دخول'}
-            </Button>
-          </form>
-
-          <div className="mt-8 text-center text-sm">
-            <p className="text-slate-500">خاص بإدارة المخيم؟</p>
-            <Link
-              href={`/${campSlug}/login/admin`}
-              className="mt-1 inline-block font-bold text-primary hover:underline"
-            >
-              لوحة إدارة المخيم
-            </Link>
-          </div>
-        </div>
-      </Card>
-
-      <Link href={`/${campSlug}`} className="mt-8 text-sm text-slate-400 transition-colors hover:text-primary">
+      <Link href={`/${campSlug}`} className="mt-8 inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground">
         العودة للصفحة الرئيسية
       </Link>
     </div>

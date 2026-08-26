@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import FamilyShell, { FamilyToolbar } from '@/components/layout/FamilyShell';
 import Button from '@/components/ui/Button';
+import LogoutButton from '@/components/ui/LogoutButton';
 import Badge from '@/components/ui/Badge';
+import Alert from '@/components/ui/Alert';
+import EmptyState, { PageSpinner } from '@/components/ui/EmptyState';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -112,74 +114,63 @@ export default function FamilyChangeRequestsPage() {
     load();
   }, [load]);
 
-  const handleLogout = async () => {
-    await logout(`/${campSlug}/login`);
-  };
-
   if (!user || !isFamilyHead) {
     return (
-      <div className="flex min-h-dvh flex-col bg-slate-50" dir="rtl">
-        <Header title="طلبات التعديل" subtitle={camp?.name} />
-        <main className="mx-auto w-full max-w-lg flex-1 px-4 py-16 text-center">
-          <p className="text-slate-600">يجب تسجيل الدخول كرب أسرة.</p>
-          <Link href={`/${campSlug}/login`} className="mt-4 inline-block font-bold text-primary">
-            الانتقال لتسجيل الدخول
-          </Link>
-        </main>
-        <Footer />
-      </div>
+      <FamilyShell title="طلبات التعديل" subtitle={camp?.name} maxWidth="max-w-lg">
+        <p className="text-center text-muted-foreground">يجب تسجيل الدخول كرب أسرة.</p>
+        <Link href={`/${campSlug}/login`} className="mt-4 inline-flex min-h-11 w-full items-center justify-center font-bold text-primary">
+          الانتقال لتسجيل الدخول
+        </Link>
+      </FamilyShell>
     );
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50">
-      <Header title="سجل طلبات التعديل" subtitle={camp?.name} />
-
-      <div className="border-b border-slate-200 bg-white px-4 py-3" dir="rtl">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
+    <FamilyShell
+      title="سجل طلبات التعديل"
+      subtitle={camp?.name}
+      maxWidth="max-w-3xl"
+      toolbar={
+        <FamilyToolbar maxWidth="max-w-3xl">
           <Link
             href={`/${campSlug}/family/dashboard`}
-            className="text-sm font-semibold text-primary hover:underline"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline"
           >
             ← لوحة رب الأسرة
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/${campSlug}/family/change-request`}
-              className="text-sm font-semibold text-primary hover:underline"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline"
             >
               طلب تعديل جديد
             </Link>
-            <Button type="button" variant="outline" size="sm" onClick={handleLogout}>
-              خروج
-            </Button>
+            <LogoutButton label="خروج" onLogout={() => logout(`/${campSlug}/login`)} />
           </div>
-        </div>
-      </div>
-
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10" dir="rtl">
-        <h1 className="text-2xl font-bold text-slate-900">سجل طلبات تعديل البيانات</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        </FamilyToolbar>
+      }
+    >
+        <h1 className="text-2xl font-bold text-foreground">سجل طلبات تعديل البيانات</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
           تُحفظ الطلبات هنا حتى تُراجعها الإدارة؛ عند القبول تُطبَّق التعديلات على السجل الرسمي.
         </p>
 
-        {loading ? (
-          <div className="mt-16 flex justify-center">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          </div>
-        ) : null}
+        {loading ? <PageSpinner /> : null}
 
         {error ? (
-          <p className="mt-6 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>
+          <Alert className="mt-6">{error}</Alert>
         ) : null}
 
         {!loading && !error && items.length === 0 ? (
-          <div className="mt-10 rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
-            <p className="text-slate-600">لا توجد طلبات بعد.</p>
-            <Button type="button" className="mt-4" onClick={() => router.push(`/${campSlug}/family/change-request`)}>
-              إرسال طلب تعديل
-            </Button>
-          </div>
+          <EmptyState
+            className="mt-10"
+            title="لا توجد طلبات بعد."
+            action={
+              <Button type="button" onClick={() => router.push(`/${campSlug}/family/change-request`)}>
+                إرسال طلب تعديل
+              </Button>
+            }
+          />
         ) : null}
 
         {!loading && items.length > 0 ? (
@@ -187,7 +178,7 @@ export default function FamilyChangeRequestsPage() {
             {items.map((row) => (
               <li
                 key={row.id}
-                className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+                className="rounded-xl bg-white p-5 shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -225,9 +216,6 @@ export default function FamilyChangeRequestsPage() {
             ))}
           </ul>
         ) : null}
-      </main>
-
-      <Footer />
-    </div>
+    </FamilyShell>
   );
 }

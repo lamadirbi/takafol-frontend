@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import FamilyShell, { FamilyToolbar } from '@/components/layout/FamilyShell';
 import Button from '@/components/ui/Button';
+import LogoutButton from '@/components/ui/LogoutButton';
+import Alert from '@/components/ui/Alert';
+import { PageSpinner } from '@/components/ui/EmptyState';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -185,10 +187,6 @@ export default function FamilyChangeRequestPage() {
     loadDashboard();
   }, [loadDashboard]);
 
-  const handleLogout = async () => {
-    await logout(`/${campSlug}/login`);
-  };
-
   function setFamilyField(name, value) {
     setFamilyForm((f) => ({ ...f, [name]: value }));
   }
@@ -253,85 +251,71 @@ export default function FamilyChangeRequestPage() {
 
   if (!user || !isFamilyHead) {
     return (
-      <div className="flex min-h-dvh flex-col bg-slate-50" dir="rtl">
-        <Header title="طلب تعديل" subtitle={camp?.name} />
-        <main className="mx-auto w-full max-w-lg flex-1 px-4 py-16 text-center">
-          <p className="text-slate-600">يجب تسجيل الدخول كرب أسرة.</p>
-          <Link href={`/${campSlug}/login`} className="mt-4 inline-block font-bold text-primary">
-            الانتقال لتسجيل الدخول
-          </Link>
-        </main>
-        <Footer />
-      </div>
+      <FamilyShell title="طلب تعديل" subtitle={camp?.name} maxWidth="max-w-lg">
+        <p className="text-center text-muted-foreground">يجب تسجيل الدخول كرب أسرة.</p>
+        <Link href={`/${campSlug}/login`} className="mt-4 inline-flex min-h-11 w-full items-center justify-center font-bold text-primary">
+          الانتقال لتسجيل الدخول
+        </Link>
+      </FamilyShell>
     );
   }
 
   if (user?.subscription?.in_grace) {
-    const amt = user?.subscription?.monthly_amount_ils ?? 15;
+    const amt = user?.subscription?.monthly_amount_ils ?? 50;
     return (
-      <div className="flex min-h-dvh flex-col bg-slate-50" dir="rtl">
-        <Header title="طلب تعديل" subtitle={camp?.name} />
-        <main className="mx-auto w-full max-w-lg flex-1 px-4 py-16 text-center">
-          <p className="text-slate-800">
-            اشتراك المخيم في فترة سماح — لا يمكن إرسال طلبات تعديل حتى يُسدَّد {amt} شيكل شهرياً وتُجدَّد الإدارة
-            الاشتراك.
-          </p>
-          <Link
-            href={`/${campSlug}/family/dashboard`}
-            className="mt-6 inline-block font-bold text-primary hover:underline"
-          >
-            العودة للوحة رب الأسرة
-          </Link>
-        </main>
-        <Footer />
-      </div>
+      <FamilyShell title="طلب تعديل" subtitle={camp?.name} maxWidth="max-w-lg">
+        <p className="text-center text-foreground">
+          اشتراك المخيم في فترة سماح — لا يمكن إرسال طلبات تعديل حتى يُسدَّد {amt} شيكل شهرياً وتُجدَّد الإدارة
+          الاشتراك.
+        </p>
+        <Link
+          href={`/${campSlug}/family/dashboard`}
+          className="mt-6 inline-flex min-h-11 w-full items-center justify-center font-bold text-primary hover:underline"
+        >
+          العودة للوحة رب الأسرة
+        </Link>
+      </FamilyShell>
     );
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50">
-      <Header title="طلب تعديل بيانات" subtitle={camp?.name} />
-
-      <div className="border-b border-slate-200 bg-white px-4 py-3" dir="rtl">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
+    <FamilyShell
+      title="طلب تعديل بيانات"
+      subtitle={camp?.name}
+      maxWidth="max-w-3xl"
+      toolbar={
+        <FamilyToolbar maxWidth="max-w-3xl">
           <Link
             href={`/${campSlug}/family/dashboard`}
-            className="text-sm font-semibold text-primary hover:underline"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline"
           >
             ← العودة للوحة رب الأسرة
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/${campSlug}/family/change-requests`}
-              className="text-sm font-semibold text-primary hover:underline"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline"
             >
               سجل الطلبات
             </Link>
-            <Button type="button" variant="outline" size="sm" onClick={handleLogout}>
-              خروج
-            </Button>
+            <LogoutButton label="خروج" onLogout={() => logout(`/${campSlug}/login`)} />
           </div>
-        </div>
-      </div>
-
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10" dir="rtl">
-        <h1 className="text-2xl font-bold text-slate-900">تعديل مقترح على السجل</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        </FamilyToolbar>
+      }
+    >
+        <h1 className="text-2xl font-bold text-foreground">تعديل مقترح على السجل</h1>
+        <p className="mt-2 text-sm text-[#65676B]">
           عدّل البيانات كما تريدها أن تصبح؛ لا يُطبَّق أي تغيير على السجل إلا بعد موافقة الإدارة.
         </p>
 
-        {loading ? (
-          <div className="mt-16 flex justify-center">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          </div>
-        ) : null}
+        {loading ? <PageSpinner /> : null}
 
         {!loading && !initialFamily ? (
           <p className="mt-8 text-sm text-red-700">{error || 'لم يُعثر على ملف أسرة.'}</p>
         ) : null}
 
         {done ? (
-          <div className="mt-8 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-900">
+          <div className="mt-8 rounded-[var(--radius-card)] border border-emerald-200 bg-emerald-50 p-6 text-emerald-900">
             <p className="font-bold">تم إرسال طلبك بنجاح.</p>
             <p className="mt-2 text-sm">
               وُسِجِّل الطلب في سجل طلباتك ويمكنك متابعته حتى تُراجعه الإدارة وتقبله أو ترفضه.
@@ -352,15 +336,13 @@ export default function FamilyChangeRequestPage() {
         ) : null}
 
         {!loading && initialFamily && !done ? (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-8">
+          <form onSubmit={handleSubmit} className="mt-8 space-y-8 rounded-xl bg-white p-4 shadow-sm sm:p-6">
             {error ? (
-              <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-                {error}
-              </p>
+              <Alert>{error}</Alert>
             ) : null}
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900">بيانات رب الأسرة والعائلة</h2>
+            <section className="rounded-[var(--radius-card)] border border-border bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-foreground">بيانات رب الأسرة والعائلة</h2>
               <p className="mt-1 text-xs text-slate-500">
                 رقم الهوية للدخول: <span className="font-mono">{nationalIdDisplay}</span> (لا يُعدَّل من هنا)
               </p>
@@ -371,7 +353,7 @@ export default function FamilyChangeRequestPage() {
                     type="text"
                     value={familyForm.head_name}
                     onChange={(e) => setFamilyField('head_name', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
+                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
                   />
                 </label>
                 <label className="block text-sm">
@@ -379,7 +361,7 @@ export default function FamilyChangeRequestPage() {
                   <select
                     value={familyForm.head_gender}
                     onChange={(e) => setFamilyField('head_gender', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
+                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
                   >
                     {GENDER_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>
@@ -395,7 +377,7 @@ export default function FamilyChangeRequestPage() {
                     inputMode="tel"
                     value={familyForm.phone}
                     onChange={(e) => setFamilyField('phone', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
+                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
                     placeholder="05xxxxxxxx"
                   />
                 </label>
@@ -404,7 +386,7 @@ export default function FamilyChangeRequestPage() {
                   <select
                     value={familyForm.social_status || ''}
                     onChange={(e) => setFamilyField('social_status', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
+                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
                   >
                     <option value="">—</option>
                     {SOCIAL_OPTIONS.map((o) => (
@@ -420,7 +402,7 @@ export default function FamilyChangeRequestPage() {
                     type="text"
                     value={familyForm.spouse_name}
                     onChange={(e) => setFamilyField('spouse_name', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
+                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
                   />
                 </label>
                 <label className="block text-sm sm:col-span-2">
@@ -429,7 +411,7 @@ export default function FamilyChangeRequestPage() {
                     type="text"
                     value={familyForm.spouse_national_id}
                     onChange={(e) => setFamilyField('spouse_national_id', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
+                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
                   />
                 </label>
                 <label className="block text-sm">
@@ -438,7 +420,7 @@ export default function FamilyChangeRequestPage() {
                     type="text"
                     value={familyForm.original_governorate}
                     onChange={(e) => setFamilyField('original_governorate', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
+                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
                   />
                 </label>
                 <label className="block text-sm">
@@ -447,14 +429,14 @@ export default function FamilyChangeRequestPage() {
                     type="text"
                     value={familyForm.original_neighborhood}
                     onChange={(e) => setFamilyField('original_neighborhood', e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm"
+                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
                   />
                 </label>
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900">أفراد الأسرة المسجّلون</h2>
+            <section className="rounded-[var(--radius-card)] border border-border bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-foreground">أفراد الأسرة المسجّلون</h2>
               <p className="mt-1 text-xs text-slate-500">
                 طلب حذف فرد يُرسل للمراجعة؛ لا يمكن حذف سجل «رب الأسرة» من هنا.
               </p>
@@ -465,7 +447,7 @@ export default function FamilyChangeRequestPage() {
                   return (
                     <div
                       key={row.id}
-                      className={`rounded-2xl border p-4 ${isDel ? 'border-amber-300 bg-amber-50 opacity-80' : 'border-slate-200'}`}
+                      className={`rounded-2xl border p-4 ${isDel ? 'border-amber-300 bg-amber-50 opacity-80' : 'border-border'}`}
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <span className="text-xs font-medium text-slate-500">فرد #{row.id}</span>
@@ -499,7 +481,7 @@ export default function FamilyChangeRequestPage() {
                             value={row.name}
                             onChange={(e) => updateMemberRow(row.id, 'name', e.target.value)}
                             disabled={isDel}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                            className="w-full rounded-xl border border-border px-3 py-2 text-sm"
                           />
                         </label>
                         <label className={`block text-sm ${isDel ? 'pointer-events-none' : ''}`}>
@@ -508,7 +490,7 @@ export default function FamilyChangeRequestPage() {
                             value={row.relationship}
                             onChange={(e) => updateMemberRow(row.id, 'relationship', e.target.value)}
                             disabled={isDel || isHead}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                            className="w-full rounded-xl border border-border px-3 py-2 text-sm"
                           >
                             {relationshipOptionsFor.map((o) => (
                               <option key={o.value} value={o.value}>
@@ -523,7 +505,7 @@ export default function FamilyChangeRequestPage() {
                             value={row.gender}
                             onChange={(e) => updateMemberRow(row.id, 'gender', e.target.value)}
                             disabled={isDel}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                            className="w-full rounded-xl border border-border px-3 py-2 text-sm"
                           >
                             {GENDER_OPTIONS.map((o) => (
                               <option key={o.value} value={o.value}>
@@ -539,7 +521,7 @@ export default function FamilyChangeRequestPage() {
                             value={row.date_of_birth}
                             onChange={(e) => updateMemberRow(row.id, 'date_of_birth', e.target.value)}
                             disabled={isDel}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                            className="w-full rounded-xl border border-border px-3 py-2 text-sm"
                           />
                         </label>
                       </div>
@@ -549,9 +531,9 @@ export default function FamilyChangeRequestPage() {
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="rounded-[var(--radius-card)] border border-border bg-white p-6 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-bold text-slate-900">إضافة أفراد جدد</h2>
+                <h2 className="text-lg font-bold text-foreground">إضافة أفراد جدد</h2>
                 <Button
                   type="button"
                   variant="outline"
@@ -589,7 +571,7 @@ export default function FamilyChangeRequestPage() {
                               list.map((x) => (x.key === nm.key ? { ...x, name: e.target.value } : x))
                             )
                           }
-                          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                          className="w-full rounded-xl border border-border px-3 py-2 text-sm"
                         />
                       </label>
                       <label className="block text-sm">
@@ -601,7 +583,7 @@ export default function FamilyChangeRequestPage() {
                               list.map((x) => (x.key === nm.key ? { ...x, relationship: e.target.value } : x))
                             )
                           }
-                          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                          className="w-full rounded-xl border border-border px-3 py-2 text-sm"
                         >
                           {RELATIONSHIP_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>
@@ -619,7 +601,7 @@ export default function FamilyChangeRequestPage() {
                               list.map((x) => (x.key === nm.key ? { ...x, gender: e.target.value } : x))
                             )
                           }
-                          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                          className="w-full rounded-xl border border-border px-3 py-2 text-sm"
                         >
                           {GENDER_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>
@@ -638,7 +620,7 @@ export default function FamilyChangeRequestPage() {
                               list.map((x) => (x.key === nm.key ? { ...x, date_of_birth: e.target.value } : x))
                             )
                           }
-                          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                          className="w-full rounded-xl border border-border px-3 py-2 text-sm"
                         />
                       </label>
                     </div>
@@ -657,9 +639,6 @@ export default function FamilyChangeRequestPage() {
             </div>
           </form>
         ) : null}
-      </main>
-
-      <Footer />
-    </div>
+    </FamilyShell>
   );
 }

@@ -1,16 +1,8 @@
-import { Cairo } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import "@/styles/theme.css";
 import Providers from "./providers";
 import { DEFAULT_BRAND_LOGO } from "@/lib/brand";
-
-const cairo = Cairo({
-  subsets: ["arabic", "latin"],
-  variable: "--font-cairo",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata = {
   title: "تَكافل",
@@ -29,15 +21,13 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#214a6d",
+  themeColor: "#1877F2",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} min-h-dvh`}>
-      <body
-        className={`${cairo.className} min-h-dvh flex flex-col bg-background font-sans text-foreground antialiased`}
-      >
+    <html lang="ar" dir="rtl" className="min-h-dvh">
+      <body className="min-h-dvh flex flex-col bg-background font-sans text-foreground antialiased">
         <Providers>{children}</Providers>
         <Script
           id="pwa-install-capture"

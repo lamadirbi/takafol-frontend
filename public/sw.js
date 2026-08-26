@@ -11,14 +11,12 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // A fetch handler is required for PWA installation.
-  // We use a simple network-first strategy.
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      // Fallback if needed, currently just letting it fail gracefully.
-      return null;
-    })
-  );
+  const url = new URL(event.request.url);
+  // لا نعترض طلبات الـ API حتى لا يُحذف توكن الدخول ويظهر وكأن المستخدم سجّل خروجاً.
+  if (url.pathname.includes('/api') || url.origin !== self.location.origin) {
+    return;
+  }
+  event.respondWith(fetch(event.request));
 });
 
 self.addEventListener('push', (event) => {

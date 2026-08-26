@@ -4,16 +4,46 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { api } from '@/lib/api';
 
 const CampContext = createContext();
+const CAMP_CACHE_MS = 60_000;
+
+function cacheKey(slug) {
+  return `takafol_camp_${slug}`;
+}
+
+function readCampCache(slug) {
+  try {
+    const raw = sessionStorage.getItem(cacheKey(slug));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.data) return null;
+    return {
+      data: parsed.data,
+      fresh: Date.now() - Number(parsed.ts || 0) < CAMP_CACHE_MS,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeCampCache(slug, data) {
+  if (!data) return;
+  try {
+    sessionStorage.setItem(cacheKey(slug), JSON.stringify({ data, ts: Date.now() }));
+  } catch {
+    /* quota / private mode */
+  }
+}
 
 export const CampProvider = ({ children, campSlug }) => {
   const [camp, setCamp] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(campSlug));
 
   const refreshCamp = useCallback(async () => {
     if (!campSlug) return null;
     try {
       const response = await api.get(`/camps/${campSlug}`);
       setCamp(response.data);
+      writeCampCache(campSlug, response.data);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch camp data:', error);
@@ -22,18 +52,31 @@ export const CampProvider = ({ children, campSlug }) => {
   }, [campSlug]);
 
   useEffect(() => {
-    const fetchCamp = async () => {
+    if (!campSlug) {
+      setLoading(false);
+      return;
+    }
+
+    const cached = readCampCache(campSlug);
+    if (cached?.data) {
+      setCamp(cached.data);
+      setLoading(false);
+    } else {
       setLoading(true);
+    }
+
+    let cancelled = false;
+    (async () => {
       try {
         await refreshCamp();
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    };
+    })();
 
-    if (campSlug) {
-      fetchCamp();
-    }
+    return () => {
+      cancelled = true;
+    };
   }, [campSlug, refreshCamp]);
 
   return (

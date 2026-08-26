@@ -2,17 +2,22 @@ import { cn } from '@/lib/utils';
 
 export default function Select({ label, id, error, className, options = [], placeholder, ...props }) {
   const selectId = id || props.name;
+  const errorId = error && selectId ? `${selectId}-error` : undefined;
 
   return (
-    <label className={cn('flex flex-col gap-1.5 w-full', className)} htmlFor={selectId}>
+    <div className={cn('flex w-full flex-col gap-1.5', className)}>
       {label ? (
-        <span className="text-sm font-medium text-muted-foreground">{label}</span>
+        <label htmlFor={selectId} className="text-sm font-medium text-foreground">
+          {label}
+        </label>
       ) : null}
       <select
         id={selectId}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={errorId}
         className={cn(
-          'w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
-          error ? 'border-red-500' : ''
+          'min-h-11 w-full rounded-[var(--radius-control)] border border-border bg-control px-3 py-2.5 text-sm text-foreground transition-[border-color,background-color] duration-(--duration-ui) ease-(--ease-out) focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/20',
+          error ? 'border-destructive' : ''
         )}
         {...props}
       >
@@ -27,7 +32,11 @@ export default function Select({ label, id, error, className, options = [], plac
           </option>
         ))}
       </select>
-      {error ? <span className="text-xs text-red-600">{error}</span> : null}
-    </label>
+      {error ? (
+        <span id={errorId} className="text-xs text-destructive" role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
   );
 }

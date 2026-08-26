@@ -3,13 +3,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import Sidebar from '@/components/layout/Sidebar';
-import AdminMobileNav from '@/components/layout/AdminMobileNav';
+import AdminShell from '@/components/layout/AdminShell';
 import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Alert from '@/components/ui/Alert';
+import PageHeading from '@/components/ui/PageHeading';
+import Spinner from '@/components/ui/Spinner';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
+import { useNotice } from '@/context/NoticeContext';
 import {
   downloadBlobFromResponse,
   formatDate,
@@ -45,6 +47,7 @@ export default function CampRecordDetailPage() {
   const { campSlug, recordId } = useParams();
   const base = campSlug ? `/${campSlug}` : '';
   const { camp } = useCamp();
+  const showNotice = useNotice();
 
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -127,27 +130,17 @@ export default function CampRecordDetailPage() {
     return out;
   }, [rows]);
 
-  const waitingRows = useMemo(
-    () => uniqueFamilyRows.filter((row) => {
-      const { hasAny, allReceived } = familyDistSummary(row.familyId);
-      return hasAny && !allReceived;
-    }),
-    [uniqueFamilyRows, distByFamily]
-  );
-
-  const doneRows = useMemo(
-    () => uniqueFamilyRows.filter((row) => familyDistSummary(row.familyId).allReceived),
-    [uniqueFamilyRows, distByFamily]
-  );
-
-  const noDistRows = useMemo(
-    () => uniqueFamilyRows.filter((row) => !familyDistSummary(row.familyId).hasAny),
-    [uniqueFamilyRows, distByFamily]
-  );
-
   async function toggleFamilyDelivery(familyId, currentlyAllReceived) {
     const fid = Number(familyId);
     setBusyFamilyId(fid);
+    const previous = distributions;
+    setDistributions((list) =>
+      list.map((d) =>
+        Number(d.family_id) === fid
+          ? { ...d, status: currentlyAllReceived ? 'pending' : 'received' }
+          : d
+      )
+    );
     try {
       if (currentlyAllReceived) {
         const list = distByFamily.get(fid) || [];
@@ -168,9 +161,9 @@ export default function CampRecordDetailPage() {
         }
       }
       await loadDistributions();
-      await loadRecord();
     } catch (e) {
-      alert(getApiErrorMessage(e, 'تعذر تحديث حالة التسليم.'));
+      setDistributions(previous);
+      showNotice(getApiErrorMessage(e, 'تعذر تحديث حالة التسليم.'));
     } finally {
       setBusyFamilyId(null);
     }
@@ -183,7 +176,7 @@ export default function CampRecordDetailPage() {
       });
       downloadBlobFromResponse(res, `filter-record-${recordId}.xlsx`);
     } catch (e) {
-      alert(getApiErrorMessage(e, 'تعذر التنزيل.'));
+      showNotice(getApiErrorMessage(e, 'تعذر التنزيل.'));
     }
   }
 
@@ -194,7 +187,7 @@ export default function CampRecordDetailPage() {
       });
       downloadBlobFromResponse(res, `filter-members-${recordId}.xlsx`);
     } catch (e) {
-      alert(getApiErrorMessage(e, 'تعذر التنزيل.'));
+      showNotice(getApiErrorMessage(e, 'تعذر التنزيل.'));
     }
   }
 
@@ -241,7 +234,7 @@ export default function CampRecordDetailPage() {
       loadDistributions();
       loadRecord();
     } catch (e) {
-      alert(getApiErrorMessage(e, 'تعذر التأكيد.'));
+      showNotice(getApiErrorMessage(e, 'تعذر التأكيد.'));
     }
   }
 
@@ -254,7 +247,7 @@ export default function CampRecordDetailPage() {
       loadDistributions();
       loadRecord();
     } catch (e) {
-      alert(getApiErrorMessage(e, 'تعذر التراجع.'));
+      showNotice(getApiErrorMessage(e, 'تعذر التراجع.'));
     }
   }
 
@@ -267,43 +260,32 @@ export default function CampRecordDetailPage() {
 
   if (loading && !record) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-slate-50">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
+      <AdminShell title="سجل الفلترة" subtitle={camp?.name}>
+        <div className="flex justify-center py-20">
+          <Spinner className="h-10 w-10 text-primary" label="جاري التحميل" />
+        </div>
+      </AdminShell>
     );
   }
 
   if (error && !record) {
     return (
-      <div className="flex min-h-dvh flex-col bg-slate-50 md:flex-row">
-        <Sidebar />
-        <div className="flex flex-1 flex-col p-8" dir="rtl">
-          <p className="text-red-700">{error}</p>
-          <Link href={`${base}/admin/camp-records`} className="mt-4 text-primary">
-            العودة للسجلات
-          </Link>
-        </div>
-      </div>
+      <AdminShell title="سجل الفلترة" subtitle={camp?.name}>
+        <Alert>{error}</Alert>
+        <Link href={`${base}/admin/camp-records`} className="mt-4 inline-flex min-h-11 items-center text-primary">
+          العودة للسجلات
+        </Link>
+      </AdminShell>
     );
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 md:flex-row">
-      <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header title={record?.name || 'سجل الفلترة'} subtitle={camp?.name} />
-        <AdminMobileNav />
-
-        <main className="flex-1 overflow-y-auto p-4 md:p-8" dir="rtl">
-          <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">{record?.name}</h1>
-              <p className="mt-1 text-sm text-slate-600">
-                {record?.created_at ? formatDate(record.created_at) : ''} —{' '}
-                {scope === 'members' ? 'فلترة أفراد' : 'فلترة عائلات'} — عدد النتائج: {resultCount}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
+    <AdminShell title={record?.name || 'سجل الفلترة'} subtitle={camp?.name}>
+          <PageHeading
+            title={record?.name}
+            description={`${record?.created_at ? formatDate(record.created_at) : ''} — ${scope === 'members' ? 'فلترة أفراد' : 'فلترة عائلات'} — عدد النتائج: ${resultCount}`}
+            actions={
+              <>
               <Button type="button" variant="outline" size="sm" onClick={downloadFilterExcel}>
                 تنزيل ملف الفلترة Excel
               </Button>
@@ -312,41 +294,42 @@ export default function CampRecordDetailPage() {
               </Button>
               <Link
                 href={`${base}/admin/camp-records`}
-                className="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
+                className="inline-flex min-h-11 items-center rounded-xl bg-secondary px-4 py-2 text-sm font-bold text-white transition-colors duration-200 hover:bg-[#166534]"
               >
                 السجلات
               </Link>
-            </div>
-          </div>
+              </>
+            }
+          />
 
-          <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-900">إرسال إشعار بوجود طرد</h2>
-            <p className="mt-2 text-sm text-slate-600">
+          <section className="file-spine mb-6 border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-foreground">إرسال إشعار بوجود طرد</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
               يُنشأ طرد قيد الانتظار للعائلات ضمن هذه اللقطة ويُرسل إشعار للهاتف عند التفعيل.
             </p>
             <div className="mt-4 flex max-w-md flex-col gap-3 sm:flex-row sm:items-end">
-              <label className="flex flex-1 flex-col gap-1 text-sm">
-                <span className="font-medium text-slate-700">اسم الطرد</span>
-                <input
-                  value={packageName}
-                  onChange={(e) => setPackageName(e.target.value)}
-                  className="rounded-2xl border border-slate-200 px-3 py-2"
-                />
-              </label>
+              <Input
+                id="package-name"
+                label="اسم الطرد"
+                value={packageName}
+                onChange={(e) => setPackageName(e.target.value)}
+                className="flex-1"
+              />
               <Button
                 type="button"
-                className="bg-emerald-600 hover:bg-emerald-700"
+                variant="secondary"
                 disabled={notifyLoading}
+                loading={notifyLoading}
                 onClick={sendBulkNotify}
               >
-                {notifyLoading ? 'جاري الإرسال…' : 'إرسال إشعار'}
+                إرسال إشعار
               </Button>
             </div>
-            {notifyMsg ? <p className="mt-3 text-sm text-slate-700">{notifyMsg}</p> : null}
+            {notifyMsg ? <p className="mt-3 text-sm text-muted-foreground">{notifyMsg}</p> : null}
           </section>
 
-          <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-900">الطرود والإشعارات المرسلة</h2>
+          <section className="file-spine mb-6 border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-foreground">الطرود والإشعارات المرسلة</h2>
             {distLoading ? (
               <p className="mt-2 text-sm text-slate-500">جاري التحميل…</p>
             ) : labelsOnRecord.length === 0 ? (
@@ -394,8 +377,8 @@ export default function CampRecordDetailPage() {
             )}
           </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-900">المستفيدون والاستلام</h2>
+          <section className="file-spine border border-border bg-card p-6">
+            <h2 className="text-lg font-bold text-foreground">المستفيدون والاستلام</h2>
             <p className="mt-2 text-sm text-slate-600">
               يُحدَّد التسليم حسب طرود هذا السجل: عند التفعيل يُسجَّل استلام الطرد (من قيد الانتظار إلى تم
               الاستلام). إن وُجد أكثر من نوع طرد للعائلة، يُؤكَّد الكل دفعة واحدة.
@@ -404,85 +387,36 @@ export default function CampRecordDetailPage() {
             {uniqueFamilyRows.length === 0 ? (
               <p className="mt-4 text-sm text-slate-500">لا مستفيدين في اللقطة.</p>
             ) : (
-              <div className="mt-6 space-y-6">
-                {waitingRows.length > 0 ? (
-                  <div>
-                    <h3 className="text-sm font-bold text-amber-800">بانتظار التسليم</h3>
-                    <ul className="mt-2 max-h-[280px] space-y-2 overflow-y-auto">
-                      {waitingRows.map((row) => {
-                        const { hasAny, allReceived } = familyDistSummary(row.familyId);
-                        const disabled = !hasAny || busyFamilyId === Number(row.familyId);
-                        return (
-                          <li
-                            key={`w-${row.familyId}`}
-                            className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50/50 px-3 py-2"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={allReceived}
-                              disabled={disabled}
-                              title={!hasAny ? 'لا يوجد طرد مُنشأ لهذه العائلة بعد — أرسل إشعار الطرد أولاً' : ''}
-                              onChange={() => toggleFamilyDelivery(row.familyId, false)}
-                              className="h-4 w-4 rounded border-slate-300"
-                            />
-                            <span className="text-sm">{row.label}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {doneRows.length > 0 ? (
-                  <div>
-                    <h3 className="text-sm font-bold text-emerald-800">طرود مُستلمة سابقاً (يمكن التراجع بتعطيل التأشير)</h3>
-                    <ul className="mt-2 max-h-[280px] space-y-2 overflow-y-auto">
-                      {doneRows.map((row) => {
-                        const { allReceived } = familyDistSummary(row.familyId);
-                        const disabled = busyFamilyId === Number(row.familyId);
-                        return (
-                          <li
-                            key={`d-${row.familyId}`}
-                            className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/40 px-3 py-2"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={allReceived}
-                              disabled={disabled}
-                              onChange={() => toggleFamilyDelivery(row.familyId, true)}
-                              className="h-4 w-4 rounded border-slate-300"
-                            />
-                            <span className="text-sm">{row.label}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {noDistRows.length > 0 ? (
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-600">لم يُرسل لهم طرد بعد</h3>
-                    <ul className="mt-2 max-h-[200px] space-y-2 overflow-y-auto text-slate-500">
-                      {noDistRows.map((row) => (
-                        <li
-                          key={`n-${row.familyId}`}
-                          className="flex items-center gap-3 rounded-xl border border-slate-100 px-3 py-2"
-                        >
-                          <input type="checkbox" disabled className="h-4 w-4 opacity-40" readOnly />
-                          <span className="text-sm">{row.label}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-              </div>
+              <ul className="mt-4 max-h-[420px] space-y-2 overflow-y-auto">
+                {uniqueFamilyRows.map((row) => {
+                  const { hasAny, allReceived } = familyDistSummary(row.familyId);
+                  const disabled = !hasAny || busyFamilyId === Number(row.familyId);
+                  return (
+                    <li
+                      key={row.familyId}
+                      className="flex items-center gap-3 rounded-xl border border-slate-100 px-3 py-2"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={hasAny && allReceived}
+                        disabled={disabled}
+                        title={
+                          !hasAny
+                            ? 'لا يوجد طرد مُنشأ لهذه العائلة بعد — أرسل إشعار الطرد أولاً'
+                            : allReceived
+                              ? 'إلغاء تأشير الاستلام'
+                              : 'تأكيد استلام الطرد'
+                        }
+                        onChange={() => toggleFamilyDelivery(row.familyId, allReceived)}
+                        className="h-4 w-4 rounded border-slate-300"
+                      />
+                      <span className="text-sm">{row.label}</span>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </section>
-        </main>
-
-        <Footer />
-      </div>
-    </div>
+        </AdminShell>
   );
 }

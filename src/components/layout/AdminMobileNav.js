@@ -3,64 +3,52 @@
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
-import Button from '@/components/ui/Button';
+import { NAV_ICONS } from '@/components/ui/Icons';
 
 export default function AdminMobileNav() {
   const pathname = usePathname();
   const { campSlug } = useParams();
-  const { user, logout } = useAuth();
-
   const base = campSlug ? `/${campSlug}` : '';
 
   const links = [
-    { href: `${base}/admin/dashboard`, label: 'الرئيسية' },
-    { href: `${base}/admin/filter`, label: 'فلترة' },
-    { href: `${base}/admin/families`, label: 'العائلات' },
-    { href: `${base}/admin/camp-records`, label: 'السجلات' },
-    { href: `${base}/admin/change-requests`, label: 'طلبات التعديل' },
-    { href: `${base}/news`, label: 'الأخبار' },
+    { href: `${base}/admin/dashboard`, label: 'اليوم', icon: 'home', match: 'prefix' },
+    { href: `${base}/admin/families`, label: 'العائلات', icon: 'family', match: 'prefix' },
+    { href: `${base}/admin/filter`, label: 'فلترة', icon: 'filter', match: 'exact' },
+    { href: `${base}/admin/change-requests`, label: 'طلبات', icon: 'clipboard', match: 'exact' },
+    { href: `${base}/news`, label: 'أخبار', icon: 'megaphone', match: 'news' },
   ];
-
-  if (user?.role === 'admin') {
-    links.push({ href: `${base}/admin/admins`, label: 'المسؤولين' });
-  }
-
-  const adminLoginPath = campSlug ? `/${campSlug}/login/admin` : '/login';
 
   return (
     <nav
-      className="sticky top-0 z-30 flex min-h-12 items-center gap-1 overflow-x-auto border-b border-white/15 bg-[color:var(--header-bar)] px-3 py-2 md:hidden"
-      aria-label="تنقل سريع — الإدارة"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-black/8 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_4px_rgba(0,0,0,0.06)] md:hidden"
+      aria-label="تنقل الإدارة"
       dir="rtl"
     >
-      {links.map((l) => {
-        const isNews = l.href === `${base}/news`;
-        const active = isNews
-          ? pathname === l.href || pathname?.endsWith('/news')
-          : pathname === l.href || pathname?.startsWith(`${l.href}/`);
-        return (
-          <Link
-            key={l.href}
-            href={l.href}
-            className={cn(
-              'shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition',
-              active ? 'bg-white/20 text-white' : 'text-white/85 hover:bg-white/10'
-            )}
-          >
-            {l.label}
-          </Link>
-        );
-      })}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="ms-1 shrink-0 border-white/40 bg-white/10 text-xs text-white hover:bg-white/15"
-        onClick={() => logout(adminLoginPath)}
-      >
-        خروج
-      </Button>
+      <div className="grid grid-cols-5">
+        {links.map((l) => {
+          const Icon = NAV_ICONS[l.icon] || NAV_ICONS.home;
+          const active =
+            l.match === 'news'
+              ? pathname === l.href || pathname?.endsWith('/news')
+              : l.match === 'exact'
+                ? pathname === l.href
+                : pathname === l.href || pathname?.startsWith(`${l.href}/`);
+          return (
+            <Link
+              key={l.href}
+              href={l.href}
+              aria-current={active ? 'page' : undefined}
+              className={cn(
+                'flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px]',
+                active ? 'font-semibold text-primary' : 'text-[#65676B]'
+              )}
+            >
+              <Icon className="h-6 w-6" />
+              {l.label}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

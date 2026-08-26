@@ -1,19 +1,16 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
-import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Card } from '@/components/ui/Card';
 import { getApiErrorMessage } from '@/lib/utils';
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
-  const { adminLogin } = useAuth();
+  const { adminLogin, adminUser, adminLoading } = useAuth();
   
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -22,6 +19,13 @@ export default function SuperAdminLoginPage() {
   const [error, setError] = useState('');
 
   const canSubmit = useMemo(() => Boolean(username.trim()) && Boolean(password) && !loading, [username, password, loading]);
+
+  useEffect(() => {
+    if (adminLoading) return;
+    if (adminUser?.is_super && adminUser.camp_id == null) {
+      router.replace('/super-admin');
+    }
+  }, [adminLoading, adminUser, router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,89 +51,69 @@ export default function SuperAdminLoginPage() {
   };
 
   return (
-    <div
-      className="relative flex min-h-dvh flex-col items-center justify-center bg-slate-50 p-4 font-sans"
-      dir="rtl"
-    >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_circle_at_50%_-20%,rgba(59,130,246,0.12),transparent_60%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-linear-to-b from-white to-transparent" />
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#F0F2F5] px-4 py-10 font-sans" dir="rtl">
+      <div className="w-full max-w-md rounded-xl bg-white px-6 py-7 shadow-md md:px-8">
+        <p className="text-xs font-bold text-primary">منصة تَكافل</p>
+        <h1 className="mt-1 text-xl font-bold tracking-tight">دخول الإدارة العليا</h1>
+        <p className="mt-1 text-sm text-[#65676B]">خاص بتأسيس وإدارة المخيمات والاشتراكات</p>
 
-      <Card className="relative w-full max-w-md overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-xl">
-        <div className="p-8 md:p-10">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-slate-50 p-2 ring-1 ring-slate-200">
-            <Image
-              src={DEFAULT_BRAND_LOGO}
-              alt="تَكافل"
-              width={72}
-              height={72}
-              className="h-full w-full object-contain"
-              priority
+        <form onSubmit={handleLogin} className="mt-6 space-y-5">
+          <Input
+            type="text"
+            label="اسم المستخدم"
+            placeholder="أدخل اسم المستخدم"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            autoComplete="username"
+            dir="ltr"
+          />
+
+          <div>
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <span className="text-sm font-medium">كلمة المرور</span>
+              <button
+                type="button"
+                onClick={() => setShowPass((v) => !v)}
+                className="min-h-11 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                {showPass ? 'إخفاء' : 'إظهار'}
+              </button>
+            </div>
+            <Input
+              type={showPass ? 'text' : 'password'}
+              placeholder="أدخل كلمة المرور"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              dir="ltr"
             />
           </div>
-          <h1 className="text-center text-2xl font-extrabold text-slate-900">بوابة الإدارة العليا</h1>
-          <p className="mt-2 text-center text-sm text-slate-600">خاص بتأسيس وإدارة المخيمات والاشتراكات</p>
 
-          <form onSubmit={handleLogin} className="mt-8 space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">اسم المستخدم</label>
-              <Input
-                type="text"
-                placeholder="أدخل اسم المستخدم"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="mt-2"
-                inputClassName="bg-white"
-                autoComplete="username"
-                dir="ltr"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between gap-2">
-                <label className="block text-sm font-semibold text-slate-700">كلمة المرور</label>
-                <button
-                  type="button"
-                  onClick={() => setShowPass((v) => !v)}
-                  className="text-xs font-semibold text-slate-600 hover:text-primary"
-                >
-                  {showPass ? 'إخفاء' : 'إظهار'}
-                </button>
-              </div>
-              <Input
-                type={showPass ? 'text' : 'password'}
-                placeholder="أدخل كلمة المرور"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="mt-2"
-                inputClassName="bg-white"
-                autoComplete="current-password"
-                dir="ltr"
-              />
-            </div>
-
-            {error && (
-              <p className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-sm font-medium text-red-400">{error}</p>
-            )}
-
-            <Button
-              type="submit"
-              disabled={!canSubmit}
-              loading={loading}
-              className="w-full rounded-2xl py-6 text-lg disabled:opacity-60"
-            >
-              تسجيل الدخول
-            </Button>
-
-            <p className="text-center text-xs text-slate-500">
-              هذه الصفحة مخصصة لـ <span className="font-semibold text-slate-800">Super Admin العام</span> فقط.
+          {error && (
+            <p className="border border-destructive/30 bg-(--stamp-fill) p-3 text-sm text-destructive" role="alert">
+              {error}
             </p>
-          </form>
-        </div>
-      </Card>
-      
-      <Link href="/" className="mt-8 text-sm text-slate-500 transition-colors hover:text-primary">
+          )}
+
+          <Button
+            type="submit"
+            disabled={!canSubmit}
+            loading={loading}
+            className="w-full rounded-lg"
+            size="lg"
+          >
+            تسجيل الدخول
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground">
+            هذه الصفحة مخصصة لـ <span className="font-medium text-foreground">Super Admin العام</span> فقط.
+          </p>
+        </form>
+      </div>
+
+      <Link href="/" className="mt-8 text-sm text-muted-foreground hover:text-foreground">
         العودة للصفحة الرئيسية
       </Link>
     </div>

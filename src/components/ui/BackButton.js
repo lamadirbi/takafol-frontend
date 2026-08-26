@@ -7,7 +7,7 @@ function ChevronIcon({ className }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.75"
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M15 19l-7-7 7-7"
@@ -16,9 +16,6 @@ function ChevronIcon({ className }) {
   );
 }
 
-/**
- * رجوع للصفحة السابقة، أو للرئيسية إن لم يكن هناك سجل.
- */
 export default function BackButton({ className = '', fallbackHref = '/' }) {
   const router = useRouter();
 
@@ -32,7 +29,7 @@ export default function BackButton({ className = '', fallbackHref = '/' }) {
           router.push(fallbackHref);
         }
       }}
-      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/5 text-white transition hover:bg-white/12 hover:ring-1 hover:ring-white/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 ${className}`}
+      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-border text-foreground transition-[background-color,border-color] duration-(--duration-ui) ease-(--ease-out) hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${className}`}
       aria-label="رجوع"
       title="رجوع"
     >

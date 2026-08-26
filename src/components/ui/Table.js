@@ -1,10 +1,10 @@
 'use client';
 
+import { cn } from '@/lib/utils';
 import Button from './Button';
 
 export default function Table({
   columns,
-  /** صفوف الجدول — يمكن تمرير `data` بدلاً منها لتوافق أقدم */
   rows,
   data,
   page,
@@ -13,63 +13,80 @@ export default function Table({
   onPageChange,
   loading = false,
   emptyMessage = 'لا توجد بيانات',
+  empty,
+  toolbar,
+  className,
 }) {
   const list = rows ?? data ?? [];
   const totalPages = pageSize ? Math.max(1, Math.ceil((total || 0) / pageSize)) : 1;
 
   return (
-    <div className="w-full overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm shadow-slate-900/[0.04]">
-      <table className="min-w-full text-sm">
-        <thead className="bg-muted/60 text-right">
-          <tr>
-            {columns.map((col) => (
-              <th key={col.key} className="px-3 py-2 font-semibold text-muted-foreground">
-                {col.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan={columns.length} className="px-3 py-12 text-center text-muted-foreground">
-                <span className="inline-flex items-center gap-2">
-                  <span
-                    className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"
-                    aria-hidden
-                  />
-                  جاري التحميل…
-                </span>
-              </td>
+    <div className={cn('w-full overflow-hidden rounded-xl border-0 bg-white shadow-sm', className)}>
+      {toolbar ? (
+        <div className="border-b border-black/8 px-3 py-3">{toolbar}</div>
+      ) : null}
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm tabular-nums">
+          <thead className="text-start">
+            <tr className="border-b border-black/8">
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  className={cn(
+                    'whitespace-nowrap px-4 py-2.5 text-start text-[length:var(--text-caption)] font-medium text-muted-foreground',
+                    col.headerClassName ?? col.className
+                  )}
+                >
+                  {col.label}
+                </th>
+              ))}
             </tr>
-          ) : list?.length ? (
-            list.map((row, idx) => (
-              <tr key={row.id ?? idx} className="border-t border-slate-100 hover:bg-muted/40">
-                {columns.map((col) => (
-                  <td key={col.key} className="px-3 py-2 align-middle">
-                    {col.render ? col.render(row) : row[col.key]}
-                  </td>
-                ))}
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length} className="px-3 py-12 text-center text-muted-foreground">
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"
+                      aria-hidden
+                    />
+                    جاري التحميل…
+                  </span>
+                </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className="px-3 py-8 text-center text-muted-foreground"
-              >
-                {emptyMessage}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            ) : list?.length ? (
+              list.map((row, idx) => (
+                <tr
+                  key={row.id ?? idx}
+                  className="border-t border-black/8 transition-colors hover:bg-[#F0F2F5]"
+                >
+                  {columns.map((col) => (
+                    <td key={col.key} className={cn('px-4 py-2.5 align-middle', col.className)}>
+                      {col.render ? col.render(row) : row[col.key]}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className={cn('px-3 py-10', empty ? 'text-center' : 'text-center text-muted-foreground')}
+                >
+                  {empty ?? emptyMessage}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
       {page && onPageChange ? (
-        <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-3 py-2">
-          <span className="text-xs text-muted-foreground">
+        <div className="flex items-center justify-between gap-3 border-t border-black/8 px-3 py-2">
+          <span className="text-xs tabular-nums text-muted-foreground">
             صفحة {page} من {totalPages}
           </span>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <Button
               type="button"
               variant="outline"
