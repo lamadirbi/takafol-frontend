@@ -9,6 +9,9 @@ import { IconClose } from './Icons';
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+const FIELD =
+  'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), [contenteditable="true"]';
+
 export default function Modal({
   open,
   title,
@@ -21,7 +24,10 @@ export default function Modal({
   const titleId = useId();
   const panelRef = useRef(null);
   const previousFocus = useRef(null);
+  const onCloseRef = useRef(onClose);
   const [mounted, setMounted] = useState(false);
+
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     setMounted(true);
@@ -34,7 +40,7 @@ export default function Modal({
     const panel = panelRef.current;
     const onKey = (e) => {
       if (e.key === 'Escape') {
-        onClose?.();
+        onCloseRef.current?.();
         return;
       }
       if (e.key !== 'Tab' || !panel) return;
@@ -57,8 +63,12 @@ export default function Modal({
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onKey);
 
-    const first = panel?.querySelector(FOCUSABLE);
-    first?.focus();
+    const firstField = panel?.querySelector(FIELD);
+    if (firstField) {
+      firstField.focus();
+    } else {
+      panel?.focus();
+    }
 
     return () => {
       window.removeEventListener('keydown', onKey);
@@ -67,7 +77,7 @@ export default function Modal({
         previousFocus.current.focus();
       }
     };
-  }, [open, onClose, mounted]);
+  }, [open, mounted]);
 
   if (!open || !mounted) return null;
 
@@ -82,16 +92,19 @@ export default function Modal({
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
     >
-      <button
-        type="button"
+      <div
         className="absolute inset-0 bg-[rgba(28,25,21,0.38)]"
-        aria-label="إغلاق"
-        onClick={onClose}
+        aria-hidden="true"
+        onMouseDown={(e) => {
+          e.preventDefault();
+        }}
+        onClick={() => onCloseRef.current?.()}
       />
       <div
         ref={panelRef}
+        tabIndex={-1}
         className={cn(
-          'relative z-10 flex min-h-0 w-full max-w-lg max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-xl border border-black/8 bg-white shadow-lg',
+          'relative z-10 flex min-h-0 w-full max-w-lg max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-xl border border-black/8 bg-white shadow-lg outline-none',
           className
         )}
       >
@@ -107,7 +120,7 @@ export default function Modal({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={onClose}
+            onClick={() => onCloseRef.current?.()}
             className="h-11 w-11 shrink-0 p-0"
             aria-label="إغلاق النافذة"
           >
