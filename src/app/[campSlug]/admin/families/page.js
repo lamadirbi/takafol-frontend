@@ -24,17 +24,17 @@ const AddFamilyModal = dynamic(() => import('@/components/admin/AddFamilyModal')
 });
 
 const EXCEL_COLUMNS = [
-  { label: 'الإسم', required: true, example: 'محمد أحمد خالد' },
-  { label: 'رقم الهوية', required: true, example: '400123456' },
-  { label: 'الجنس', required: false, example: 'ذكر' },
-  { label: 'تاريخ الميلاد', required: false, example: '1985-03-15' },
-  { label: 'الحالة الاجتماعية', required: false, example: 'متزوج' },
-  { label: 'اسم الزوجة رباعي', required: false, example: 'فاطمة علي حسن' },
-  { label: 'رقم هوية الزوجة', required: false, example: '400123457' },
-  { label: 'رقم الموبايل', required: false, example: '0591234567' },
-  { label: 'عدد افراد الاسرة الكلي', required: false, example: '5' },
-  { label: 'العنوان الأصلي- المحافظة', required: false, example: 'غزة' },
-  { label: 'العنوان الأصلي- الحي', required: false, example: 'الشجاعية' },
+  { label: 'الإسم', required: true },
+  { label: 'رقم الهوية', required: true },
+  { label: 'الجنس', required: false },
+  { label: 'تاريخ الميلاد', required: false },
+  { label: 'الحالة الاجتماعية', required: false },
+  { label: 'اسم الزوجة رباعي', required: false },
+  { label: 'رقم هوية الزوجة', required: false },
+  { label: 'رقم الموبايل', required: false },
+  { label: 'عدد افراد الاسرة الكلي', required: false },
+  { label: 'العنوان الأصلي- المحافظة', required: false },
+  { label: 'العنوان الأصلي- الحي', required: false },
 ];
 
 function formatLoginSerial(row) {
@@ -305,8 +305,8 @@ export default function AdminFamiliesPage() {
                 نموذج ملف الإكسل
               </h2>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                هذا الهيكل المعتمد للاستيراد. حمّلي النموذج، استبدلي صفوف المثال ببيانات العائلات، ثم اضغطي
-                «استيراد Excel». الإسم ورقم الهوية إلزاميان. الأطفال يُضافون لاحقاً من صفحة العائلة.
+                الملف النازل فيه أسماء الحقول فقط. عبّي صفوف العائلات ثم اضغطي «استيراد Excel». الإسم ورقم
+                الهوية إلزاميان. الأطفال يُضافون لاحقاً من صفحة العائلة.
               </p>
               <div className="mt-3 overflow-x-auto rounded-lg bg-white">
                 <table className="min-w-full text-start text-xs">
@@ -315,7 +315,7 @@ export default function AdminFamiliesPage() {
                       {EXCEL_COLUMNS.map((col) => (
                         <th
                           key={col.label}
-                          className="whitespace-nowrap px-2.5 py-2 font-medium text-muted-foreground"
+                          className="whitespace-nowrap px-2.5 py-2 font-medium text-foreground"
                         >
                           {col.label}
                           {col.required ? <span className="text-destructive"> *</span> : null}
@@ -323,15 +323,6 @@ export default function AdminFamiliesPage() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr>
-                      {EXCEL_COLUMNS.map((col) => (
-                        <td key={col.label} className="whitespace-nowrap px-2.5 py-2 text-foreground">
-                          {col.example}
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
                 </table>
               </div>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
