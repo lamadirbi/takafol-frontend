@@ -191,9 +191,9 @@ export default function GlobalHomePage() {
         </section>
         ) : (
         <section id="camps" className="scroll-mt-24">
-          <h1 className="text-[length:var(--text-h2)] font-semibold tracking-tight">اختاري مخيمك</h1>
+          <h1 className="text-[length:var(--text-h2)] font-semibold tracking-tight">اختر مخيمك</h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            دخول العائلات أو دخول الإدارة من نفس القائمة. لتسجيل مخيم جديد استخدمي النموذج بالأسفل.
+            دخول العائلات أو دخول الإدارة من نفس القائمة. لتسجيل مخيم جديد استخدم النموذج بالأسفل.
           </p>
           {familyUser && familyCampSlug ? (
             <Link href={`/${familyCampSlug}/family/dashboard`} className="mt-4 inline-flex">
@@ -250,7 +250,7 @@ export default function GlobalHomePage() {
           <section id="register" className="scroll-mt-24 rounded-xl bg-white p-5 shadow-sm md:p-6">
             <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">طلب تسجيل مخيم جديد</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              الحساب مجاني لأسبوعين بعد التفعيل، وبعدها الاشتراك 50 شيكل كل شهر. املئي البيانات وسنتواصل عبر واتساب
+              الحساب مجاني لأسبوعين بعد التفعيل، وبعدها الاشتراك 50 شيكل كل شهر. املأ البيانات وسنتواصل عبر واتساب
               لإنشاء الحساب وإرسال رابط المخيم.
             </p>
             <form onSubmit={handleRequestSubmit} className="mt-5 space-y-4">

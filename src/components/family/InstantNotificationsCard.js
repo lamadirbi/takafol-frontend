@@ -60,7 +60,7 @@ export default function InstantNotificationsCard() {
         window.location.href = href;
       }
     } catch (err) {
-      setMsg(getApiErrorMessage(err, 'تعذر فتح تطبيق ntfy. ثبّتيه من المتجر ثم أعيدي الربط.'));
+      setMsg(getApiErrorMessage(err, 'تعذر فتح تطبيق ntfy. ثبّته من المتجر ثم أعد الربط.'));
     } finally {
       setBusy(false);
     }
@@ -72,7 +72,7 @@ export default function InstantNotificationsCard() {
     try {
       const { data } = await api.post('/push/instant-channel/unlink');
       setChannel(data);
-      setMsg('تم فك الربط. الإشعارات توقفت إلى أن تربطي التطبيق مرة ثانية.');
+      setMsg('تم فك الربط. الإشعارات توقفت إلى أن تربط التطبيق مرة ثانية.');
     } catch (err) {
       setMsg(getApiErrorMessage(err, 'تعذر فك الربط.'));
     } finally {
@@ -133,7 +133,7 @@ export default function InstantNotificationsCard() {
       <h2 className="text-lg font-bold text-foreground">إشعارات الطرود</h2>
       <p className="mt-1 text-sm text-foreground">
         الإشعار بيوصل حصراً من تطبيق <strong>ntfy</strong> المثبّت على الجوال، مش من المتصفح ولا من موقع ntfy.
-        ثبّتي التطبيق ثم اضغطي ربط الحساب حتى ينفتح التطبيق مباشرة.
+        ثبّت التطبيق ثم اضغط ربط الحساب حتى ينفتح التطبيق مباشرة.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         {store !== 'ios' ? (

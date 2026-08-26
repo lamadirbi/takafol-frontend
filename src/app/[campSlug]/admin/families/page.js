@@ -305,7 +305,7 @@ export default function AdminFamiliesPage() {
                 نموذج ملف الإكسل
               </h2>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                الملف النازل فيه أسماء الحقول فقط. عبّي صفوف العائلات ثم اضغطي «استيراد Excel». الإسم ورقم
+                الملف النازل فيه أسماء الحقول فقط. املأ صفوف العائلات ثم اضغط «استيراد Excel». الإسم ورقم
                 الهوية إلزاميان. الأطفال يُضافون لاحقاً من صفحة العائلة.
               </p>
               <div className="mt-3 overflow-x-auto rounded-lg bg-white">

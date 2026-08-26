@@ -61,13 +61,13 @@ async function registerWorker() {
   const isLocalhost =
     window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   if (window.location.protocol !== 'https:' && !isLocalhost) {
-    throw new Error('افتحي الموقع على HTTPS حتى تشتغل الإشعارات.');
+    throw new Error('افتح الموقع على HTTPS حتى تشتغل الإشعارات.');
   }
 
   try {
     await navigator.serviceWorker.register('/sw.js', { scope: '/' });
   } catch {
-    throw new Error('تعذر تجهيز الإشعارات. حدّثي الصفحة ثم أعيدي المحاولة.');
+    throw new Error('تعذر تجهيز الإشعارات. حدّث الصفحة ثم أعد المحاولة.');
   }
 
   return navigator.serviceWorker.ready;
@@ -82,7 +82,7 @@ async function saveSubscription(sub) {
       e?.response?.data?.message ||
       (typeof e?.response?.data === 'string' ? e.response.data : '') ||
       '';
-    if (status === 401) throw new Error('سجّلي دخولك قبل تفعيل الإشعارات.');
+    if (status === 401) throw new Error('سجّل دخولك قبل تفعيل الإشعارات.');
     if (msg) throw new Error(`تعذر حفظ الاشتراك: ${msg}`);
     throw new Error('تعذر حفظ الاشتراك على السيرفر.');
   }
@@ -105,10 +105,10 @@ async function createSubscription(reg, publicKey) {
   } catch (e) {
     const name = e?.name ? String(e.name) : '';
     if (name === 'NotAllowedError') {
-      throw new Error('المتصفح منع الإشعارات. من إعدادات الموقع اسمحي بالإشعارات ثم أعيدي المحاولة.');
+      throw new Error('المتصفح منع الإشعارات. من إعدادات الموقع اسمح بالإشعارات ثم أعد المحاولة.');
     }
     if (name === 'SecurityError') {
-      throw new Error('افتحي الموقع على HTTPS حتى تشتغل الإشعارات.');
+      throw new Error('افتح الموقع على HTTPS حتى تشتغل الإشعارات.');
     }
     throw new Error(e?.message || 'تعذر تفعيل إشعارات هذا الجهاز.');
   }
