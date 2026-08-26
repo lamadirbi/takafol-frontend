@@ -40,14 +40,35 @@ function FooterLink({ href, children, external = false }) {
   );
 }
 
-export default function Footer() {
+export default function Footer({ compact = false }) {
   const { camp } = useCamp() || {};
   const { familyUser, adminUser } = useAuth();
-  const campName = camp?.name || 'تَكافل';
+  const campName = camp?.name || '';
   const base = camp?.slug ? `/${camp.slug}` : '';
   const year = new Date().getFullYear();
   const supportHref = `https://wa.me/${waMeNumber(SUPPORT_WA)}`;
   const showAllCamps = isGlobalSuperAdmin(adminUser);
+
+  if (compact) {
+    return (
+      <footer className="mt-auto shrink-0 border-t border-black/8 bg-white" dir="rtl">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>© {year} تَكافل</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <a href={supportHref} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+              واتساب
+            </a>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-primary" dir="ltr">
+              {SUPPORT_EMAIL}
+            </a>
+            <Link href="/super-admin/login" className="hover:text-primary">
+              الإدارة العليا
+            </Link>
+          </div>
+        </div>
+      </footer>
+    );
+  }
 
   const navLinks = camp?.slug
     ? [
@@ -71,7 +92,7 @@ export default function Footer() {
           <Link href="/" className="inline-block">
             <CampLogo height={40} width={140} className="max-h-10 max-w-[9rem] object-contain" />
           </Link>
-          <p className="mt-3 text-sm font-semibold text-foreground">{campName}</p>
+          <p className="mt-3 text-sm font-semibold text-foreground">{campName || 'تَكافل'}</p>
           <p className="mt-1 max-w-sm text-sm leading-relaxed text-muted-foreground">
             سجل العائلات وتوزيع الطرود بين اللجنة والأسر، بكرامة وشفافية.
           </p>

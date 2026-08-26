@@ -1,12 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { isGlobalSuperAdmin } from '@/lib/authSession';
-import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 import InstallPwaButton from '@/components/ui/InstallPwaButton';
 import {
@@ -55,26 +53,12 @@ export default function PublicNav({ onNavigate, onClose }) {
 
   const isHome = pathname === homeHref || pathname === '/';
   const isNews = pathname === '/news' || pathname?.endsWith('/news');
-  const brandName = camp?.name || 'تَكافل';
-  const brandLogo = camp?.logo_path || DEFAULT_BRAND_LOGO;
 
   return (
     <div className="flex h-full min-h-0 flex-col px-3 py-4" dir="rtl">
       {onClose ? (
         <div className="mb-3 flex items-center justify-between gap-2">
-          <Link href="/" onClick={onNavigate} className="flex min-w-0 items-center gap-2">
-            <Image
-              src={brandLogo}
-              alt=""
-              width={40}
-              height={40}
-              className="h-10 w-10 rounded-full border border-black/10 bg-white object-contain"
-            />
-            <div className="min-w-0">
-              <p className="truncate text-[15px] font-bold text-primary">تَكافل</p>
-              <p className="truncate text-xs text-[#65676B]">{brandName}</p>
-            </div>
-          </Link>
+          <p className="px-2 text-sm font-semibold text-[#65676B]">القائمة</p>
           <button
             type="button"
             onClick={onClose}
@@ -96,11 +80,17 @@ export default function PublicNav({ onNavigate, onClose }) {
           </Link>
           {!camp?.slug ? (
             <>
+              <Link href="/#camps" onClick={onNavigate} className={itemClass(false)}>
+                <IconWell>
+                  <IconShield className="h-5 w-5" />
+                </IconWell>
+                دخول الإدارة
+              </Link>
               <Link href="/#register" onClick={onNavigate} className={itemClass(false)}>
                 <IconWell>
                   <IconClipboard className="h-5 w-5" />
                 </IconWell>
-                طلب تسجيل مخيم
+                تسجيل مخيم
               </Link>
             </>
           ) : null}

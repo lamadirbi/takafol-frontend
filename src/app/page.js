@@ -190,35 +190,23 @@ export default function GlobalHomePage() {
           )}
         </section>
         ) : (
-        <section id="camps">
-          <h1 className="text-[length:var(--text-h2)] font-semibold tracking-tight">تَكافل</h1>
+        <section id="camps" className="scroll-mt-24">
+          <h1 className="text-[length:var(--text-h2)] font-semibold tracking-tight">اختاري مخيمك</h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            منصة سجل العائلات وتوزيع المساعدات. اختاري مخيمك للدخول، أو سجّلي مخيماً جديداً من الطلب أدناه.
+            دخول العائلات أو دخول الإدارة من نفس القائمة. لتسجيل مخيم جديد استخدمي النموذج بالأسفل.
           </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            {familyUser && familyCampSlug ? (
-              <Link href={`/${familyCampSlug}/family/dashboard`}>
-                <Button type="button">حسابي</Button>
-              </Link>
-            ) : null}
-            {adminUser && !isSuper && adminCampSlug ? (
-              <Link href={`/${adminCampSlug}/admin/dashboard`}>
-                <Button type="button" variant={familyUser ? 'outline' : 'primary'}>
-                  لوحة الإدارة
-                </Button>
-              </Link>
-            ) : null}
-            <a href="#register">
-              <Button type="button" variant={familyUser || (adminUser && !isSuper) ? 'outline' : 'primary'}>
-                طلب تسجيل مخيم
+          {familyUser && familyCampSlug ? (
+            <Link href={`/${familyCampSlug}/family/dashboard`} className="mt-4 inline-flex">
+              <Button type="button">حسابي</Button>
+            </Link>
+          ) : null}
+          {adminUser && !isSuper && adminCampSlug ? (
+            <Link href={`/${adminCampSlug}/admin/dashboard`} className="mt-4 ms-2 inline-flex">
+              <Button type="button" variant={familyUser ? 'outline' : 'primary'}>
+                لوحة الإدارة
               </Button>
-            </a>
-            <a href="#contact">
-              <Button type="button" variant="outline">
-                تواصل
-              </Button>
-            </a>
-          </div>
+            </Link>
+          ) : null}
           {loading ? (
             <div className="flex justify-center py-10">
               <Spinner className="h-10 w-10 text-primary" label="جاري تحميل المخيمات" />
@@ -230,16 +218,28 @@ export default function GlobalHomePage() {
           ) : filteredCamps.length === 0 ? (
             <p className="mt-6 text-sm text-muted-foreground">لا توجد مخيمات مفعلة حالياً. يمكنك طلب تسجيل مخيم من النموذج أدناه.</p>
           ) : (
-            <div className="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
+            <div className="mt-5 overflow-hidden rounded-xl bg-white shadow-sm">
               {filteredCamps.map((camp, i) => (
-                <Link
+                <div
                   key={camp.id}
-                  href={`/${camp.slug}`}
-                  className={`flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#F0F2F5] ${i > 0 ? 'border-t border-black/8' : ''}`}
+                  className={`flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${i > 0 ? 'border-t border-black/8' : ''}`}
                 >
-                  <span className="font-semibold text-foreground">{camp.name}</span>
-                  <span className="text-sm font-semibold text-primary">دخول</span>
-                </Link>
+                  <p className="min-w-0 font-semibold text-foreground">{camp.name}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={`/${camp.slug}/login`}
+                      className="inline-flex min-h-10 items-center rounded-lg bg-[#E4E6EB] px-3 text-sm font-semibold text-foreground hover:bg-[#d8dadf]"
+                    >
+                      دخول العائلات
+                    </Link>
+                    <Link
+                      href={`/${camp.slug}/login/admin`}
+                      className="inline-flex min-h-10 items-center rounded-lg bg-primary px-3 text-sm font-semibold text-white hover:brightness-95"
+                    >
+                      دخول الإدارة
+                    </Link>
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -329,7 +329,7 @@ export default function GlobalHomePage() {
         </div>
       </main>
 
-      <Footer />
+      <Footer compact />
     </PublicShell>
   );
 }

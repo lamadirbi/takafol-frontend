@@ -23,8 +23,8 @@ export default function PublicShell({ children }) {
   const adminSlug = camp?.slug || getAuthCampSlug(REALM_ADMIN);
   const showFamilyMenu = Boolean(familyUser);
   const showAdminMenu = Boolean(adminUser && !isGlobalSuperAdmin(adminUser) && adminUser.camp_id != null);
-  const brandName = camp?.name || 'تَكافل';
   const brandLogo = camp?.logo_path || DEFAULT_BRAND_LOGO;
+  const isGlobalHome = pathname === '/';
 
   useEffect(() => {
     setOpen(false);
@@ -64,32 +64,25 @@ export default function PublicShell({ children }) {
               height={40}
               className="h-10 w-10 rounded-full border border-black/10 bg-white object-contain"
             />
-            <div className="min-w-0">
-              <p className="truncate text-[15px] font-bold text-primary">تَكافل</p>
-              <p className="truncate text-xs text-[#65676B]">{brandName}</p>
-            </div>
+            <p className="truncate text-[15px] font-bold text-primary">
+              {camp?.name || 'تَكافل'}
+            </p>
           </Link>
           <div className="ms-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto">
             {pathname === '/' ? (
               <>
                 <a
-                  href="#register"
+                  href="#camps"
                   className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-primary px-2.5 text-xs font-semibold text-white hover:brightness-95 sm:px-3 sm:text-sm"
                 >
-                  التسجيل
+                  دخول الإدارة
                 </a>
                 <a
-                  href="#contact"
+                  href="#register"
                   className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm"
                 >
-                  تواصل
+                  تسجيل مخيم
                 </a>
-                <Link
-                  href="/super-admin/login"
-                  className="hidden min-h-10 shrink-0 items-center rounded-lg px-3 text-sm font-semibold text-muted-foreground hover:text-foreground sm:inline-flex"
-                >
-                  الإدارة العليا
-                </Link>
               </>
             ) : null}
             <InstallPwaButton variant="header" />
@@ -127,9 +120,11 @@ export default function PublicShell({ children }) {
       ) : null}
 
       <div className="mx-auto flex w-full max-w-[1280px] flex-1">
-        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 overflow-y-auto md:flex md:flex-col">
-          <PublicNav />
-        </aside>
+        {isGlobalHome ? null : (
+          <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 overflow-y-auto md:flex md:flex-col">
+            <PublicNav />
+          </aside>
+        )}
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>
       </div>
     </div>
