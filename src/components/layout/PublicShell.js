@@ -70,20 +70,12 @@ export default function PublicShell({ children }) {
           </Link>
           <div className="ms-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto">
             {pathname === '/' ? (
-              <>
-                <a
-                  href="#camps"
-                  className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-primary px-2.5 text-xs font-semibold text-white hover:brightness-95 sm:px-3 sm:text-sm"
-                >
-                  دخول الإدارة
-                </a>
-                <a
-                  href="#register"
-                  className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm"
-                >
-                  تسجيل مخيم
-                </a>
-              </>
+              <a
+                href="#register"
+                className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm"
+              >
+                تسجيل مخيم
+              </a>
             ) : null}
             <InstallPwaButton variant="header" />
             {showFamilyMenu ? (
