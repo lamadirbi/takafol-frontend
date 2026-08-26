@@ -62,7 +62,7 @@ export default function PublicNav({ onNavigate, onClose }) {
     <div className="flex h-full min-h-0 flex-col px-3 py-4" dir="rtl">
       {onClose ? (
         <div className="mb-3 flex items-center justify-between gap-2">
-          <Link href={homeHref} onClick={onNavigate} className="flex min-w-0 items-center gap-2">
+          <Link href="/" onClick={onNavigate} className="flex min-w-0 items-center gap-2">
             <Image
               src={brandLogo}
               alt=""
@@ -101,12 +101,6 @@ export default function PublicNav({ onNavigate, onClose }) {
                   <IconClipboard className="h-5 w-5" />
                 </IconWell>
                 طلب تسجيل مخيم
-              </Link>
-              <Link href="/#payment" onClick={onNavigate} className={itemClass(false)}>
-                <IconWell>
-                  <IconMegaphone className="h-5 w-5" />
-                </IconWell>
-                الدفع
               </Link>
             </>
           ) : null}

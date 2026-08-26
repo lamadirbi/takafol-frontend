@@ -151,7 +151,9 @@ export default function InstallPwaButton({ className, variant = 'button', onClic
           'inline-flex min-h-11 items-center outline-none transition-[background-color,border-color,color] duration-(--duration-ui) ease-(--ease-out)',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
           'disabled:pointer-events-none disabled:opacity-70',
-          variant === 'nav'
+          variant === 'header'
+            ? 'min-h-10 shrink-0 rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm'
+            : variant === 'nav'
             ? 'w-full justify-start gap-3 rounded-xl border-0 bg-transparent px-2 py-2 text-sm hover:bg-black/5'
             : 'rounded-lg border-0 bg-[#E4E6EB] px-3 py-2 text-sm font-medium text-foreground hover:bg-[#d8dadf]',
           !hasDeferredPrompt && !showForIOS ? 'opacity-90' : null,
@@ -165,7 +167,7 @@ export default function InstallPwaButton({ className, variant = 'button', onClic
             <IconDownload className="h-5 w-5" />
           </span>
         ) : null}
-        {installing ? 'جاري فتح التثبيت…' : 'تثبيت الموقع'}
+        {installing ? 'جاري فتح التثبيت…' : variant === 'header' ? 'تثبيت' : 'تثبيت الموقع'}
       </button>
       {hint ? (
         <div className="fixed inset-x-4 bottom-4 z-60 mx-auto max-w-2xl rounded-[var(--radius-card)] border border-border bg-card px-4 py-3 text-sm text-foreground">

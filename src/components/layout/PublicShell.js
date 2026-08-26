@@ -5,15 +5,24 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useCamp } from '@/context/CampContext';
+import { useAuth } from '@/hooks/useAuth';
+import { REALM_ADMIN, REALM_FAMILY, getAuthCampSlug, isGlobalSuperAdmin } from '@/lib/authSession';
 import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
 import PublicNav from '@/components/layout/PublicNav';
+import InstallPwaButton from '@/components/ui/InstallPwaButton';
+import AccountMenu from '@/components/ui/AccountMenu';
 import { IconMenu } from '@/components/ui/Icons';
 
 export default function PublicShell({ children }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { camp } = useCamp() || {};
-  const homeHref = camp?.slug ? `/${camp.slug}` : '/';
+  const { familyUser, adminUser, logoutFamily, logoutAdmin } = useAuth();
+  const homeHref = '/';
+  const familySlug = camp?.slug || getAuthCampSlug(REALM_FAMILY);
+  const adminSlug = camp?.slug || getAuthCampSlug(REALM_ADMIN);
+  const showFamilyMenu = Boolean(familyUser);
+  const showAdminMenu = Boolean(adminUser && !isGlobalSuperAdmin(adminUser) && adminUser.camp_id != null);
   const brandName = camp?.name || 'تَكافل';
   const brandLogo = camp?.logo_path || DEFAULT_BRAND_LOGO;
 
@@ -60,34 +69,46 @@ export default function PublicShell({ children }) {
               <p className="truncate text-xs text-[#65676B]">{brandName}</p>
             </div>
           </Link>
-          {pathname === '/' ? (
-            <div className="ms-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto">
-              <a
-                href="#register"
-                className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-primary px-2.5 text-xs font-semibold text-white hover:brightness-95 sm:px-3 sm:text-sm"
-              >
-                التسجيل
-              </a>
-              <a
-                href="#payment"
-                className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm"
-              >
-                الدفع
-              </a>
-              <a
-                href="#contact"
-                className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm"
-              >
-                تواصل
-              </a>
-              <Link
-                href="/super-admin/login"
-                className="hidden min-h-10 shrink-0 items-center rounded-lg px-3 text-sm font-semibold text-muted-foreground hover:text-foreground sm:inline-flex"
-              >
-                الإدارة العليا
-              </Link>
-            </div>
-          ) : null}
+          <div className="ms-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto">
+            {pathname === '/' ? (
+              <>
+                <a
+                  href="#register"
+                  className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-primary px-2.5 text-xs font-semibold text-white hover:brightness-95 sm:px-3 sm:text-sm"
+                >
+                  التسجيل
+                </a>
+                <a
+                  href="#contact"
+                  className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm"
+                >
+                  تواصل
+                </a>
+                <Link
+                  href="/super-admin/login"
+                  className="hidden min-h-10 shrink-0 items-center rounded-lg px-3 text-sm font-semibold text-muted-foreground hover:text-foreground sm:inline-flex"
+                >
+                  الإدارة العليا
+                </Link>
+              </>
+            ) : null}
+            <InstallPwaButton variant="header" />
+            {showFamilyMenu ? (
+              <AccountMenu
+                name={familyUser.name}
+                profileHref={familySlug ? `/${familySlug}/family/dashboard` : '/'}
+                profileLabel="حسابي"
+                onLogout={() => logoutFamily(familySlug ? `/${familySlug}/login` : '/')}
+              />
+            ) : showAdminMenu ? (
+              <AccountMenu
+                name={adminUser.name}
+                profileHref={adminSlug ? `/${adminSlug}/admin/dashboard` : '/'}
+                profileLabel="لوحة الإدارة"
+                onLogout={() => logoutAdmin(adminSlug ? `/${adminSlug}/login/admin` : '/')}
+              />
+            ) : null}
+          </div>
         </div>
       </header>
 

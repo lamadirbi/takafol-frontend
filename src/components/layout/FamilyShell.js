@@ -9,6 +9,9 @@ import { useFamilyFeed } from '@/context/FamilyFeedContext';
 import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 import LogoutButton from '@/components/ui/LogoutButton';
+import BackButton from '@/components/ui/BackButton';
+import AccountMenu from '@/components/ui/AccountMenu';
+import InstallPwaButton from '@/components/ui/InstallPwaButton';
 import FamilyMobileNav from '@/components/layout/FamilyMobileNav';
 import {
   IconHome,
@@ -111,19 +114,22 @@ export default function FamilyShell({
     <div className="flex min-h-dvh flex-col bg-[#F0F2F5]">
       <header className="sticky top-0 z-40 border-b border-black/8 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
         <div className="mx-auto flex h-14 max-w-[1280px] items-center justify-between gap-3 px-3" dir="rtl">
-          <Link href={newsHref} className="flex min-w-0 items-center gap-2">
-            <Image
-              src={camp?.logo_path || DEFAULT_BRAND_LOGO}
-              alt=""
-              width={40}
-              height={40}
-              className="h-10 w-10 rounded-full border border-black/10 bg-white object-contain"
-            />
-            <div className="hidden min-w-0 sm:block">
-              <p className="truncate text-[15px] font-bold text-primary">تَكافل</p>
-              <p className="truncate text-xs text-[#65676B]">{subtitle || brandName}</p>
-            </div>
-          </Link>
+          <div className="flex min-w-0 items-center gap-2">
+            <BackButton fallbackHref={dashHref} className="h-10 w-10 rounded-full border-0 bg-[#E4E6EB]" />
+            <Link href="/" className="flex min-w-0 items-center gap-2">
+              <Image
+                src={camp?.logo_path || DEFAULT_BRAND_LOGO}
+                alt=""
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-full border border-black/10 bg-white object-contain"
+              />
+              <div className="hidden min-w-0 sm:block">
+                <p className="truncate text-[15px] font-bold text-primary">تَكافل</p>
+                <p className="truncate text-xs text-[#65676B]">{subtitle || brandName}</p>
+              </div>
+            </Link>
+          </div>
 
           <nav className="hidden items-center md:flex" aria-label="التنقل الرئيسي">
             <TopTab href={newsHref} active={onNews} label="الرئيسية">
@@ -138,13 +144,13 @@ export default function FamilyShell({
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link
-              href={dashHref}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-white"
-              aria-label="ملفي"
-            >
-              {initials(displayName)}
-            </Link>
+            <InstallPwaButton variant="header" />
+            <AccountMenu
+              name={displayName}
+              profileHref={dashHref}
+              profileLabel="حسابي"
+              onLogout={() => logoutFamily(`/${campSlug}/login`)}
+            />
           </div>
         </div>
       </header>

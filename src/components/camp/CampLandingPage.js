@@ -12,14 +12,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
 import { IconBuilding, IconUsers, IconChat } from '@/components/ui/Icons';
 
-const PAYMENT_METHODS = [
-  {
-    method: 'محفظة بال باي',
-    number: '0592533678',
-    name: 'لما أحمد الدربي',
-  },
-];
-
 const FEATURES = [
   {
     title: 'تنظيم وتوزيع',
@@ -146,22 +138,6 @@ export default function CampLandingPage({ compact = false }) {
             <HomePillarsStrip />
           </div>
         </details>
-
-        <section id="payment" className="mt-8 rounded-xl bg-white p-4 shadow-sm">
-          <h2 className="text-sm font-semibold">وسائل الدفع</h2>
-          <p className="mt-1 text-sm text-muted-foreground">يمكن إرسال إشعار الدفع عبر الطرق التالية:</p>
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
-            {PAYMENT_METHODS.map((item) => (
-              <div key={item.method} className="rounded-lg bg-[#F0F2F5] p-3 text-sm">
-                <p className="font-medium">{item.method}</p>
-                <p className="mt-0.5 tabular-nums text-muted-foreground" dir="ltr">
-                  {item.number}
-                </p>
-                <p className="text-muted-foreground">الاسم: {item.name}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
     </div>
   );

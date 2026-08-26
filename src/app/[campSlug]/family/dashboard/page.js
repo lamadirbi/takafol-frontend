@@ -4,7 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import FamilyShell from '@/components/layout/FamilyShell';
-import LogoutButton from '@/components/ui/LogoutButton';
 import EmptyState, { PageSpinner } from '@/components/ui/EmptyState';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -54,7 +53,7 @@ function initials(name) {
 export default function FamilyDashboardPage() {
   const { campSlug } = useParams();
   const { camp } = useCamp() || {};
-  const { familyUser, logoutFamily } = useAuth();
+  const { familyUser } = useAuth();
   const sub = familyUser?.subscription;
   const inGrace = Boolean(sub?.in_grace);
   const monthlyAmount = sub?.monthly_amount_ils ?? 50;
@@ -237,13 +236,6 @@ export default function FamilyDashboardPage() {
             )}
           </section>
         </div>
-      </div>
-
-      <div className="mt-4 lg:hidden">
-        <LogoutButton
-          className="w-full rounded-xl"
-          onLogout={() => logoutFamily(`/${campSlug}/login`)}
-        />
       </div>
     </FamilyShell>
   );

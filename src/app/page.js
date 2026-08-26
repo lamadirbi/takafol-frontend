@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { getApiErrorMessage } from '@/lib/utils';
 import PublicShell from '@/components/layout/PublicShell';
@@ -23,23 +22,17 @@ import {
 
 const SUPPORT_WA =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP) || '970592533678';
-const PAYMENT_METHODS = [
-  {
-    method: 'محفظة بال باي',
-    number: '0592533678',
-    name: 'لما أحمد الدربي',
-  },
-];
 
 function waDigits(s) {
   return String(s || '').replace(/\D/g, '');
 }
 
 export default function GlobalHomePage() {
-  const router = useRouter();
   const { adminUser, familyUser, adminLoading, familyLoading } = useAuth();
   const isSuper = isGlobalSuperAdmin(adminUser);
   const authReady = !adminLoading && !familyLoading;
+  const familyCampSlug = getAuthCampSlug(REALM_FAMILY);
+  const adminCampSlug = getAuthCampSlug(REALM_ADMIN);
 
   const [camps, setCamps] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,22 +50,7 @@ export default function GlobalHomePage() {
   const [formErr, setFormErr] = useState('');
 
   useEffect(() => {
-    if (!authReady) return;
-    if (isSuper) return;
-    const slug = getAuthCampSlug(REALM_FAMILY) || getAuthCampSlug(REALM_ADMIN);
-    if (slug) router.replace(`/${slug}`);
-  }, [authReady, isSuper, familyUser, adminUser, router]);
-
-  useEffect(() => {
     if (!authReady) return undefined;
-    if (!isSuper) {
-      const slug = getAuthCampSlug(REALM_FAMILY) || getAuthCampSlug(REALM_ADMIN);
-      if (slug) {
-        setCamps([]);
-        setLoading(false);
-        return undefined;
-      }
-    }
     const fetchCamps = async () => {
       setLoading(true);
       try {
@@ -87,7 +65,7 @@ export default function GlobalHomePage() {
     };
 
     fetchCamps();
-  }, [authReady, isSuper]);
+  }, [authReady]);
 
   async function handleRequestSubmit(e) {
     e.preventDefault();
@@ -102,7 +80,7 @@ export default function GlobalHomePage() {
         message: form.message.trim() || undefined,
       });
       setFormMsg(
-        'تم إرسال طلبك. عند تفعيل مخيمك يُفتح الحساب لمدة 14 يوماً لإضافة العائلات واستخدام المنصة. بعد ذلك يظهر عدّاد تجديد الاشتراك في لوحة إدارة المخيم.'
+        'تم إرسال طلبك. الحساب مجاني لأسبوعين بعد التفعيل، وبعدها الاشتراك 50 شيكل كل شهر.'
       );
       setForm({
         applicant_name: '',
@@ -135,11 +113,6 @@ export default function GlobalHomePage() {
               <div className="mt-4 flex flex-wrap gap-2">
                 <a href="#register">
                   <Button type="button">طلب تسجيل مخيم</Button>
-                </a>
-                <a href="#payment">
-                  <Button type="button" variant="outline">
-                    الدفع
-                  </Button>
                 </a>
                 <a href="#contact">
                   <Button type="button" variant="outline">
@@ -223,12 +196,21 @@ export default function GlobalHomePage() {
             منصة سجل العائلات وتوزيع المساعدات. اختاري مخيمك للدخول، أو سجّلي مخيماً جديداً من الطلب أدناه.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
+            {familyUser && familyCampSlug ? (
+              <Link href={`/${familyCampSlug}/family/dashboard`}>
+                <Button type="button">حسابي</Button>
+              </Link>
+            ) : null}
+            {adminUser && !isSuper && adminCampSlug ? (
+              <Link href={`/${adminCampSlug}/admin/dashboard`}>
+                <Button type="button" variant={familyUser ? 'outline' : 'primary'}>
+                  لوحة الإدارة
+                </Button>
+              </Link>
+            ) : null}
             <a href="#register">
-              <Button type="button">طلب تسجيل مخيم</Button>
-            </a>
-            <a href="#payment">
-              <Button type="button" variant="outline">
-                الدفع
+              <Button type="button" variant={familyUser || (adminUser && !isSuper) ? 'outline' : 'primary'}>
+                طلب تسجيل مخيم
               </Button>
             </a>
             <a href="#contact">
@@ -268,7 +250,8 @@ export default function GlobalHomePage() {
           <section id="register" className="scroll-mt-24 rounded-xl bg-white p-5 shadow-sm md:p-6">
             <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">طلب تسجيل مخيم جديد</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              املأ البيانات وسنتواصل معك عبر واتساب لإنشاء الحساب وإرسال رابط المخيم بعد التجهيز.
+              الحساب مجاني لأسبوعين بعد التفعيل، وبعدها الاشتراك 50 شيكل كل شهر. املئي البيانات وسنتواصل عبر واتساب
+              لإنشاء الحساب وإرسال رابط المخيم.
             </p>
             <form onSubmit={handleRequestSubmit} className="mt-5 space-y-4">
               {formErr ? (
@@ -344,22 +327,6 @@ export default function GlobalHomePage() {
             </p>
           </section>
         </div>
-
-        <section id="payment" className="mt-8 scroll-mt-24 rounded-xl bg-white p-5 shadow-sm md:p-6" dir="rtl">
-          <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">وسائل الدفع</h2>
-          <p className="mt-1 text-sm text-muted-foreground">يمكن إرسال إشعار الدفع عبر الطرق التالية:</p>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {PAYMENT_METHODS.map((item) => (
-              <div key={item.method} className="rounded-lg bg-[#F0F2F5] p-4 text-sm">
-                <p className="font-medium text-foreground">{item.method}</p>
-                <p className="mt-0.5 tabular-nums text-muted-foreground" dir="ltr">
-                  {item.number}
-                </p>
-                <p className="text-muted-foreground">الاسم: {item.name}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
 
       <Footer />

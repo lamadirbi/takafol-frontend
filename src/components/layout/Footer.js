@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { isGlobalSuperAdmin } from '@/lib/authSession';
 import { IconMail, IconWhatsApp } from '@/components/ui/Icons';
 
-const SUPPORT_EMAIL = 'radartech85@gmail.com';
+const SUPPORT_EMAIL = 'lamaadirbi@gmail.com';
 const SUPPORT_WA = '0592533678';
 
 function waDigits(s) {
@@ -60,7 +60,6 @@ export default function Footer() {
       ]
     : [
         { href: '/#register', label: 'طلب تسجيل مخيم' },
-        { href: '/#payment', label: 'الدفع' },
         ...(showAllCamps ? [{ href: '/', label: 'كل المخيمات' }] : []),
       ];
 
@@ -69,7 +68,9 @@ export default function Footer() {
 
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:grid-cols-2 lg:grid-cols-3">
         <div className="sm:col-span-2 lg:col-span-1">
-          <CampLogo height={40} width={140} className="max-h-10 max-w-[9rem] object-contain" />
+          <Link href="/" className="inline-block">
+            <CampLogo height={40} width={140} className="max-h-10 max-w-[9rem] object-contain" />
+          </Link>
           <p className="mt-3 text-sm font-semibold text-foreground">{campName}</p>
           <p className="mt-1 max-w-sm text-sm leading-relaxed text-muted-foreground">
             سجل العائلات وتوزيع الطرود بين اللجنة والأسر، بكرامة وشفافية.

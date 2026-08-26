@@ -59,7 +59,9 @@ export default function AdminLoginPage() {
       </div>
 
       <div className="w-full max-w-md rounded-xl bg-white px-6 py-7 shadow-md md:px-8">
-        <p className="text-xs font-bold text-primary">تَكافل</p>
+        <Link href="/" className="inline-block">
+          <p className="text-xs font-bold text-primary">تَكافل</p>
+        </Link>
         <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground">
           دخول الإدارة
         </h1>

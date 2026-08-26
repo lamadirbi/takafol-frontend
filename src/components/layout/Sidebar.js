@@ -69,7 +69,9 @@ export default function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col overflow-y-auto px-3 py-4 md:flex">
       <div className="mb-3 px-2">
-        <p className="text-[15px] font-bold text-primary">تَكافل</p>
+        <Link href="/" className="block">
+          <p className="text-[15px] font-bold text-primary">تَكافل</p>
+        </Link>
         <p className="text-sm font-semibold text-foreground">لوحة الإدارة</p>
       </div>
       <nav className="flex flex-1 flex-col" dir="rtl">

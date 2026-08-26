@@ -74,17 +74,19 @@ export default function FamilyLoginPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-[#F0F2F5] px-4 py-10" dir="rtl">
       <div className="mb-6 flex flex-col items-center text-center">
-        <div className="mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-black/10 bg-white shadow-sm">
-          <Image
-            src={camp?.logo_path || DEFAULT_BRAND_LOGO}
-            alt={camp?.name || 'تَكافل'}
-            width={64}
-            height={64}
-            className="h-full w-full object-contain"
-            priority
-          />
-        </div>
-        <p className="text-3xl font-bold text-primary">تَكافل</p>
+        <Link href="/" className="mb-3 flex flex-col items-center">
+          <div className="mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-black/10 bg-white shadow-sm">
+            <Image
+              src={camp?.logo_path || DEFAULT_BRAND_LOGO}
+              alt={camp?.name || 'تَكافل'}
+              width={64}
+              height={64}
+              className="h-full w-full object-contain"
+              priority
+            />
+          </div>
+          <p className="text-3xl font-bold text-primary">تَكافل</p>
+        </Link>
         <p className="mt-1 text-sm text-[#65676B]">{camp?.name || 'دخول العائلات'}</p>
       </div>
 
