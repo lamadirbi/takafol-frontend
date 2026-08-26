@@ -34,58 +34,15 @@ function connectHref(channel) {
 }
 
 export default function InstantNotificationsCard() {
-  const [status, setStatus] = useState('checking');
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState('');
-  const [iosNeedsInstall, setIosNeedsInstall] = useState(false);
   const [channel, setChannel] = useState(null);
-  const [ntfyOpen, setNtfyOpen] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [testMsg, setTestMsg] = useState('');
+  const [browserStatus, setBrowserStatus] = useState('idle');
+  const [browserBusy, setBrowserBusy] = useState(false);
+  const [browserMsg, setBrowserMsg] = useState('');
   const store = useMemo(() => preferredStore(), []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      if (!pushSupported()) {
-        if (!cancelled) setStatus('unsupported');
-        return;
-      }
-      if (isIosDevice() && !isStandalonePwa()) {
-        if (!cancelled) {
-          setIosNeedsInstall(true);
-          setStatus('off');
-        }
-        return;
-      }
-
-      const perm = notificationPermission();
-      if (perm === 'denied') {
-        if (!cancelled) setStatus('blocked');
-        return;
-      }
-      if (perm === 'granted') {
-        try {
-          await ensurePush();
-          if (!cancelled) {
-            setStatus('on');
-            setMsg('الإشعارات شغّالة على هذا الجهاز.');
-          }
-        } catch {
-          if (!cancelled) setStatus('off');
-        }
-        return;
-      }
-      if (!cancelled) setStatus('off');
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!ntfyOpen || channel) return;
     let cancelled = false;
     (async () => {
       try {
@@ -103,45 +60,74 @@ export default function InstantNotificationsCard() {
     return () => {
       cancelled = true;
     };
-  }, [ntfyOpen, channel]);
+  }, []);
 
-  async function turnOn() {
-    setBusy(true);
-    setMsg('');
-    try {
-      await enablePush();
-      setStatus('on');
-      setMsg('تم تفعيل الإشعارات. بنبعتلك تنبيه تجريبي الآن.');
-      await sendTest(true);
-    } catch (err) {
-      if (String(err?.message) === 'DENIED') {
-        setStatus('blocked');
-        setMsg('المتصفح رفض الإشعارات. من إعدادات الموقع (القفل بجانب الرابط) اسمحي بالإشعارات ثم اضغطي تشغيل مرة ثانية.');
-      } else {
-        setMsg(err?.message || 'تعذر تفعيل الإشعارات.');
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!pushSupported()) {
+        if (!cancelled) setBrowserStatus('unsupported');
+        return;
       }
-    } finally {
-      setBusy(false);
-    }
-  }
+      if (isIosDevice() && !isStandalonePwa()) {
+        if (!cancelled) setBrowserStatus('ios');
+        return;
+      }
+      const perm = notificationPermission();
+      if (perm === 'denied') {
+        if (!cancelled) setBrowserStatus('blocked');
+        return;
+      }
+      if (perm === 'granted') {
+        try {
+          await ensurePush();
+          if (!cancelled) setBrowserStatus('on');
+        } catch {
+          if (!cancelled) setBrowserStatus('off');
+        }
+        return;
+      }
+      if (!cancelled) setBrowserStatus('off');
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  async function sendTest(fromEnable = false) {
-    if (!fromEnable) {
-      setTesting(true);
-      setMsg('');
-    }
+  async function sendTest() {
+    setTesting(true);
+    setTestMsg('');
     try {
       const { data } = await api.post('/push/instant-channel/test');
       if (data?.topic) setChannel((c) => ({ ...(c || {}), ...data }));
-      setMsg(
+      setTestMsg(
         data?.sent
-          ? 'وصل الإشعار التجريبي؟ إذا ما طلع، تأكدي إن الإشعارات مسموحة لهذا الموقع.'
+          ? 'تم إرسال إشعار تجريبي. لازم يوصل على تطبيق ntfy حتى لو تَكافل مسكّر. إذا ما وصل، اضغطي «ربط الحساب» مرة ثانية.'
           : data?.message || 'تعذر إرسال الإشعار التجريبي.'
       );
     } catch (err) {
-      setMsg(getApiErrorMessage(err, 'تعذر إرسال الإشعار التجريبي.'));
+      setTestMsg(getApiErrorMessage(err, 'تعذر إرسال الإشعار التجريبي.'));
     } finally {
-      if (!fromEnable) setTesting(false);
+      setTesting(false);
+    }
+  }
+
+  async function turnOnBrowser() {
+    setBrowserBusy(true);
+    setBrowserMsg('');
+    try {
+      await enablePush();
+      setBrowserStatus('on');
+      setBrowserMsg('تم تفعيل إشعار المتصفح على هذا الجهاز. الإشعار الموثوق يبقى عبر ntfy.');
+    } catch (err) {
+      if (String(err?.message) === 'DENIED') {
+        setBrowserStatus('blocked');
+        setBrowserMsg('المتصفح رفض الإذن. الإشعار الفوري يبقى عبر تطبيق ntfy.');
+      } else {
+        setBrowserMsg(err?.message || 'تعذر تفعيل إشعار المتصفح.');
+      }
+    } finally {
+      setBrowserBusy(false);
     }
   }
 
@@ -152,100 +138,86 @@ export default function InstantNotificationsCard() {
   return (
     <section className="mt-4 rounded-xl bg-white p-4 shadow-sm">
       <h2 className="text-lg font-bold text-foreground">إشعارات الطرود</h2>
-      <p className="mt-1 text-sm text-[#65676B]">
-        ضغطة واحدة تكفي. الإشعار يجي على هذا الجهاز حتى لو التطبيق مش مفتوح قدامك.
+      <p className="mt-1 text-sm text-foreground">
+        الإشعار الفوري بيجي من تطبيق <strong>ntfy</strong> حتى لو تَكافل مسكّر أو المتصفح علّق. حمّليه ثم اربطي
+        حسابك من الجوال.
       </p>
-
-      {iosNeedsInstall ? (
-        <p className="mt-3 rounded-lg bg-[#F0F2F5] p-3 text-sm leading-relaxed text-foreground">
-          على الآيفون: من Safari اضغطي مشاركة ثم «إضافة إلى الشاشة الرئيسية»، وبعدين افتحي تَكافل من الأيقونة
-          وشغّلي الإشعارات.
-        </p>
-      ) : null}
-
-      {status === 'unsupported' ? (
-        <p className="mt-3 text-sm text-[#65676B]">
-          هذا المتصفح لا يدعم إشعارات الموقع. استعملي Chrome أو ثبّتي التطبيق من القائمة.
-        </p>
-      ) : null}
-
-      {status === 'blocked' ? (
-        <p className="mt-3 rounded-lg bg-[#F0F2F5] p-3 text-sm leading-relaxed text-foreground">
-          المتصفح حاجب الإشعارات لهذا الموقع. اضغطي على القفل بجانب الرابط ← الإشعارات ← السماح، بعدين ارجعي
-          لهون واضغطي تشغيل.
-        </p>
-      ) : null}
-
-      {status === 'on' ? (
-        <p className="mt-3 text-sm font-medium text-primary">الإشعارات مفعّلة على هذا الجهاز.</p>
-      ) : null}
-
-      {status === 'off' || status === 'blocked' ? (
-        <button
-          type="button"
-          disabled={busy}
-          onClick={turnOn}
-          className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-60"
+      <div className="mt-3 flex flex-wrap gap-2">
+        {store !== 'ios' ? (
+          <a
+            href={playUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#1877F2] px-4 text-sm font-semibold text-white hover:brightness-95"
+          >
+            Google Play
+          </a>
+        ) : null}
+        {store !== 'android' ? (
+          <a
+            href={appUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#E4E6EB] px-4 text-sm font-semibold text-foreground hover:bg-[#d8dadf]"
+          >
+            App Store
+          </a>
+        ) : null}
+      </div>
+      {href ? (
+        <a
+          href={href}
+          className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:brightness-95"
         >
-          {busy ? 'جاري التفعيل…' : 'تشغيل الإشعارات'}
-        </button>
-      ) : null}
-
-      {status === 'on' ? (
+          ربط الحساب
+        </a>
+      ) : (
+        <p className="mt-3 text-sm text-[#65676B]">جاري تجهيز قناة الربط…</p>
+      )}
+      {channel?.topic ? (
         <button
           type="button"
           disabled={testing}
-          onClick={() => sendTest(false)}
+          onClick={sendTest}
           className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[#E4E6EB] px-4 text-sm font-semibold text-foreground hover:bg-[#d8dadf] disabled:opacity-60"
         >
           {testing ? 'جاري الإرسال…' : 'إرسال إشعار تجريبي'}
         </button>
       ) : null}
+      {testMsg ? <p className="mt-2 text-sm text-muted-foreground">{testMsg}</p> : null}
+      <p className="mt-2 text-xs leading-relaxed text-[#65676B]">
+        على أندرويد: في إعدادات الهاتف خلّي البطارية لتطبيق ntfy بدون تقييد، وإلا الإشعارات بتوقف والهاتف مقفول.
+      </p>
 
-      {msg ? <p className="mt-2 text-sm text-muted-foreground">{msg}</p> : null}
-
-      <details
-        className="mt-3"
-        onToggle={(e) => setNtfyOpen(e.currentTarget.open)}
-      >
+      <details className="mt-3">
         <summary className="cursor-pointer text-sm font-medium text-[#65676B]">
-          خيار إضافي: تطبيق ntfy للجوال
+          إشعار المتصفح (قد يتأخر أو يتعلّق)
         </summary>
         <p className="mt-2 text-sm leading-relaxed text-[#65676B]">
-          مش لازم. استعمليه فقط إذا بدك إشعار والجوال مقفول بدون فتح تَكافل أبداً.
+          هذا اختياري. المتصفح أحياناً بحجب الإشعار أو بيعلّقه، لذلك الاعتماد الأساسي على ntfy.
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {store !== 'ios' ? (
-            <a
-              href={playUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#1877F2] px-4 text-sm font-semibold text-white hover:brightness-95"
-            >
-              Google Play
-            </a>
-          ) : null}
-          {store !== 'android' ? (
-            <a
-              href={appUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#E4E6EB] px-4 text-sm font-semibold text-foreground hover:bg-[#d8dadf]"
-            >
-              App Store
-            </a>
-          ) : null}
-        </div>
-        {href ? (
-          <a
-            href={href}
-            className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[#E4E6EB] px-4 text-sm font-semibold text-foreground hover:bg-[#d8dadf]"
-          >
-            ربط حساب ntfy
-          </a>
-        ) : ntfyOpen ? (
-          <p className="mt-2 text-xs text-[#65676B]">جاري تجهيز قناة الربط…</p>
+        {browserStatus === 'ios' ? (
+          <p className="mt-2 text-sm text-[#65676B]">
+            على الآيفون لازم تضيفي تَكافل للشاشة الرئيسية أولاً حتى يشتغل إشعار المتصفح.
+          </p>
         ) : null}
+        {browserStatus === 'blocked' ? (
+          <p className="mt-2 text-sm text-[#65676B]">المتصفح حاجب الإشعارات لهذا الموقع.</p>
+        ) : null}
+        {browserStatus === 'on' ? (
+          <p className="mt-2 text-sm font-medium text-primary">إشعار المتصفح مفعّل على هذا الجهاز.</p>
+        ) : null}
+        {browserStatus === 'off' || browserStatus === 'blocked' || browserStatus === 'ios' ? (
+          <button
+            type="button"
+            disabled={browserBusy}
+            onClick={turnOnBrowser}
+            className="mt-2 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#E4E6EB] px-4 text-sm font-semibold text-foreground hover:bg-[#d8dadf] disabled:opacity-60"
+          >
+            {browserBusy ? 'جاري التفعيل…' : 'تفعيل إشعار المتصفح'}
+          </button>
+        ) : null}
+        {browserMsg ? <p className="mt-2 text-sm text-muted-foreground">{browserMsg}</p> : null}
       </details>
     </section>
   );
