@@ -78,14 +78,6 @@ export default function PublicNav({ onNavigate, onClose }) {
             </IconWell>
             الرئيسية
           </Link>
-          {!camp?.slug ? (
-            <Link href="/#register" onClick={onNavigate} className={itemClass(false)}>
-              <IconWell>
-                <IconClipboard className="h-5 w-5" />
-              </IconWell>
-              تسجيل مخيم
-            </Link>
-          ) : null}
           {camp?.slug ? (
             <Link href={newsHref} onClick={onNavigate} className={itemClass(isNews)} aria-current={isNews ? 'page' : undefined}>
               <IconWell>
@@ -140,6 +132,12 @@ export default function PublicNav({ onNavigate, onClose }) {
               </Link>
             )
           ) : null}
+          <Link href="/#register" onClick={onNavigate} className={itemClass(false)}>
+            <IconWell>
+              <IconClipboard className="h-5 w-5" />
+            </IconWell>
+            تسجيل مخيم جديد
+          </Link>
           <a
             href={supportHref}
             target="_blank"

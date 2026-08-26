@@ -6,11 +6,10 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import FeaturedNewsSection from '@/components/home/FeaturedNewsSection';
-import HomePillarsStrip from '@/components/home/HomePillarsStrip';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
-import { IconBuilding, IconUsers, IconChat } from '@/components/ui/Icons';
+import { IconBuilding, IconUsers, IconChat, IconChevron } from '@/components/ui/Icons';
 
 const FEATURES = [
   {
@@ -30,9 +29,34 @@ const FEATURES = [
   },
 ];
 
+function AboutCampBlock({ className = '' }) {
+  return (
+    <details className={`group overflow-hidden rounded-lg ${className}`.trim()}>
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 bg-[#E4E6EB] px-5 text-[length:var(--text-h4)] font-medium hover:bg-[#d8dadf] group-open:rounded-b-none group-open:bg-white group-open:shadow-sm [&::-webkit-details-marker]:hidden">
+        عن المخيم
+        <IconChevron className="h-5 w-5 shrink-0 -rotate-90 text-muted-foreground transition-transform group-open:rotate-90" />
+      </summary>
+      <div className="divide-y divide-black/8 border-t border-black/8 bg-white shadow-sm">
+        {FEATURES.map((item) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.title} className="flex gap-3 px-4 py-3">
+              <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <div>
+                <h3 className="text-sm font-semibold">{item.title}</h3>
+                <p className="mt-0.5 text-sm text-muted-foreground">{item.desc}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+
 export default function CampLandingPage({ compact = false }) {
   const { camp, loading } = useCamp();
-  const { familyUser } = useAuth();
+  const { familyUser, adminUser } = useAuth();
 
   if (loading && !camp) {
     return (
@@ -104,40 +128,33 @@ export default function CampLandingPage({ compact = false }) {
               </Button>
             </Link>
           )}
+          {adminUser?.camp_id != null ? (
+            <Link href={`/${camp.slug}/admin/dashboard`} className="block">
+              <Button variant="outline" size="lg" className="w-full">
+                لوحة الإدارة
+              </Button>
+            </Link>
+          ) : (
+            <Link href={`/${camp.slug}/login/admin`} className="block">
+              <Button variant="outline" size="lg" className="w-full">
+                دخول الإدارة
+              </Button>
+            </Link>
+          )}
           <Link href={`/${camp.slug}/news`} className="block">
             <Button variant="outline" size="lg" className="w-full">
               أخبار المخيم
             </Button>
           </Link>
+          <AboutCampBlock />
         </div>
         )}
+
+        {compact ? <AboutCampBlock className="mt-4" /> : null}
 
         <div className="mt-10">
           <FeaturedNewsSection />
         </div>
-
-        <details className="mt-8 overflow-hidden rounded-xl bg-white shadow-sm">
-          <summary className="flex min-h-12 cursor-pointer list-none items-center px-4 text-sm font-semibold">
-            عن المخيم
-          </summary>
-          <div className="divide-y divide-black/8 border-t border-black/8">
-            {FEATURES.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.title} className="flex gap-3 px-4 py-3">
-                  <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <div>
-                    <h3 className="text-sm font-semibold">{item.title}</h3>
-                    <p className="mt-0.5 text-sm text-muted-foreground">{item.desc}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="border-t border-black/8 px-4 py-3">
-            <HomePillarsStrip />
-          </div>
-        </details>
       </main>
     </div>
   );
