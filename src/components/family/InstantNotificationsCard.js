@@ -27,7 +27,10 @@ function nativeAppHref(channel) {
   return channel?.deep_link || `ntfy://${host}/${topic}`;
 }
 
-export default function InstantNotificationsCard() {
+export default function InstantNotificationsCard({
+  title = 'إشعارات الطرود',
+  description = 'الإشعار بيوصل حصراً من تطبيق ntfy المثبّت على الجوال، مش من المتصفح ولا من موقع ntfy. ثبّت التطبيق ثم اضغط ربط الحساب حتى ينفتح التطبيق مباشرة.',
+}) {
   const [channel, setChannel] = useState(null);
   const [testing, setTesting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -130,11 +133,8 @@ export default function InstantNotificationsCard() {
 
   return (
     <section className="mt-4 rounded-xl bg-white p-4 shadow-sm">
-      <h2 className="text-lg font-bold text-foreground">إشعارات الطرود</h2>
-      <p className="mt-1 text-sm text-foreground">
-        الإشعار بيوصل حصراً من تطبيق <strong>ntfy</strong> المثبّت على الجوال، مش من المتصفح ولا من موقع ntfy.
-        ثبّت التطبيق ثم اضغط ربط الحساب حتى ينفتح التطبيق مباشرة.
-      </p>
+      <h2 className="text-lg font-bold text-foreground">{title}</h2>
+      <p className="mt-1 text-sm text-foreground">{description}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {store !== 'ios' ? (
           <a

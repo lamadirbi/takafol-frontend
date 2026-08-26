@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import SuperAdminShell from '@/components/super-admin/SuperAdminShell';
+import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
 import { IconBuilding, IconClipboard, IconMegaphone } from '@/components/ui/Icons';
 
 const SECTIONS = [
@@ -28,7 +29,11 @@ const SECTIONS = [
 export default function SuperAdminHomePage() {
   return (
     <SuperAdminShell title="إدارة المنصة" description="اختر قسماً للمتابعة">
-      <div className="space-y-3">
+      <InstantNotificationsCard
+        title="إشعارات المنصة"
+        description="اربط تطبيق ntfy حتى يوصلك إشعار عند طلب تسجيل مخيم جديد أو طلب تجديد اشتراك."
+      />
+      <div className="mt-4 space-y-3">
         {SECTIONS.map((item) => {
           const Icon = item.icon;
           return (
