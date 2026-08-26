@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import LogoutButton from '@/components/ui/LogoutButton';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 function initials(name) {
   const s = String(name || '').trim();
@@ -16,15 +16,19 @@ export default function AccountMenu({
   profileLabel = 'حسابي',
 }) {
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
     if (!open) return undefined;
     const onDoc = (e) => {
-      if (!ref.current?.contains(e.target)) setOpen(false);
+      if (ref.current?.contains(e.target)) return;
+      if (e.target?.closest?.('[role="dialog"]')) return;
+      setOpen(false);
     };
     const onKey = (e) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape' && !confirmOpen) setOpen(false);
     };
     document.addEventListener('mousedown', onDoc);
     document.addEventListener('keydown', onKey);
@@ -32,7 +36,18 @@ export default function AccountMenu({
       document.removeEventListener('mousedown', onDoc);
       document.removeEventListener('keydown', onKey);
     };
-  }, [open]);
+  }, [open, confirmOpen]);
+
+  async function confirmLogout() {
+    setLeaving(true);
+    try {
+      await onLogout?.();
+    } finally {
+      setLeaving(false);
+      setConfirmOpen(false);
+      setOpen(false);
+    }
+  }
 
   return (
     <div className="relative" ref={ref}>
@@ -60,11 +75,30 @@ export default function AccountMenu({
               {profileLabel}
             </Link>
           ) : null}
-          <div className="px-0.5 pt-1">
-            <LogoutButton className="w-full rounded-lg" onLogout={onLogout} />
-          </div>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              setConfirmOpen(true);
+            }}
+            className="mt-1 flex min-h-10 w-full items-center rounded-lg px-3 text-sm font-semibold text-[#E41E3F] hover:bg-[#F0F2F5]"
+          >
+            تسجيل الخروج
+          </button>
         </div>
       ) : null}
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => !leaving && setConfirmOpen(false)}
+        onConfirm={confirmLogout}
+        title="تأكيد تسجيل الخروج"
+        message="هل تريد تسجيل الخروج؟ يمكنك الدخول مرة أخرى بنفس بياناتك في أي وقت."
+        confirmLabel="تسجيل الخروج"
+        cancelLabel="إلغاء"
+        danger
+        loading={leaving}
+      />
     </div>
   );
 }
