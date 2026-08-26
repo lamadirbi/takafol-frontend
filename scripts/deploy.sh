@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+npm config set fetch-retries 8 >/dev/null
 
 ROOT=/www/wwwroot/takafol/frontend
 cd "$ROOT"
