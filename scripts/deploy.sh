@@ -10,9 +10,8 @@ cd "$ROOT"
 git fetch origin main
 git reset --hard origin/main
 
-export NODE_ENV=production
-npm ci
-npm run build
+npm ci --include=dev
+NODE_ENV=production npm run build
 
 chown -R www:www .next
 systemctl restart takafol-frontend
