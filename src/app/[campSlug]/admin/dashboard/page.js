@@ -9,6 +9,7 @@ import { IconCheck, IconCopy } from '@/components/ui/Icons';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { useNotice } from '@/context/NoticeContext';
+import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
 import { formatDate, getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
 
 const PAYMENT_METHODS = [
@@ -175,6 +176,8 @@ export default function AdminDashboardPage() {
           { label: 'الأفراد', value: loading ? '…' : stats.members, hint: 'حسب العدد المسجّل' },
         ]}
       />
+
+      <InstantNotificationsCard />
 
       <section className="mb-8">
         <h2 className="mb-3 text-[length:var(--text-caption)] font-medium tracking-[0.16em] text-muted-foreground">
