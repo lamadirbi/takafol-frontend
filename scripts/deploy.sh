@@ -3,6 +3,12 @@ set -euo pipefail
 export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
 npm config set fetch-retries 8 >/dev/null
 
+exec 9>/tmp/takafol-frontend-deploy.lock
+if ! flock -n 9; then
+  echo "takafol frontend deploy already running"
+  exit 0
+fi
+
 ROOT=/www/wwwroot/takafol/frontend
 git config --global --add safe.directory "$ROOT" 2>/dev/null || true
 cd "$ROOT"
@@ -12,7 +18,13 @@ git reset --hard origin/main
 
 npm ci --include=dev
 export PATH="$ROOT/node_modules/.bin:/usr/local/bin:/usr/bin:/bin:$PATH"
-NODE_ENV=production npm run build
+NEXT_BIN="$ROOT/node_modules/.bin/next"
+if [ ! -x "$NEXT_BIN" ]; then
+  echo "next binary missing after npm ci" >&2
+  ls -la "$ROOT/node_modules/.bin" >&2 || true
+  exit 1
+fi
+NODE_ENV=production "$NEXT_BIN" build
 
 chown -R www:www .next
 systemctl restart takafol-frontend
