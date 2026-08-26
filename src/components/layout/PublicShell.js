@@ -61,16 +61,28 @@ export default function PublicShell({ children }) {
             </div>
           </Link>
           {pathname === '/' ? (
-            <div className="ms-auto flex shrink-0 items-center gap-2">
+            <div className="ms-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto">
               <a
-                href="#camps"
-                className="inline-flex min-h-10 items-center rounded-lg bg-[#E4E6EB] px-3 text-sm font-semibold text-foreground hover:bg-[#d8dadf]"
+                href="#register"
+                className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-primary px-2.5 text-xs font-semibold text-white hover:brightness-95 sm:px-3 sm:text-sm"
               >
-                دخول المخيمات
+                التسجيل
+              </a>
+              <a
+                href="#payment"
+                className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm"
+              >
+                الدفع
+              </a>
+              <a
+                href="#contact"
+                className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm"
+              >
+                تواصل
               </a>
               <Link
                 href="/super-admin/login"
-                className="inline-flex min-h-10 items-center rounded-lg bg-primary px-3 text-sm font-semibold text-white hover:brightness-95"
+                className="hidden min-h-10 shrink-0 items-center rounded-lg px-3 text-sm font-semibold text-muted-foreground hover:text-foreground sm:inline-flex"
               >
                 الإدارة العليا
               </Link>

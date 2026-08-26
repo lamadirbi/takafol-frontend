@@ -195,7 +195,7 @@ export default function AdminDashboardPage() {
       </section>
 
       {sub ? (
-        <details className="overflow-hidden border border-border bg-card open:bg-card">
+        <details open className="overflow-hidden border border-border bg-card open:bg-card">
           <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium">
             <span>اشتراك المنصة · {monthlyAmount} شيكل / شهر</span>
             {sub.status === 'active' ? (

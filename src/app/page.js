@@ -132,6 +132,21 @@ export default function GlobalHomePage() {
             <div>
               <h1 className="text-[length:var(--text-h2)] font-semibold tracking-tight">كل المخيمات</h1>
               <p className="mt-1 text-sm text-muted-foreground">ظاهر لإدارة المنصة فقط.</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <a href="#register">
+                  <Button type="button">طلب تسجيل مخيم</Button>
+                </a>
+                <a href="#payment">
+                  <Button type="button" variant="outline">
+                    الدفع
+                  </Button>
+                </a>
+                <a href="#contact">
+                  <Button type="button" variant="outline">
+                    تواصل
+                  </Button>
+                </a>
+              </div>
             </div>
             <div className="w-full sm:w-80">
               <Input
