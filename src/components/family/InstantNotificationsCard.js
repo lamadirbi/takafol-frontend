@@ -3,9 +3,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import {
+  clearNtfyAppOpened,
+  clearNtfyLinkConfirmed,
+  markNtfyAppOpened,
+  markNtfyLinkConfirmed,
   markNtfyStoreOpened,
+  ntfyAppOpened,
   ntfyDeviceKey,
-  ntfyPendingLinkKey,
+  ntfyLinkConfirmed,
+  ntfyPendingOpenKey,
   ntfyStoreOpened,
 } from '@/lib/ntfyDevice';
 import { getApiErrorMessage } from '@/lib/utils';
@@ -44,11 +50,13 @@ function nativeAppHref(channel) {
 
 export default function InstantNotificationsCard({
   title = 'إشعارات الطرود',
-  description = 'ثبّت تطبيق ntfy على هذا الجهاز، بعدين اربطه. كل جهاز يُربَط لوحده حتى لو نفس الحساب.',
+  description = 'ثبّت تطبيق ntfy، وانتظر يخلص التثبيت ويفتح على الجهاز، بعدين أكّد الربط. كل جهاز يُربَط لوحده.',
 }) {
   const deviceKey = useMemo(() => ntfyDeviceKey(), []);
   const [channel, setChannel] = useState(null);
   const [storeOpened, setStoreOpened] = useState(false);
+  const [appOpened, setAppOpened] = useState(false);
+  const [linkConfirmed, setLinkConfirmed] = useState(false);
   const [testing, setTesting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -56,6 +64,8 @@ export default function InstantNotificationsCard({
 
   useEffect(() => {
     setStoreOpened(ntfyStoreOpened());
+    setAppOpened(ntfyAppOpened());
+    setLinkConfirmed(ntfyLinkConfirmed());
   }, []);
 
   useEffect(() => {
@@ -77,30 +87,22 @@ export default function InstantNotificationsCard({
   useEffect(() => {
     if (!deviceKey) return undefined;
 
-    async function finishPendingLink() {
+    function noteAppOpened(event) {
       if (typeof window === 'undefined') return;
-      if (document.visibilityState !== 'visible') return;
-      const pending = window.sessionStorage.getItem(ntfyPendingLinkKey());
+      const pending = window.sessionStorage.getItem(ntfyPendingOpenKey());
       if (pending !== deviceKey) return;
-      window.sessionStorage.removeItem(ntfyPendingLinkKey());
-      setBusy(true);
-      setMsg('');
-      try {
-        const { data } = await api.post('/push/instant-channel/link', { device_key: deviceKey });
-        setChannel(data);
-        setMsg('تم ربط هذا الجهاز. أرسل إشعار تجريبي للتأكد.');
-      } catch (err) {
-        setMsg(getApiErrorMessage(err, 'ثبّت تطبيق ntfy أولاً ثم اربط هذا الجهاز.'));
-      } finally {
-        setBusy(false);
-      }
+      const left =
+        event?.type === 'pagehide' || document.hidden || document.visibilityState === 'hidden';
+      if (!left) return;
+      markNtfyAppOpened();
+      setAppOpened(true);
     }
 
-    document.addEventListener('visibilitychange', finishPendingLink);
-    window.addEventListener('pageshow', finishPendingLink);
+    document.addEventListener('visibilitychange', noteAppOpened);
+    window.addEventListener('pagehide', noteAppOpened);
     return () => {
-      document.removeEventListener('visibilitychange', finishPendingLink);
-      window.removeEventListener('pageshow', finishPendingLink);
+      document.removeEventListener('visibilitychange', noteAppOpened);
+      window.removeEventListener('pagehide', noteAppOpened);
     };
   }, [deviceKey]);
 
@@ -108,6 +110,8 @@ export default function InstantNotificationsCard({
     const href = installHref(channel, store);
     setBusy(true);
     setMsg('');
+    clearNtfyAppOpened();
+    setAppOpened(false);
     try {
       await api.post('/push/instant-channel/installed', { device_key: deviceKey });
       markNtfyStoreOpened();
@@ -123,10 +127,10 @@ export default function InstantNotificationsCard({
     }
   }
 
-  function connectApp() {
+  function openNtfyApp() {
     const href = nativeAppHref(channel);
     if (!href) {
-      setMsg('ثبّت تطبيق ntfy أولاً.');
+      setMsg('ثبّت تطبيق ntfy أولاً وانتظر حتى يخلص التثبيت.');
       return;
     }
     setBusy(true);
@@ -137,23 +141,44 @@ export default function InstantNotificationsCard({
     };
     document.addEventListener('visibilitychange', onHide);
     try {
-      window.sessionStorage.setItem(ntfyPendingLinkKey(), deviceKey);
+      window.sessionStorage.setItem(ntfyPendingOpenKey(), deviceKey);
     } catch {
       /* ignore */
     }
     window.location.href = href;
     window.setTimeout(() => {
       document.removeEventListener('visibilitychange', onHide);
-      if (document.visibilityState === 'visible' && !leftPage) {
-        try {
-          window.sessionStorage.removeItem(ntfyPendingLinkKey());
-        } catch {
-          /* ignore */
-        }
-        setMsg('التطبيق مش مثبت على هذا الجهاز. اضغط تثبيت التطبيق أولاً.');
+      if (document.visibilityState === 'visible' && !leftPage && !ntfyAppOpened()) {
+        clearNtfyAppOpened();
+        setAppOpened(false);
+        setMsg('تطبيق ntfy لسا ما فتح. انتظر يخلص التثبيت، افتحه من قائمة التطبيقات، بعدين ارجع واضغط فتح تطبيق ntfy.');
         setBusy(false);
+        return;
       }
-    }, 1400);
+      setBusy(false);
+    }, 1800);
+  }
+
+  function dismissAppOpened() {
+    clearNtfyAppOpened();
+    setAppOpened(false);
+    setMsg('تمام. بعد ما يخلص التثبيت ويفتح تطبيق ntfy على الجهاز، اضغط فتح تطبيق ntfy.');
+  }
+
+  async function confirmLink() {
+    setBusy(true);
+    setMsg('');
+    try {
+      const { data } = await api.post('/push/instant-channel/link', { device_key: deviceKey });
+      markNtfyLinkConfirmed();
+      setLinkConfirmed(true);
+      setChannel(data);
+      setMsg('تم ربط هذا الجهاز. أرسل إشعار تجريبي للتأكد.');
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, 'ما قدرنا نربط. تأكد إن تطبيق ntfy فتح على الجهاز.'));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function unlink() {
@@ -161,6 +186,9 @@ export default function InstantNotificationsCard({
     setMsg('');
     try {
       const { data } = await api.post('/push/instant-channel/unlink', { device_key: deviceKey });
+      clearNtfyLinkConfirmed();
+      setLinkConfirmed(false);
+      setAppOpened(false);
       setChannel(data);
       setMsg('تم فك ربط هذا الجهاز.');
     } catch (err) {
@@ -188,8 +216,7 @@ export default function InstantNotificationsCard({
     }
   }
 
-  const linked = Boolean(channel?.linked);
-  const canLink = storeOpened;
+  const linked = Boolean(channel?.linked) && linkConfirmed;
 
   if (linked) {
     return (
@@ -227,21 +254,41 @@ export default function InstantNotificationsCard({
         onClick={installApp}
         className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-60"
       >
-        {busy && !canLink ? 'جاري فتح المتجر…' : 'تثبيت التطبيق'}
+        {busy && !storeOpened ? 'جاري فتح المتجر…' : 'تثبيت التطبيق'}
       </button>
-      {canLink ? (
+      {storeOpened ? (
         <button
           type="button"
           disabled={busy || !channel?.topic}
-          onClick={connectApp}
+          onClick={openNtfyApp}
           className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[#E4E6EB] px-4 text-sm font-semibold text-foreground hover:bg-[#d8dadf] disabled:opacity-60"
         >
-          {busy ? 'جاري فتح التطبيق…' : 'ربط هذا الجهاز'}
+          {busy ? 'جاري فتح التطبيق…' : 'فتح تطبيق ntfy'}
         </button>
+      ) : null}
+      {appOpened ? (
+        <>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={confirmLink}
+            className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-60"
+          >
+            تأكيد الربط
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={dismissAppOpened}
+            className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-lg px-4 text-sm font-semibold text-[#65676B] hover:bg-[#F0F2F5] disabled:opacity-60"
+          >
+            التطبيق لسا ما فتح
+          </button>
+        </>
       ) : null}
       {msg ? <p className="mt-2 text-sm text-muted-foreground">{msg}</p> : null}
       <p className="mt-2 text-xs leading-relaxed text-[#65676B]">
-        على أندرويد: خلّي بطارية تطبيق ntfy بدون تقييد حتى يوصل الإشعار والهاتف مقفول.
+        زر الربط ما بيظهر إلا بعد ما تطبيق ntfy يفتح على الجهاز. إذا فتح المتجر وما خلص التثبيت، لا تضغط تأكيد الربط.
       </p>
     </section>
   );
