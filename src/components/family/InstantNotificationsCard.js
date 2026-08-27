@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '@/lib/api';
+import { ntfyDeviceKey } from '@/lib/ntfyDevice';
 import { getApiErrorMessage } from '@/lib/utils';
 
 function preferredStore() {
@@ -29,8 +30,9 @@ function nativeAppHref(channel) {
 
 export default function InstantNotificationsCard({
   title = 'إشعارات الطرود',
-  description = 'الإشعار بيوصل حصراً من تطبيق ntfy المثبّت على الجوال، مش من المتصفح ولا من موقع ntfy. ثبّت التطبيق ثم اضغط ربط الحساب حتى ينفتح التطبيق مباشرة.',
+  description = 'ثبّت تطبيق ntfy على هذا الجهاز، أكّد التثبيت، ثم اربط الجهاز. كل جهاز يُربَط لوحده حتى لو نفس الحساب.',
 }) {
+  const deviceKey = useMemo(() => ntfyDeviceKey(), []);
   const [channel, setChannel] = useState(null);
   const [testing, setTesting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -38,10 +40,11 @@ export default function InstantNotificationsCard({
   const store = useMemo(() => preferredStore(), []);
 
   useEffect(() => {
+    if (!deviceKey) return undefined;
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await api.get('/push/instant-channel');
+        const { data } = await api.get('/push/instant-channel', { params: { device_key: deviceKey } });
         if (!cancelled) setChannel(data);
       } catch {
         if (!cancelled) setChannel(null);
@@ -50,20 +53,33 @@ export default function InstantNotificationsCard({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [deviceKey]);
+
+  async function confirmInstalled() {
+    setBusy(true);
+    setMsg('');
+    try {
+      const { data } = await api.post('/push/instant-channel/installed', { device_key: deviceKey });
+      setChannel(data);
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, 'تعذر تأكيد التثبيت. ثبّت التطبيق من المتجر ثم أعد المحاولة.'));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function connectApp() {
     const href = nativeAppHref(channel);
     setBusy(true);
     setMsg('');
     try {
-      const { data } = await api.post('/push/instant-channel/link');
+      const { data } = await api.post('/push/instant-channel/link', { device_key: deviceKey });
       setChannel(data);
       if (href) {
         window.location.href = href;
       }
     } catch (err) {
-      setMsg(getApiErrorMessage(err, 'تعذر فتح تطبيق ntfy. ثبّته من المتجر ثم أعد الربط.'));
+      setMsg(getApiErrorMessage(err, 'أكّد تثبيت التطبيق أولاً ثم اربط هذا الجهاز.'));
     } finally {
       setBusy(false);
     }
@@ -73,9 +89,9 @@ export default function InstantNotificationsCard({
     setBusy(true);
     setMsg('');
     try {
-      const { data } = await api.post('/push/instant-channel/unlink');
+      const { data } = await api.post('/push/instant-channel/unlink', { device_key: deviceKey });
       setChannel(data);
-      setMsg('تم فك الربط. الإشعارات توقفت إلى أن تربط التطبيق مرة ثانية.');
+      setMsg('تم فك ربط هذا الجهاز. الأجهزة الأخرى تبقى مربوطة.');
     } catch (err) {
       setMsg(getApiErrorMessage(err, 'تعذر فك الربط.'));
     } finally {
@@ -87,11 +103,11 @@ export default function InstantNotificationsCard({
     setTesting(true);
     setMsg('');
     try {
-      const { data } = await api.post('/push/instant-channel/test');
+      const { data } = await api.post('/push/instant-channel/test', { device_key: deviceKey });
       if (data?.topic) setChannel((c) => ({ ...(c || {}), ...data }));
       setMsg(
         data?.sent
-          ? 'تم إرسال إشعار تجريبي لتطبيق ntfy المثبّت.'
+          ? 'تم إرسال إشعار تجريبي لهذا الجهاز.'
           : data?.message || 'تعذر إرسال الإشعار التجريبي.'
       );
     } catch (err) {
@@ -103,13 +119,14 @@ export default function InstantNotificationsCard({
 
   const playUrl = channel?.play_store_url || 'https://play.google.com/store/apps/details?id=io.heckel.ntfy';
   const appUrl = channel?.app_store_url || 'https://apps.apple.com/app/ntfy/id1625396347';
+  const installed = Boolean(channel?.installed);
   const linked = Boolean(channel?.linked);
 
   if (linked) {
     return (
       <section className="mt-4 rounded-xl bg-white p-4 shadow-sm">
-        <p className="text-sm font-semibold text-primary">تم الربط مع تطبيق ntfy</p>
-        <p className="mt-1 text-sm text-[#65676B]">الإشعار بيوصل حصراً على التطبيق المثبّت، مش من نسخة الويب.</p>
+        <p className="text-sm font-semibold text-primary">هذا الجهاز مربوط مع ntfy</p>
+        <p className="mt-1 text-sm text-[#65676B]">الإشعار بيوصل على هذا الجهاز فقط بعد ربطه. أي جهاز ثاني يحتاج ربط منفصل.</p>
         <button
           type="button"
           disabled={testing}
@@ -124,7 +141,7 @@ export default function InstantNotificationsCard({
           onClick={unlink}
           className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-lg px-4 text-sm font-semibold text-[#E41E3F] hover:bg-[#F0F2F5] disabled:opacity-60"
         >
-          {busy ? 'جاري فك الربط…' : 'فك الربط'}
+          {busy ? 'جاري فك الربط…' : 'فك ربط هذا الجهاز'}
         </button>
         {msg ? <p className="mt-2 text-sm text-muted-foreground">{msg}</p> : null}
       </section>
@@ -157,14 +174,25 @@ export default function InstantNotificationsCard({
           </a>
         ) : null}
       </div>
-      <button
-        type="button"
-        disabled={busy || !channel?.topic}
-        onClick={connectApp}
-        className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-60"
-      >
-        {busy ? 'جاري فتح التطبيق…' : 'ربط الحساب'}
-      </button>
+      {!installed ? (
+        <button
+          type="button"
+          disabled={busy || !deviceKey}
+          onClick={confirmInstalled}
+          className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-60"
+        >
+          {busy ? 'جاري التأكيد…' : 'ثبّتت التطبيق'}
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={busy || !channel?.topic}
+          onClick={connectApp}
+          className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-60"
+        >
+          {busy ? 'جاري فتح التطبيق…' : 'ربط هذا الجهاز'}
+        </button>
+      )}
       {msg ? <p className="mt-2 text-sm text-muted-foreground">{msg}</p> : null}
       <p className="mt-2 text-xs leading-relaxed text-[#65676B]">
         على أندرويد: خلّي بطارية تطبيق ntfy بدون تقييد حتى يوصل الإشعار والهاتف مقفول.
