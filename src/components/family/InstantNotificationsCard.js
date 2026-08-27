@@ -1,26 +1,21 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import {
   clearNtfyAppOpened,
-  clearNtfyAwaitingReceipt,
   clearNtfyLinkConfirmed,
   markNtfyAppOpened,
   markNtfyAskedOpen,
-  markNtfyAwaitingReceipt,
   markNtfyLinkConfirmed,
   markNtfyStoreOpened,
   ntfyAppOpened,
   ntfyAskedOpen,
-  ntfyAwaitingReceipt,
   ntfyDeviceKey,
   ntfyLinkConfirmed,
   ntfyStoreOpened,
 } from '@/lib/ntfyDevice';
 import { getApiErrorMessage } from '@/lib/utils';
-
-const VERIFY_SENT_KEY = 'takafol_ntfy_verify_sent';
 
 function preferredStore() {
   if (typeof navigator === 'undefined') return 'both';
@@ -54,55 +49,27 @@ function nativeAppHref(channel) {
   return channel?.deep_link || `ntfy://${host}/${topic}`;
 }
 
-function wasVerifySent() {
-  if (typeof window === 'undefined') return false;
-  try {
-    return window.sessionStorage.getItem(VERIFY_SENT_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function markVerifySent() {
-  if (typeof window === 'undefined') return;
-  try {
-    window.sessionStorage.setItem(VERIFY_SENT_KEY, '1');
-  } catch {
-    /* ignore */
-  }
-}
-
-function clearVerifySent() {
-  if (typeof window === 'undefined') return;
-  try {
-    window.sessionStorage.removeItem(VERIFY_SENT_KEY);
-  } catch {
-    /* ignore */
-  }
-}
+const NOTIFICATION_HINT = 'تأكد إن إشعارات التطبيق مفعّلة حتى يوصلك الإشعارات.';
 
 export default function InstantNotificationsCard({
   title = 'إشعارات الطرود',
-  description = 'ثبّت تطبيق ntfy، افتحه، بعدين اربط الجهاز. الربط ما بيصير إلا إذا وصلك الإشعار التجريبي.',
+  description = 'ثبّت تطبيق ntfy، افتحه، بعدين اربط الجهاز. كل جهاز يُربَط لوحده.',
 }) {
   const deviceKey = useMemo(() => ntfyDeviceKey(), []);
   const [channel, setChannel] = useState(null);
   const [storeOpened, setStoreOpened] = useState(false);
   const [askedOpen, setAskedOpen] = useState(false);
   const [appOpened, setAppOpened] = useState(false);
-  const [awaitingReceipt, setAwaitingReceipt] = useState(false);
   const [linkConfirmed, setLinkConfirmed] = useState(false);
   const [testing, setTesting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const store = useMemo(() => preferredStore(), []);
-  const sendingRef = useRef(false);
 
   useEffect(() => {
     setStoreOpened(ntfyStoreOpened());
     setAskedOpen(ntfyAskedOpen());
     setAppOpened(ntfyAppOpened());
-    setAwaitingReceipt(ntfyAwaitingReceipt());
     setLinkConfirmed(ntfyLinkConfirmed());
   }, []);
 
@@ -122,47 +89,13 @@ export default function InstantNotificationsCard({
     };
   }, [deviceKey]);
 
-  async function sendVerifyTest() {
-    if (!deviceKey || sendingRef.current) return;
-    sendingRef.current = true;
-    setTesting(true);
-    try {
-      const { data } = await api.post('/push/instant-channel/test', { device_key: deviceKey });
-      if (data?.topic) setChannel((c) => ({ ...(c || {}), ...data }));
-      markVerifySent();
-      setMsg(
-        data?.sent
-          ? 'أرسلنا إشعار تجريبي. إذا التطبيق سمح بالإشعارات لازم يوصلك الآن.'
-          : data?.message || 'تعذر إرسال الإشعار التجريبي.'
-      );
-    } catch (err) {
-      setMsg(getApiErrorMessage(err, 'تعذر إرسال الإشعار التجريبي.'));
-      sendingRef.current = false;
-    } finally {
-      setTesting(false);
-    }
-  }
-
-  useEffect(() => {
-    if (!awaitingReceipt || !deviceKey || !channel?.topic) return undefined;
-    if (wasVerifySent()) return undefined;
-    const timer = window.setTimeout(() => {
-      sendVerifyTest();
-    }, 1800);
-    return () => window.clearTimeout(timer);
-    // sendVerifyTest is stable enough for this mount; device/channel gates the effect.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [awaitingReceipt, deviceKey, channel?.topic]);
-
   async function installApp() {
     const href = installHref(channel, store);
     setBusy(true);
     setMsg('');
     clearNtfyAppOpened();
-    clearVerifySent();
     setAskedOpen(false);
     setAppOpened(false);
-    setAwaitingReceipt(false);
     try {
       await api.post('/push/instant-channel/installed', { device_key: deviceKey });
       markNtfyStoreOpened();
@@ -183,9 +116,6 @@ export default function InstantNotificationsCard({
     markNtfyAskedOpen();
     setAskedOpen(true);
     setAppOpened(false);
-    setAwaitingReceipt(false);
-    clearNtfyAwaitingReceipt();
-    clearVerifySent();
     const href = nativeAppHref(channel);
     if (href) {
       window.location.href = href;
@@ -203,53 +133,27 @@ export default function InstantNotificationsCard({
     clearNtfyAppOpened();
     setAskedOpen(false);
     setAppOpened(false);
-    setAwaitingReceipt(false);
     setMsg('بعد ما يخلص التثبيت، ارجع اضغط على فتح تطبيق ntfy مجدداً.');
   }
 
-  function startLink() {
-    setMsg('');
-    sendingRef.current = false;
-    clearVerifySent();
-    markNtfyAwaitingReceipt();
-    setAwaitingReceipt(true);
-    const href = nativeAppHref(channel);
-    if (href) {
-      window.location.href = href;
-    }
-  }
-
-  async function confirmReceived() {
+  async function confirmLink() {
     setBusy(true);
     setMsg('');
     try {
       const { data } = await api.post('/push/instant-channel/link', { device_key: deviceKey });
       markNtfyLinkConfirmed();
-      clearNtfyAwaitingReceipt();
-      clearVerifySent();
       setLinkConfirmed(true);
-      setAwaitingReceipt(false);
       setChannel(data);
-      setMsg('تم الربط. الإشعارات وصلت لهذا الجهاز.');
+      setMsg(NOTIFICATION_HINT);
+      const href = nativeAppHref(data);
+      if (href) {
+        window.location.href = href;
+      }
     } catch (err) {
       setMsg(getApiErrorMessage(err, 'ما قدرنا نربط هذا الجهاز.'));
     } finally {
       setBusy(false);
     }
-  }
-
-  function denyReceived() {
-    sendingRef.current = false;
-    clearVerifySent();
-    setMsg(
-      'الإشعار ما وصل لأن تطبيق ntfy غالباً مش سامح بالإشعارات. افتح ntfy واضغط سماح، بعدين اضغط إرسال الإشعار التجريبي مرة ثانية.'
-    );
-  }
-
-  async function retryVerifyTest() {
-    sendingRef.current = false;
-    clearVerifySent();
-    await sendVerifyTest();
   }
 
   async function unlink() {
@@ -258,11 +162,9 @@ export default function InstantNotificationsCard({
     try {
       const { data } = await api.post('/push/instant-channel/unlink', { device_key: deviceKey });
       clearNtfyLinkConfirmed();
-      clearVerifySent();
       setLinkConfirmed(false);
       setAskedOpen(false);
       setAppOpened(false);
-      setAwaitingReceipt(false);
       setChannel(data);
       setMsg('تم فك ربط هذا الجهاز.');
     } catch (err) {
@@ -296,7 +198,7 @@ export default function InstantNotificationsCard({
     return (
       <section className="mt-4 rounded-xl bg-white p-4 shadow-sm">
         <p className="text-sm font-semibold text-primary">هذا الجهاز مربوط مع ntfy</p>
-        <p className="mt-1 text-sm text-[#65676B]">الإشعار بيوصل على هذا الجهاز بعد ما التطبيق سمح بالإشعارات.</p>
+        <p className="mt-1 text-sm text-[#65676B]">{NOTIFICATION_HINT}</p>
         <button
           type="button"
           disabled={testing}
@@ -313,7 +215,7 @@ export default function InstantNotificationsCard({
         >
           {busy ? 'جاري فك الربط…' : 'فك ربط هذا الجهاز'}
         </button>
-        {msg ? <p className="mt-2 text-sm text-muted-foreground">{msg}</p> : null}
+        {msg && msg !== NOTIFICATION_HINT ? <p className="mt-2 text-sm text-muted-foreground">{msg}</p> : null}
       </section>
     );
   }
@@ -361,47 +263,15 @@ export default function InstantNotificationsCard({
           </button>
         </div>
       ) : null}
-      {appOpened && !awaitingReceipt ? (
+      {appOpened ? (
         <button
           type="button"
           disabled={busy || !channel?.topic}
-          onClick={startLink}
+          onClick={confirmLink}
           className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-60"
         >
           ربط هذا الجهاز
         </button>
-      ) : null}
-      {awaitingReceipt ? (
-        <div className="mt-3 space-y-2">
-          <p className="text-sm font-semibold text-foreground">وصلك الإشعار التجريبي؟</p>
-          <p className="text-xs leading-relaxed text-[#65676B]">
-            هيك نتأكد إن تطبيق ntfy سمح بالإشعارات. إذا ما وصل، افتح ntfy واضغط سماح على الإشعارات.
-          </p>
-          <button
-            type="button"
-            disabled={busy || testing}
-            onClick={confirmReceived}
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-60"
-          >
-            وصلني الإشعار
-          </button>
-          <button
-            type="button"
-            disabled={busy || testing}
-            onClick={denyReceived}
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[#E4E6EB] px-4 text-sm font-semibold text-foreground hover:bg-[#d8dadf] disabled:opacity-60"
-          >
-            ما وصلني الإشعار
-          </button>
-          <button
-            type="button"
-            disabled={busy || testing}
-            onClick={retryVerifyTest}
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg px-4 text-sm font-semibold text-[#65676B] hover:bg-[#F0F2F5] disabled:opacity-60"
-          >
-            {testing ? 'جاري الإرسال…' : 'إرسال الإشعار التجريبي مرة ثانية'}
-          </button>
-        </div>
       ) : null}
       {msg ? <p className="mt-2 text-sm text-muted-foreground">{msg}</p> : null}
     </section>
