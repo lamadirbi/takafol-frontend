@@ -1,7 +1,7 @@
 const STORAGE_KEY = 'takafol_ntfy_device_key';
 const STORE_OPENED_KEY = 'takafol_ntfy_store_opened';
+const ASKED_OPEN_KEY = 'takafol_ntfy_asked_open';
 const APP_OPENED_KEY = 'takafol_ntfy_app_opened';
-const PENDING_OPEN_KEY = 'takafol_ntfy_pending_open';
 const LINK_CONFIRMED_KEY = 'takafol_ntfy_link_confirmed';
 
 export function ntfyDeviceKey() {
@@ -38,6 +38,25 @@ export function markNtfyStoreOpened() {
   }
 }
 
+export function ntfyAskedOpen() {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.sessionStorage.getItem(ASKED_OPEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markNtfyAskedOpen() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(ASKED_OPEN_KEY, '1');
+    window.sessionStorage.removeItem(APP_OPENED_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function ntfyAppOpened() {
   if (typeof window === 'undefined') return false;
   try {
@@ -51,13 +70,10 @@ export function markNtfyAppOpened() {
   if (typeof window === 'undefined') return;
   try {
     window.sessionStorage.setItem(APP_OPENED_KEY, '1');
+    window.sessionStorage.removeItem(ASKED_OPEN_KEY);
   } catch {
     /* ignore */
   }
-}
-
-export function ntfyPendingOpenKey() {
-  return PENDING_OPEN_KEY;
 }
 
 export function ntfyLinkConfirmed() {
@@ -83,7 +99,7 @@ export function clearNtfyLinkConfirmed() {
   try {
     window.localStorage.removeItem(LINK_CONFIRMED_KEY);
     window.sessionStorage.removeItem(APP_OPENED_KEY);
-    window.sessionStorage.removeItem(PENDING_OPEN_KEY);
+    window.sessionStorage.removeItem(ASKED_OPEN_KEY);
   } catch {
     /* ignore */
   }
@@ -93,7 +109,7 @@ export function clearNtfyAppOpened() {
   if (typeof window === 'undefined') return;
   try {
     window.sessionStorage.removeItem(APP_OPENED_KEY);
-    window.sessionStorage.removeItem(PENDING_OPEN_KEY);
+    window.sessionStorage.removeItem(ASKED_OPEN_KEY);
   } catch {
     /* ignore */
   }
