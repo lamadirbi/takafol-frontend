@@ -14,9 +14,9 @@ export default function FamilyUserGuidePage() {
   return (
     <FamilyShell title="دليل الاستخدام" subtitle={camp?.name} maxWidth="max-w-3xl">
       <UserGuide
-        kicker="حساب الأسرة"
-        title="دليل استخدام حساب العائلة"
-        intro="هذا دليلكم لكل اللي بتقدروا تعملوه من حساب رب الأسرة: الملف، الأخبار، الطرود، وطلب تعديل البيانات."
+        kicker="العائلة"
+        title="دليل العائلة"
+        intro="شو تشوف من حسابك: الملف، الأخبار، والطرود."
         sections={familyGuideSections(base)}
       />
     </FamilyShell>

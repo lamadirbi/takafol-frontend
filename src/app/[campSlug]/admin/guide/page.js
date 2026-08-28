@@ -15,9 +15,9 @@ export default function AdminUserGuidePage() {
     <AdminShell title="دليل الاستخدام" subtitle={camp?.name}>
       <div className="mx-auto max-w-3xl">
         <UserGuide
-          kicker="لوحة الإدارة"
-          title="دليل استخدام إدارة المخيم"
-          intro="كل ميزة في اللوحة مشروحة هنا بالخطوات. من كل صفحة تقدروا تفتحوا دليل تلك الصفحة، أو ترجعوا لهذا الدليل الكامل."
+          kicker="الإدارة"
+          title="دليل الإدارة"
+          intro="شو تعمل من كل صفحة. اضغط القسم اللي بدك ياه."
           sections={adminGuideSections(base)}
         />
       </div>

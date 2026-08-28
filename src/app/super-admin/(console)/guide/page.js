@@ -8,9 +8,9 @@ export default function SuperAdminUserGuidePage() {
   return (
     <SuperAdminShell title="دليل الاستخدام" description="كل أقسام إدارة المنصة">
       <UserGuide
-        kicker="إدارة المنصة"
-        title="دليل استخدام الإدارة العليا"
-        intro="خطوات العمل على المخيمات، طلبات التسجيل، رسائل التواصل، وتجديد الاشتراك."
+        kicker="المنصة"
+        title="دليل المنصة"
+        intro="المخيمات، الطلبات، الرسائل، والتجديد."
         sections={superAdminGuideSections()}
       />
     </SuperAdminShell>

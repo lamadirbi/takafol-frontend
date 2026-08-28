@@ -66,7 +66,7 @@ export default function UserGuide({ kicker, title, intro, sections }) {
                 href={section.pageHref}
                 className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-primary px-3 text-sm font-semibold text-white hover:brightness-[0.96]"
               >
-                فتح الصفحة
+                افتح الصفحة
               </Link>
             ) : null}
           </div>
