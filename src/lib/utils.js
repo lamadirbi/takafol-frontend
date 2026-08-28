@@ -91,6 +91,9 @@ export function getApiErrorMessage(err, fallback = 'حدث خطأ. حاول مر
     const first = Object.values(errors).flat()?.find((m) => typeof m === 'string');
     if (first) return first;
   }
+  if (err?.response?.status === 502 || err?.response?.status === 504) {
+    return 'السيرفر قطع الاستيراد لأنه أخذ وقت. حدّث الصفحة وجرب ترفع الملف مرة ثانية.';
+  }
   if (err?.code === 'ECONNABORTED' || /timeout of \d+ms exceeded/i.test(String(err?.message || ''))) {
     return 'الطلب أخذ وقت أطول من المتوقع. خلّي الصفحة مفتوحة وحاول مرة ثانية.';
   }
