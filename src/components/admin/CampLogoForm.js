@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Alert from '@/components/ui/Alert';
+import LogoCropModal from '@/components/admin/LogoCropModal';
 import { api } from '@/lib/api';
 import { campLogoSrc, DEFAULT_BRAND_LOGO } from '@/lib/brand';
 import { getApiErrorMessage } from '@/lib/utils';
@@ -14,19 +15,13 @@ export default function CampLogoForm() {
   const { camp, refreshCamp } = useCamp() || {};
   const [uploading, setUploading] = useState(false);
   const [removing, setRemoving] = useState(false);
-  const [preview, setPreview] = useState('');
+  const [sourceFile, setSourceFile] = useState(null);
   const [error, setError] = useState('');
 
   const currentSrc = campLogoSrc(camp);
   const hasCustomLogo = Boolean(camp?.logo_url || camp?.logo_path);
 
-  useEffect(() => {
-    return () => {
-      if (preview) URL.revokeObjectURL(preview);
-    };
-  }, [preview]);
-
-  async function onFileChange(e) {
+  function onFileChange(e) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -40,20 +35,22 @@ export default function CampLogoForm() {
     }
 
     setError('');
+    setSourceFile(file);
+  }
+
+  async function uploadCropped(file) {
     setUploading(true);
-    const localPreview = URL.createObjectURL(file);
-    setPreview(localPreview);
+    setError('');
     try {
       const fd = new FormData();
       fd.append('logo', file);
       await api.post('/admin/camp/logo', fd);
       await refreshCamp?.();
+      setSourceFile(null);
     } catch (err) {
       setError(getApiErrorMessage(err, 'تعذر رفع الشعار.'));
     } finally {
       setUploading(false);
-      URL.revokeObjectURL(localPreview);
-      setPreview('');
     }
   }
 
@@ -70,13 +67,14 @@ export default function CampLogoForm() {
     }
   }
 
-  const displaySrc = preview || currentSrc || DEFAULT_BRAND_LOGO;
+  const displaySrc = currentSrc || DEFAULT_BRAND_LOGO;
 
   return (
     <section className="mb-5 rounded-xl bg-white p-4 shadow-sm" dir="rtl">
       <h2 className="text-sm font-semibold text-foreground">شعار المخيم</h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        يظهر في صفحة المخيم، شريط الموقع، وصفحة الدخول. JPG أو PNG أو WebP حتى {MAX_LOGO_MB} ميغابايت.
+        ارفع الصورة، قصّها وعدّل حجمها قبل الحفظ. تظهر في صفحة المخيم وشريط الموقع وصفحة الدخول. JPG أو PNG أو
+        WebP حتى {MAX_LOGO_MB} ميغابايت.
       </p>
 
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -110,7 +108,9 @@ export default function CampLogoForm() {
             ) : null}
           </div>
           <p className="text-xs text-muted-foreground">
-            {hasCustomLogo ? 'يُستخدم الشعار المرفوع في صفحة المخيم للعائلات والزوار.' : 'حالياً يظهر شعار المنصة الافتراضي حتى ترفع شعاراً خاصاً.'}
+            {hasCustomLogo
+              ? 'يُستخدم الشعار المرفوع في صفحة المخيم للعائلات والزوار.'
+              : 'حالياً يظهر شعار المنصة الافتراضي حتى ترفع شعاراً خاصاً.'}
           </p>
         </div>
       </div>
@@ -119,6 +119,16 @@ export default function CampLogoForm() {
           {error}
         </Alert>
       ) : null}
+
+      <LogoCropModal
+        file={sourceFile}
+        open={Boolean(sourceFile)}
+        confirming={uploading}
+        onClose={() => {
+          if (!uploading) setSourceFile(null);
+        }}
+        onConfirm={uploadCropped}
+      />
     </section>
   );
 }
