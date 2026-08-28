@@ -85,11 +85,11 @@ export default function AdminFamiliesPage() {
     e.target.value = '';
     if (!file) return;
     setImporting(true);
-    setImportMsg('');
+    setImportMsg('جاري الاستيراد… الملف الكبير ممكن يحتاج دقيقة أو أكتر. خلّي الصفحة مفتوحة.');
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const { data } = await api.post('/admin/import/families-excel', fd);
+      const { data } = await api.post('/admin/import/families-excel', fd, { timeout: 300000 });
       const created = data?.created ?? 0;
       const updated = data?.updated ?? 0;
       const skipped = data?.skipped ?? 0;
@@ -104,7 +104,15 @@ export default function AdminFamiliesPage() {
       }
       fetchFamilies();
     } catch (err) {
-      setImportMsg(getApiErrorMessage(err, 'تعذر استيراد الملف. تحقق من الصيغة وحاول مرة أخرى.'));
+      const timedOut = err?.code === 'ECONNABORTED' || /timeout/i.test(String(err?.message || ''));
+      setImportMsg(
+        getApiErrorMessage(
+          err,
+          timedOut
+            ? 'الاستيراد أخذ وقت أطول من المتوقع. خلّي الصفحة مفتوحة وجرب ترفع الملف مرة ثانية.'
+            : 'تعذر استيراد الملف. تحقق من الصيغة وحاول مرة أخرى.'
+        )
+      );
     } finally {
       setImporting(false);
     }
@@ -297,6 +305,8 @@ export default function AdminFamiliesPage() {
                 <Button
                   type="button"
                   variant="outline"
+                  disabled={importing}
+                  loading={importing}
                   onClick={() => fileRef.current?.click()}
                 >
                   استيراد Excel
