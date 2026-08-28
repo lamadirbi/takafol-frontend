@@ -90,9 +90,18 @@ export default function AdminFamiliesPage() {
       const fd = new FormData();
       fd.append('file', file);
       const { data } = await api.post('/admin/import/families-excel', fd);
-      setImportMsg(
-        `تم اعتماد حقول الملف ثم الاستيراد: أُنشئ ${data?.created ?? 0}، حُدِّث ${data?.updated ?? 0}، تُخطّي ${data?.skipped ?? 0}.`
-      );
+      const created = data?.created ?? 0;
+      const updated = data?.updated ?? 0;
+      const skipped = data?.skipped ?? 0;
+      if (created === 0 && updated === 0 && skipped > 0) {
+        setImportMsg(
+          `تم اعتماد حقول الملف، بس ما انضاف عائلات: تُخطّي ${skipped}. تأكد إن عمود الاسم وعمود رقم الهوية فيهم بيانات.`
+        );
+      } else {
+        setImportMsg(
+          `تم اعتماد حقول الملف ثم الاستيراد: أُنشئ ${created}، حُدِّث ${updated}، تُخطّي ${skipped}.`
+        );
+      }
       fetchFamilies();
     } catch (err) {
       setImportMsg(getApiErrorMessage(err, 'تعذر استيراد الملف. تحقق من الصيغة وحاول مرة أخرى.'));
