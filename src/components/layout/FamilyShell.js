@@ -14,12 +14,12 @@ import AccountMenu from '@/components/ui/AccountMenu';
 import InstallPwaButton from '@/components/ui/InstallPwaButton';
 import FamilyMobileNav from '@/components/layout/FamilyMobileNav';
 import {
-  IconHome,
   IconMegaphone,
   IconClipboard,
   IconBuilding,
   IconBell,
   IconUser,
+  IconInfo,
 } from '@/components/ui/Icons';
 
 export function FamilyToolbar({ children, className, maxWidth = 'max-w-5xl' }) {
@@ -47,28 +47,6 @@ function NotifBadge({ count }) {
   );
 }
 
-function TopTab({ href, active, label, badge, children }) {
-  return (
-    <Link
-      href={href}
-      aria-label={label}
-      aria-current={active ? 'page' : undefined}
-      className={cn(
-        'relative flex h-14 w-[72px] items-center justify-center rounded-lg transition-colors',
-        active ? 'text-primary' : 'text-[#65676B] hover:bg-black/5'
-      )}
-    >
-      <span className="relative inline-flex">
-        {children}
-        <NotifBadge count={badge} />
-      </span>
-      {active ? (
-        <span aria-hidden className="absolute inset-x-3 bottom-0 h-[3px] rounded-t-full bg-primary" />
-      ) : null}
-    </Link>
-  );
-}
-
 function railClass(active) {
   return cn(
     'flex min-h-11 items-center gap-3 rounded-xl px-2 py-2 text-sm transition-colors',
@@ -93,6 +71,7 @@ export default function FamilyShell({
   const newsHref = campSlug ? `/${campSlug}/news` : '/news';
   const notifHref = campSlug ? `/${campSlug}/family/notifications` : '/';
   const requestsHref = campSlug ? `/${campSlug}/family/change-requests` : '/';
+  const guideHref = campSlug ? `/${campSlug}/family/guide` : '/';
   const brandName = camp?.name || 'تَكافل';
   const logoSrc = campLogoSrc(camp);
   const displayName = familyUser?.name || title || 'الأسرة';
@@ -101,6 +80,7 @@ export default function FamilyShell({
   const onNews = pathname === newsHref || pathname?.endsWith('/news');
   const onNotif = pathname === notifHref || pathname?.startsWith(`${notifHref}`);
   const onRequests = pathname?.includes('/family/change-request');
+  const onGuide = pathname === guideHref || pathname?.startsWith(`${guideHref}`);
   const onCamp = pathname === homeHref;
 
   const rail = [
@@ -108,6 +88,7 @@ export default function FamilyShell({
     { href: newsHref, label: 'الأخبار', icon: IconMegaphone, active: onNews },
     { href: notifHref, label: 'الإشعارات', icon: IconBell, active: onNotif, badge: unreadCount },
     { href: requestsHref, label: 'الطلبات', icon: IconClipboard, active: onRequests },
+    { href: guideHref, label: 'دليل الاستخدام', icon: IconInfo, active: onGuide },
     { href: homeHref, label: 'صفحة المخيم', icon: IconBuilding, active: onCamp },
   ];
 
@@ -133,24 +114,21 @@ export default function FamilyShell({
             </Link>
           </div>
 
-          <nav className="hidden items-center md:flex" aria-label="التنقل الرئيسي">
-            <TopTab href={newsHref} active={onNews} label="الرئيسية">
-              <IconHome className="h-6 w-6" />
-            </TopTab>
-            <TopTab href={requestsHref} active={onRequests} label="الطلبات">
-              <IconClipboard className="h-6 w-6" />
-            </TopTab>
-            <TopTab href={notifHref} active={onNotif} label="الإشعارات" badge={unreadCount}>
-              <IconBell className="h-6 w-6" />
-            </TopTab>
-          </nav>
-
           <div className="flex items-center gap-2">
+            <Link
+              href={notifHref}
+              aria-label="الإشعارات"
+              className="relative hidden h-10 w-10 items-center justify-center rounded-full bg-[#E4E6EB] text-foreground hover:bg-[#d8dadf] md:inline-flex"
+            >
+              <IconBell className="h-5 w-5" />
+              <NotifBadge count={unreadCount} />
+            </Link>
             <InstallPwaButton variant="header" />
             <AccountMenu
               name={displayName}
               profileHref={dashHref}
               profileLabel="حسابي"
+              extraLinks={[{ href: guideHref, label: 'دليل الاستخدام' }]}
               onLogout={() => logoutFamily(`/${campSlug}/login`)}
             />
           </div>
@@ -158,7 +136,7 @@ export default function FamilyShell({
       </header>
 
       <div className="mx-auto flex w-full max-w-[1280px] flex-1">
-        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 flex-col overflow-y-auto px-3 py-4 lg:flex">
+        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 flex-col overflow-y-auto px-3 py-4 md:flex">
           <nav className="flex flex-1 flex-col gap-0.5" dir="rtl">
             {rail.map((item) => {
               const Icon = item.icon;

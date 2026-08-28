@@ -12,6 +12,8 @@ import FamilyProfileView from '@/components/admin/FamilyProfileView';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { getApiErrorMessage, unwrapResource } from '@/lib/utils';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
 
 const AdminFamilyManageModal = dynamic(() => import('@/components/admin/AdminFamilyManageModal'), {
   ssr: false,
@@ -66,28 +68,41 @@ export default function AdminFamilyProfilePage() {
         />
       }
     >
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Link
-            href={`${base}/admin/families`}
-            className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline"
-          >
-            العودة لسجل العائلات
-          </Link>
-          {family ? (
-            <p className="text-sm text-muted-foreground">ملف الأسرة الكامل: البيانات، الأفراد، رقم الدخول، والطرود.</p>
-          ) : null}
-        </div>
+      <PageGuidePanel
+        sections={adminGuideSections(base)}
+        sectionId="family-file"
+        guideHref={adminGuideHref(base)}
+      />
+      <div className="mb-4">
+        <Link
+          href={`${base}/admin/families`}
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline"
+        >
+          العودة لسجل العائلات
+        </Link>
         {family ? (
-          <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
-            تعديل
-          </Button>
+          <p className="text-sm text-muted-foreground">ملف الأسرة الكامل: البيانات، الأفراد، رقم الدخول، والطرود.</p>
         ) : null}
       </div>
 
       {loading ? <PageSpinner label="جاري تحميل الملف" /> : null}
       {error ? <Alert>{error}</Alert> : null}
-      {!loading && family ? <FamilyProfileView family={family} schema={schema} /> : null}
+      {!loading && family ? (
+        <FamilyProfileView
+          family={family}
+          schema={schema}
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              className="border-0 bg-white shadow-sm hover:bg-[#F0F2F5]"
+              onClick={() => setEditOpen(true)}
+            >
+              تعديل
+            </Button>
+          }
+        />
+      ) : null}
     </AdminShell>
   );
 }

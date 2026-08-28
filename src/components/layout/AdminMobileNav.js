@@ -24,11 +24,11 @@ export default function AdminMobileNav() {
   const primary = [
     { href: `${base}/admin/dashboard`, label: 'اليوم', icon: 'home', match: 'prefix' },
     { href: `${base}/admin/families`, label: 'العائلات', icon: 'family', match: 'prefix' },
-    { href: `${base}/admin/filter`, label: 'فلترة', icon: 'filter', match: 'exact' },
-    { href: `${base}/admin/change-requests`, label: 'طلبات', icon: 'clipboard', match: 'exact' },
   ];
 
   const moreLinks = [
+    { href: `${base}/admin/filter`, label: 'فلترة للتوزيع', icon: 'filter', match: 'exact' },
+    { href: `${base}/admin/change-requests`, label: 'طلبات التعديل', icon: 'clipboard', match: 'exact' },
     { href: `${base}/news`, label: 'الأخبار', icon: 'megaphone', match: 'news' },
     { href: `${base}/admin/camp-records`, label: 'سجلات الفلترة', icon: 'folder', match: 'exact' },
     { href: `${base}/admin/family-fields`, label: 'حقول العائلات', icon: 'list', match: 'exact' },
@@ -43,6 +43,13 @@ export default function AdminMobileNav() {
       match: 'prefix',
     });
   }
+
+  moreLinks.push({
+    href: `${base}/admin/guide`,
+    label: 'دليل الاستخدام',
+    icon: 'info',
+    match: 'exact',
+  });
 
   const moreActive = moreLinks.some((item) => isLinkActive(pathname, item));
 
@@ -120,7 +127,7 @@ export default function AdminMobileNav() {
         aria-label="تنقل الإدارة"
         dir="rtl"
       >
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-3">
           {primary.map((l) => {
             const Icon = NAV_ICONS[l.icon] || NAV_ICONS.home;
             const active = isLinkActive(pathname, l);

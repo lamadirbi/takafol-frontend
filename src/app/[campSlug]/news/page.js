@@ -14,6 +14,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCamp } from '@/context/CampContext';
 import { unwrapApiList } from '@/lib/utils';
 import { IconMegaphone } from '@/components/ui/Icons';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
+import { familyGuideHref, familyGuideSections } from '@/components/guide/familyGuide';
 
 export default function NewsPage() {
   const { campSlug } = useParams() || {};
@@ -122,9 +125,15 @@ export default function NewsPage() {
 
   if (canPost) {
     const adminHome = campSlug ? `/${campSlug}/admin/dashboard` : '/';
+    const adminBase = campSlug ? `/${campSlug}` : '';
     return (
       <AdminShell title="الأخبار" subtitle={camp?.name}>
         <div className="mx-auto w-full max-w-[680px]">
+          <PageGuidePanel
+            sections={adminGuideSections(adminBase)}
+            sectionId="news"
+            guideHref={adminGuideHref(adminBase)}
+          />
           <div className="mb-4 flex items-center gap-3">
             <BackButton fallbackHref={adminHome} className="rounded-full border-0 bg-[#E4E6EB]" />
             <h1 className="text-xl font-bold text-foreground">نشر خبر</h1>
@@ -136,8 +145,14 @@ export default function NewsPage() {
   }
 
   if (familyUser) {
+    const familyBase = campSlug ? `/${campSlug}` : '';
     return (
       <FamilyShell title="الأخبار" subtitle={camp?.name} maxWidth="max-w-[680px]">
+        <PageGuidePanel
+          sections={familyGuideSections(familyBase)}
+          sectionId="news"
+          guideHref={familyGuideHref(familyBase)}
+        />
         {feed}
       </FamilyShell>
     );

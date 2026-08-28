@@ -12,6 +12,8 @@ import Alert from '@/components/ui/Alert';
 import { IconWhatsApp } from '@/components/ui/Icons';
 import { api } from '@/lib/api';
 import { formatDate, getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { SUPER_ADMIN_GUIDE_HREF, superAdminGuideSections } from '@/components/guide/superAdminGuide';
 
 const REJECT_REASONS = [
   'رقم الواتساب غير صالح أو لا يمكن التواصل عليه',
@@ -242,6 +244,11 @@ export default function SuperAdminRequestsPage() {
         </>
       }
     >
+      <PageGuidePanel
+        sections={superAdminGuideSections()}
+        sectionId="requests"
+        guideHref={SUPER_ADMIN_GUIDE_HREF}
+      />
       <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
         الطلب يصل من الصفحة الرئيسية. <strong className="font-medium text-foreground">الاعتماد</strong> يعني أن اللجنة مناسبة، وبعده تنشئ المخيم يدوياً.
         <strong className="font-medium text-foreground"> الرفض</strong> يحتاج سبباً واضحاً (رقم خاطئ، مخيم مكرر، بيانات ناقصة…) ليُحفظ ويُرسل عبر واتساب.

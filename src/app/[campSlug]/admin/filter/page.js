@@ -18,6 +18,8 @@ import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { cn, getApiErrorMessage } from '@/lib/utils';
 import { analyzeFilterReadiness } from '@/lib/filterReadiness';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
 
 const SOCIAL_AR = {
   married: 'متزوج',
@@ -337,6 +339,11 @@ export default function AdminFilterPage() {
   return (
     <AdminShell title="فلترة العائلات والأفراد" subtitle={camp?.name}>
           <div className="mx-auto max-w-6xl space-y-8">
+            <PageGuidePanel
+              sections={adminGuideSections(campSlug ? `/${campSlug}` : '')}
+              sectionId="filter"
+              guideHref={adminGuideHref(campSlug ? `/${campSlug}` : '')}
+            />
             <PageHeading
               className="mb-0"
               title="فلترة حسب العائلة أو الأفراد"

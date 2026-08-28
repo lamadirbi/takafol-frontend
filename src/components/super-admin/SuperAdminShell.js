@@ -31,6 +31,12 @@ export default function SuperAdminShell({ title, description, actions, children,
             </Link>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/super-admin/guide"
+              className="inline-flex min-h-10 items-center rounded-lg bg-[#E4E6EB] px-3 text-sm font-semibold text-foreground hover:bg-[#d8dadf]"
+            >
+              دليل الاستخدام
+            </Link>
             <InstallPwaButton variant="header" />
             <LogoutButton
               label="خروج"

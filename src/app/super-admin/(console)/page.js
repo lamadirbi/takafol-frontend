@@ -3,9 +3,17 @@
 import Link from 'next/link';
 import SuperAdminShell from '@/components/super-admin/SuperAdminShell';
 import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
-import { IconBuilding, IconClipboard, IconMegaphone, IconChat } from '@/components/ui/Icons';
+import { IconBuilding, IconClipboard, IconMegaphone, IconChat, IconInfo } from '@/components/ui/Icons';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { SUPER_ADMIN_GUIDE_HREF, superAdminGuideSections } from '@/components/guide/superAdminGuide';
 
 const SECTIONS = [
+  {
+    href: '/super-admin/guide',
+    title: 'دليل الاستخدام',
+    desc: 'خطوات كل قسم في إدارة المنصة.',
+    icon: IconInfo,
+  },
   {
     href: '/super-admin/camps',
     title: 'المخيمات',
@@ -35,6 +43,11 @@ const SECTIONS = [
 export default function SuperAdminHomePage() {
   return (
     <SuperAdminShell title="إدارة المنصة" description="اختر قسماً للمتابعة">
+      <PageGuidePanel
+        sections={superAdminGuideSections()}
+        sectionId="hub"
+        guideHref={SUPER_ADMIN_GUIDE_HREF}
+      />
       <InstantNotificationsCard
         title="إشعارات المنصة"
         description="اربط تطبيق ntfy حتى يوصلك إشعار عند طلب تسجيل مخيم، رسالة تواصل، تجديد اشتراك، أو قرب انتهاء الاشتراك."

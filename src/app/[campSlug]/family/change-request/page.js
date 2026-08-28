@@ -15,6 +15,8 @@ import { getApiErrorMessage, unwrapResource } from '@/lib/utils';
 import { RELATIONSHIP_OPTIONS } from '@/lib/memberOptions';
 import FamilySchemaFields from '@/components/admin/FamilySchemaFields';
 import { enabledFamilyFields, formFromFamily } from '@/lib/familyFormSchema';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { familyGuideHref, familyGuideSections } from '@/components/guide/familyGuide';
 
 const GENDER_OPTIONS = [
   { value: 'male', label: 'ذكر' },
@@ -287,6 +289,11 @@ export default function FamilyChangeRequestPage() {
         </FamilyToolbar>
       }
     >
+        <PageGuidePanel
+          sections={familyGuideSections(campSlug ? `/${campSlug}` : '')}
+          sectionId="request"
+          guideHref={familyGuideHref(campSlug ? `/${campSlug}` : '')}
+        />
         <h1 className="text-2xl font-bold text-foreground">تعديل مقترح على السجل</h1>
         <p className="mt-2 text-sm text-[#65676B]">
           عدّل البيانات كما تريدها أن تصبح؛ لا يُطبَّق أي تغيير على السجل إلا بعد موافقة الإدارة.

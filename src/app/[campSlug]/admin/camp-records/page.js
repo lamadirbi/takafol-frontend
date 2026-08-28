@@ -11,6 +11,8 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { cn, formatDate, getApiErrorMessage, unwrapApiList, unwrapResource } from '@/lib/utils';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
 
 function resultCount(row) {
   const snap = row?.snapshot;
@@ -170,6 +172,11 @@ export default function CampRecordsPage() {
         </>
       }
     >
+          <PageGuidePanel
+            sections={adminGuideSections(base)}
+            sectionId="records"
+            guideHref={adminGuideHref(base)}
+          />
           <PageHeading
             title="سجلات فلترة المخيم"
             description="اضغط على سجل للانتقال إلى صفحة التوزيع والاستلام أو عرّف اللقطة سريعاً."

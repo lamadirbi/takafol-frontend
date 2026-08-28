@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,16 +36,15 @@ export default function AdminTopbar({ title, subtitle }) {
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <InstallPwaButton variant="header" />
-        <Link
-          href="/"
-          className="hidden min-h-10 items-center rounded-lg bg-[#E4E6EB] px-3 text-sm font-semibold text-foreground hover:bg-[#d8dadf] sm:inline-flex"
-        >
-          الرئيسية
-        </Link>
         <AccountMenu
           name={adminUser?.name || 'إدارة'}
           profileHref={dashHref}
           profileLabel="لوحة الإدارة"
+          extraLinks={
+            campSlug
+              ? [{ href: `/${campSlug}/admin/guide`, label: 'دليل الاستخدام' }]
+              : []
+          }
           onLogout={() => logoutAdmin(adminLoginPath)}
         />
       </div>

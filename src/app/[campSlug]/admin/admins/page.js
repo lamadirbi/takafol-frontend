@@ -13,8 +13,13 @@ import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { getApiErrorMessage, unwrapApiList } from '@/lib/utils';
+import { useParams } from 'next/navigation';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
 
 export default function AdminUsersPage() {
+  const { campSlug } = useParams();
+  const base = campSlug ? `/${campSlug}` : '';
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -163,6 +168,11 @@ export default function AdminUsersPage() {
         </>
       }
     >
+      <PageGuidePanel
+        sections={adminGuideSections(base)}
+        sectionId="admins"
+        guideHref={adminGuideHref(base)}
+      />
       <PageHeading
         title={`المسؤولين في ${camp?.name || ''}`}
         description="المسؤول الرئيسي يضيف مديراً ثانياً، يشوف اسمه واسم المستخدم وكلمة السر، ويقدر يعدّل بياناته لاحقاً. كلمة السر تظهر عند الإنشاء أو عند تعيين كلمة جديدة فقط."

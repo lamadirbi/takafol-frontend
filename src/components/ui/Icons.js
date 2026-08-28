@@ -263,4 +263,6 @@ export const NAV_ICONS = {
   menu: IconMenu,
   list: IconList,
   chat: IconChat,
+  info: IconInfo,
+  building: IconBuilding,
 };

@@ -37,6 +37,13 @@ export default function Sidebar() {
     });
   }
 
+  archive.push({
+    href: `${base}/admin/guide`,
+    label: 'دليل الاستخدام',
+    icon: 'info',
+    match: 'exact',
+  });
+
   function isActive(item) {
     if (!pathname) return false;
     if (item.match === 'exact') return pathname === item.href;

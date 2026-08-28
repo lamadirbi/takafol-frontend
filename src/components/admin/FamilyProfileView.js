@@ -74,27 +74,28 @@ export default function FamilyProfileView({ family, schema, actions = null }) {
 
   return (
     <div className="space-y-4">
-      <section className="overflow-hidden rounded-xl bg-white shadow-sm">
-        <div className="h-28 bg-gradient-to-l from-[#1877F2] to-primary sm:h-32" />
-        <div className="px-4 pb-5">
-          <div className="-mt-10 flex flex-wrap items-end justify-between gap-3">
-            <div className="flex min-w-0 items-end gap-3">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-sm">
-                {initials(name)}
-              </div>
-              <div className="min-w-0 pb-1">
-                <h1 className="break-words text-xl font-bold leading-snug">{name}</h1>
-                <p className="mt-0.5 text-sm text-[#65676B]">ملف العائلة</p>
-              </div>
+      <section className="rounded-xl bg-white shadow-sm">
+        <div className="relative">
+          <div className="h-28 rounded-t-xl bg-gradient-to-l from-[#1877F2] to-primary sm:h-32">
+            {actions ? <div className="absolute start-3 top-3 z-10">{actions}</div> : null}
+          </div>
+          <div className="absolute bottom-0 start-4 translate-y-1/2">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-sm sm:h-24 sm:w-24 sm:text-4xl">
+              {initials(name)}
             </div>
-            <div className="flex flex-wrap items-center gap-2 pb-1">
-              {family?.profile_complete ? (
-                <Badge variant="success">الملف مكتمل</Badge>
-              ) : (
-                <Badge variant="warning">الملف غير مكتمل</Badge>
-              )}
-              {actions}
+          </div>
+        </div>
+        <div className="px-4 pb-5 pt-14 sm:pt-16">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-bold leading-snug text-foreground sm:text-2xl">{name}</h1>
+              <p className="mt-0.5 text-sm text-[#65676B]">ملف العائلة</p>
             </div>
+            {family?.profile_complete ? (
+              <Badge variant="success">الملف مكتمل</Badge>
+            ) : (
+              <Badge variant="warning">الملف غير مكتمل</Badge>
+            )}
           </div>
         </div>
       </section>

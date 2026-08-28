@@ -12,6 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNotice } from '@/context/NoticeContext';
 import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
 import CampLogoForm from '@/components/admin/CampLogoForm';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
 import Button from '@/components/ui/Button';
 import { formatDate, getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
 
@@ -157,6 +159,7 @@ export default function AdminDashboardPage() {
     sub?.status === 'locked' ? 'stamp' : sub?.status === 'grace' ? 'warn' : 'carbon';
 
   const quickLinks = [
+    { href: `${base}/admin/guide`, label: 'دليل الاستخدام', desc: 'خطوات كل ميزة في لوحة الإدارة' },
     { href: `${base}/admin/families`, label: 'سجل العائلات', desc: 'اضغط اسم رب الأسرة لفتح الملف، أو أضف وعدّل واستورد Excel' },
     { href: `${base}/admin/filter`, label: 'فلترة المخيم', desc: 'عائلات أو أفراد وحفظ السجلات' },
     { href: `${base}/admin/change-requests`, label: 'طلبات تعديل البيانات', desc: 'مراجعة الطلبات وقبولها أو رفضها' },
@@ -169,6 +172,11 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminShell title="اليوم" subtitle={camp?.name}>
+      <PageGuidePanel
+        sections={adminGuideSections(base)}
+        sectionId="today"
+        guideHref={adminGuideHref(base)}
+      />
       {sub && (sub.status === 'grace' || sub.status === 'locked') ? (
         <FilePanel spine={subSpine} className="mb-5">
           <p className="text-sm font-medium text-foreground">

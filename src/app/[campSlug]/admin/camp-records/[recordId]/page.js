@@ -19,6 +19,8 @@ import {
   unwrapPaginated,
   unwrapResource,
 } from '@/lib/utils';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
 
 function buildBeneficiaryRows(record) {
   const scope = record?.criteria?.filter_scope || 'family';
@@ -281,6 +283,11 @@ export default function CampRecordDetailPage() {
 
   return (
     <AdminShell title={record?.name || 'سجل الفلترة'} subtitle={camp?.name}>
+          <PageGuidePanel
+            sections={adminGuideSections(base)}
+            sectionId="record-detail"
+            guideHref={adminGuideHref(base)}
+          />
           <PageHeading
             title={record?.name}
             description={`${record?.created_at ? formatDate(record.created_at) : ''} — ${scope === 'members' ? 'فلترة أفراد' : 'فلترة عائلات'} — عدد النتائج: ${resultCount}`}

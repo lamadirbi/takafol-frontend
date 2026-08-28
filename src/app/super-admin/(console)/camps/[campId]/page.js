@@ -13,6 +13,8 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { api } from '@/lib/api';
 import { readCachedAdminCamps, writeCachedAdminCamps } from '@/lib/authCache';
 import { getApiErrorMessage, unwrapApiList } from '@/lib/utils';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { SUPER_ADMIN_GUIDE_HREF, superAdminGuideSections } from '@/components/guide/superAdminGuide';
 import { useNotice } from '@/context/NoticeContext';
 
 function Field({ label, children }) {
@@ -314,6 +316,11 @@ export default function SuperAdminCampDetailPage() {
         </>
       }
     >
+      <PageGuidePanel
+        sections={superAdminGuideSections()}
+        sectionId="camp-detail"
+        guideHref={SUPER_ADMIN_GUIDE_HREF}
+      />
       {loading ? (
         <p className="py-12 text-center text-sm text-muted-foreground">جاري التحميل…</p>
       ) : error ? (

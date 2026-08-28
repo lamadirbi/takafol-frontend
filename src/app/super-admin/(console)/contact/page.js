@@ -11,6 +11,8 @@ import Alert from '@/components/ui/Alert';
 import { IconWhatsApp } from '@/components/ui/Icons';
 import { api } from '@/lib/api';
 import { formatDate, getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { SUPER_ADMIN_GUIDE_HREF, superAdminGuideSections } from '@/components/guide/superAdminGuide';
 
 function kindLabel(kind) {
   if (kind === 'platform_change') return 'طلب تعديل على المنصة';
@@ -168,6 +170,11 @@ export default function SuperAdminContactPage() {
         </Modal>
       }
     >
+      <PageGuidePanel
+        sections={superAdminGuideSections()}
+        sectionId="contact"
+        guideHref={SUPER_ADMIN_GUIDE_HREF}
+      />
       <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
         الرسائل تصل من صفحة <strong className="font-medium text-foreground">تواصل</strong>. راجعوا الطلب، ردّوا عبر
         واتساب إن لزم، ثم ضعوه قيد المتابعة أو أغلقوه.

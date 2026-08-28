@@ -7,8 +7,11 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Alert from '@/components/ui/Alert';
 import { api } from '@/lib/api';
+import { useParams } from 'next/navigation';
 import { useCamp } from '@/context/CampContext';
 import { getApiErrorMessage } from '@/lib/utils';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
 
 function newCustomField() {
   return {
@@ -24,7 +27,9 @@ function newCustomField() {
 }
 
 export default function FamilyFieldsSettingsPage() {
+  const { campSlug } = useParams();
   const { camp } = useCamp();
+  const base = campSlug ? `/${campSlug}` : '';
   const [fields, setFields] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -94,6 +99,11 @@ export default function FamilyFieldsSettingsPage() {
 
   return (
     <AdminShell title="حقول العائلات" subtitle={camp?.name}>
+      <PageGuidePanel
+        sections={adminGuideSections(base)}
+        sectionId="fields"
+        guideHref={adminGuideHref(base)}
+      />
       <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
         حدّد الحقول يدوياً، أو ارفع ملف إكسل من سجل العائلات: النظام بيعتمد أعمدة الملف كحقول. رقم الهوية واسم رب الأسرة
         لازم يضلوا ظاهرين لأنهم للدخول. نموذج الاستيراد فيه معايير الفلترة: الحالة الاجتماعية، عدد الأفراد، الجنس، تاريخ

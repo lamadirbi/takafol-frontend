@@ -16,6 +16,8 @@ import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { useNotice } from '@/context/NoticeContext';
 import { getApiErrorMessage, unwrapPaginated, downloadBlobFromResponse } from '@/lib/utils';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
 
 const AdminFamilyManageModal = dynamic(() => import('@/components/admin/AdminFamilyManageModal'), {
   ssr: false,
@@ -243,6 +245,12 @@ export default function AdminFamiliesPage() {
         accept=".xlsx,.xls"
         className="hidden"
         onChange={handleExcel}
+      />
+
+      <PageGuidePanel
+        sections={adminGuideSections(campSlug ? `/${campSlug}` : '')}
+        sectionId="families"
+        guideHref={adminGuideHref(campSlug ? `/${campSlug}` : '')}
       />
 
       {importMsg ? (

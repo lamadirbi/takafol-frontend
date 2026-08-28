@@ -14,6 +14,8 @@ import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDate, getApiErrorMessage, unwrapApiList } from '@/lib/utils';
 import ChangeRequestPayloadDetails from '@/components/shared/ChangeRequestPayloadDetails';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { familyGuideHref, familyGuideSections } from '@/components/guide/familyGuide';
 
 function statusLabel(status) {
   const s = String(status ?? '');
@@ -150,6 +152,11 @@ export default function FamilyChangeRequestsPage() {
         </FamilyToolbar>
       }
     >
+        <PageGuidePanel
+          sections={familyGuideSections(campSlug ? `/${campSlug}` : '')}
+          sectionId="requests"
+          guideHref={familyGuideHref(campSlug ? `/${campSlug}` : '')}
+        />
         <h1 className="text-2xl font-bold text-foreground">سجل طلبات تعديل البيانات</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           تُحفظ الطلبات هنا حتى تُراجعها الإدارة؛ عند القبول تُطبَّق التعديلات على السجل الرسمي.

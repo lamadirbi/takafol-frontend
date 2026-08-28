@@ -9,6 +9,8 @@ import { useCamp } from '@/context/CampContext';
 import { useFamilyFeed } from '@/context/FamilyFeedContext';
 import { formatRelativeTime } from '@/lib/utils';
 import { IconBell, IconMegaphone, IconPackage } from '@/components/ui/Icons';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { familyGuideHref, familyGuideSections } from '@/components/guide/familyGuide';
 
 function kindMeta(kind) {
   if (kind === 'package') {
@@ -36,6 +38,11 @@ export default function FamilyNotificationsPage() {
 
   return (
     <FamilyShell title="الإشعارات" subtitle={camp?.name} maxWidth="max-w-[680px]">
+      <PageGuidePanel
+        sections={familyGuideSections(campSlug ? `/${campSlug}` : '')}
+        sectionId="notifications"
+        guideHref={familyGuideHref(campSlug ? `/${campSlug}` : '')}
+      />
       <section className="overflow-hidden rounded-xl bg-white shadow-sm">
         <header className="flex items-center justify-between gap-3 px-4 py-3">
           <h1 className="text-[22px] font-bold text-foreground">الإشعارات</h1>

@@ -11,7 +11,9 @@ import { useFamilyFeed } from '@/context/FamilyFeedContext';
 import { familyFieldDisplay, genderLabel } from '@/lib/memberOptions';
 import { familyFieldValue } from '@/lib/familyFormSchema';
 import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
-import { IconBell, IconClipboard, IconPackage } from '@/components/ui/Icons';
+import { IconBell, IconClipboard, IconPackage, IconInfo } from '@/components/ui/Icons';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { familyGuideHref, familyGuideSections } from '@/components/guide/familyGuide';
 
 const LOGIN_FIELD = { key: 'login_serial', label: 'رقم الدخول' };
 
@@ -70,20 +72,29 @@ export default function FamilyDashboardPage() {
         </div>
       ) : null}
 
-      <section className="overflow-hidden rounded-xl bg-white shadow-sm">
-        <div className="h-36 bg-gradient-to-l from-[#1877F2] to-primary sm:h-40 md:h-48" />
-        <div className="px-3 pb-4 sm:px-4">
-          <div className="-mt-10 sm:-mt-12">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-sm sm:h-24 sm:w-24 sm:text-4xl md:h-28 md:w-28">
+      <PageGuidePanel
+        sections={familyGuideSections(campSlug ? `/${campSlug}` : '')}
+        sectionId="profile"
+        guideHref={familyGuideHref(campSlug ? `/${campSlug}` : '')}
+      />
+
+      <section className="rounded-xl bg-white shadow-sm">
+        <div className="relative">
+          <div className="h-28 rounded-t-xl bg-gradient-to-l from-[#1877F2] to-primary sm:h-36" />
+          <div className="absolute bottom-0 start-4 translate-y-1/2">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-sm sm:h-24 sm:w-24 sm:text-4xl">
               {initials(greetingName)}
             </div>
-            <div className="mt-3 min-w-0">
-              <h1 className="break-words text-xl font-bold leading-snug text-foreground sm:text-2xl">
-                {greetingName}
-              </h1>
-              <p className="mt-0.5 break-words text-sm text-[#65676B]">{camp?.name || 'الأسرة'}</p>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+          </div>
+        </div>
+        <div className="px-3 pb-4 pt-14 sm:px-4 sm:pt-16">
+          <div className="min-w-0">
+            <h1 className="break-words text-xl font-bold leading-snug text-foreground sm:text-2xl">
+              {greetingName}
+            </h1>
+            <p className="mt-0.5 break-words text-sm text-[#65676B]">{camp?.name || 'الأسرة'}</p>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
               <Link
                 href={`/${campSlug}/family/change-request`}
                 className={`inline-flex min-h-10 items-center justify-center rounded-lg bg-[#E4E6EB] px-2 text-center text-sm font-semibold text-foreground sm:px-3 ${
@@ -101,12 +112,18 @@ export default function FamilyDashboardPage() {
               </Link>
               <Link
                 href={`/${campSlug}/contact`}
-                className="col-span-2 inline-flex min-h-10 items-center justify-center rounded-lg bg-[#E4E6EB] px-2 text-center text-sm font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3"
+                className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#E4E6EB] px-2 text-center text-sm font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3"
               >
                 تواصل مع إدارة المنصة
               </Link>
+              <Link
+                href={`/${campSlug}/family/guide`}
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-[#E4E6EB] px-2 text-center text-sm font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3"
+              >
+                <IconInfo className="h-4 w-4 shrink-0" />
+                دليل الاستخدام
+              </Link>
             </div>
-          </div>
         </div>
       </section>
 

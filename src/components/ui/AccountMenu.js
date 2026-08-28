@@ -14,6 +14,7 @@ export default function AccountMenu({
   onLogout,
   profileHref,
   profileLabel = 'حسابي',
+  extraLinks = [],
 }) {
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -75,6 +76,17 @@ export default function AccountMenu({
               {profileLabel}
             </Link>
           ) : null}
+          {extraLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              className="flex min-h-10 items-center rounded-lg px-3 text-sm font-medium text-foreground hover:bg-[#F0F2F5]"
+              role="menuitem"
+            >
+              {link.label}
+            </Link>
+          ))}
           <button
             type="button"
             role="menuitem"

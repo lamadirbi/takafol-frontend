@@ -7,6 +7,8 @@ import Button from '@/components/ui/Button';
 import { api } from '@/lib/api';
 import { formatDate, getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
 import { useNotice } from '@/context/NoticeContext';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { SUPER_ADMIN_GUIDE_HREF, superAdminGuideSections } from '@/components/guide/superAdminGuide';
 
 function statusLabel(status) {
   if (status === 'approved') return 'معتمد';
@@ -54,6 +56,11 @@ export default function SuperAdminRenewalsPage() {
 
   return (
     <SuperAdminShell title="تجديد الاشتراك" description="اضغط اسم المخيم لعرض الإشعار">
+      <PageGuidePanel
+        sections={superAdminGuideSections()}
+        sectionId="renewals"
+        guideHref={SUPER_ADMIN_GUIDE_HREF}
+      />
       <NameList
         title="اسم المخيم"
         items={renewals}

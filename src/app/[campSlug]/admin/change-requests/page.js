@@ -17,6 +17,8 @@ import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { useNotice } from '@/context/NoticeContext';
 import { formatDate, getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
 
 function statusLabel(s) {
   if (s === 'pending') return 'قيد المراجعة';
@@ -231,6 +233,11 @@ export default function AdminChangeRequestsPage() {
         </>
       }
     >
+          <PageGuidePanel
+            sections={adminGuideSections(base)}
+            sectionId="change-requests"
+            guideHref={adminGuideHref(base)}
+          />
           <PageHeading
             title="طلبات التعديل"
             description="طلبات رب الأسرة لتعديل البيانات؛ راجع ثم اقبل أو ارفض. عند القبول تُطبَّق التعديلات على السجل."

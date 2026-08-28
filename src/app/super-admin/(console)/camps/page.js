@@ -10,6 +10,8 @@ import Alert from '@/components/ui/Alert';
 import { api } from '@/lib/api';
 import { getApiErrorMessage } from '@/lib/utils';
 import { readCachedAdminCamps, writeCachedAdminCamps } from '@/lib/authCache';
+import PageGuidePanel from '@/components/guide/PageGuidePanel';
+import { SUPER_ADMIN_GUIDE_HREF, superAdminGuideSections } from '@/components/guide/superAdminGuide';
 
 export default function SuperAdminCampsPage() {
   const [camps, setCamps] = useState([]);
@@ -131,6 +133,11 @@ export default function SuperAdminCampsPage() {
         </Modal>
       }
     >
+      <PageGuidePanel
+        sections={superAdminGuideSections()}
+        sectionId="camps"
+        guideHref={SUPER_ADMIN_GUIDE_HREF}
+      />
       <NameList
         title="اسم المخيم"
         items={camps}
