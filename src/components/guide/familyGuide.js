@@ -8,6 +8,7 @@ export function familyGuideSections(base = '') {
       id: 'start',
       title: 'الدخول',
       pageHref: `${base}/login`,
+      videoId: 'family-account',
       summary: 'ادخل من دخول العائلات على صفحة المخيم.',
       steps: [
         'اكتب رقم الدخول اللي عطتكم ياه اللجنة.',
@@ -19,6 +20,7 @@ export function familyGuideSections(base = '') {
       id: 'profile',
       title: 'ملفي',
       pageHref: `${base}/family/dashboard`,
+      videoId: 'family-account',
       summary: 'بياناتكم، الأفراد، والطرود.',
       steps: [
         'شوف بياناتك والأفراد في الصفحة.',
@@ -36,6 +38,7 @@ export function familyGuideSections(base = '') {
       id: 'notifications',
       title: 'الإشعارات',
       pageHref: `${base}/family/notifications`,
+      videoId: 'notifications',
       summary: 'هنا طرد جديد، تسليم، أو خبر.',
       steps: [
         'الرقم الأحمر يعني في جديد.',
@@ -46,6 +49,7 @@ export function familyGuideSections(base = '') {
       id: 'request',
       title: 'طلب تعديل',
       pageHref: `${base}/family/change-request`,
+      videoId: 'change-requests',
       summary: 'صحّح الاسم أو الأفراد. اللجنة توافق قبل ما يتغيّر السجل.',
       steps: [
         'من ملفي: تعديل الملف.',
@@ -56,6 +60,7 @@ export function familyGuideSections(base = '') {
       id: 'requests',
       title: 'الطلبات',
       pageHref: `${base}/family/change-requests`,
+      videoId: 'change-requests',
       summary: 'حالة طلباتك: قيد المراجعة، مقبول، أو مرفوض.',
       steps: ['إذا انقبل الطلب، البيانات الجديدة بتظهر في ملفي.'],
     },
@@ -63,6 +68,7 @@ export function familyGuideSections(base = '') {
       id: 'ntfy',
       title: 'إشعارات الموبايل',
       pageHref: `${base}/family/dashboard`,
+      videoId: 'notifications',
       summary: 'ربط الموبايل من ملفي عشان يوصلك تنبيه الطرد.',
       steps: ['ثبّت التطبيق، افتحه، اربط الجهاز من البطاقة.'],
     },

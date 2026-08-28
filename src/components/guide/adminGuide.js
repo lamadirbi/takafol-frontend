@@ -18,6 +18,7 @@ export function adminGuideSections(base = '') {
       id: 'today',
       title: 'اليوم',
       pageHref: `${base}/admin/dashboard`,
+      videoId: 'notifications',
       summary: 'هنا العدد، الشعار، والاشتراك.',
       steps: [
         'ارفع الشعار واقصّ الصورة إذا بدك.',
@@ -29,6 +30,7 @@ export function adminGuideSections(base = '') {
       id: 'families',
       title: 'سجل العائلات',
       pageHref: `${base}/admin/families`,
+      videoId: 'excel-import',
       summary: 'ضيف عيلة، أو ارفع ملف إكسل.',
       steps: [
         'إضافة عائلة: وحدة وحدة.',
@@ -51,6 +53,7 @@ export function adminGuideSections(base = '') {
       id: 'fields',
       title: 'حقول العائلات',
       pageHref: `${base}/admin/family-fields`,
+      videoId: 'excel-import',
       summary: 'اختار شو يظهر في استمارة العيلة.',
       steps: [
         'فعّل الحقل أو أخفيه.',
@@ -61,6 +64,7 @@ export function adminGuideSections(base = '') {
       id: 'filter',
       title: 'فلترة للتوزيع',
       pageHref: `${base}/admin/filter`,
+      videoId: 'filter-distribute',
       summary: 'اختار مين يستلم قبل التوزيع.',
       steps: [
         'عائلات أو أفراد، بعدين حط المعيار.',
@@ -72,6 +76,7 @@ export function adminGuideSections(base = '') {
       id: 'records',
       title: 'سجلات الفلترة',
       pageHref: `${base}/admin/camp-records`,
+      videoId: 'filter-distribute',
       summary: 'الفلاتر اللي حفظتوها.',
       steps: ['اضغط اسم السجل عشان التوزيع والاستلام.'],
     },
@@ -79,6 +84,7 @@ export function adminGuideSections(base = '') {
       id: 'record-detail',
       title: 'الطرود والاستلام',
       pageHref: `${base}/admin/camp-records`,
+      videoId: 'filter-distribute',
       summary: 'إشعار بالطرد وتأكيد الاستلام.',
       steps: [
         'اكتب اسم الطرد وابعت إشعار.',
@@ -89,6 +95,7 @@ export function adminGuideSections(base = '') {
       id: 'change-requests',
       title: 'طلبات التعديل',
       pageHref: `${base}/admin/change-requests`,
+      videoId: 'change-requests',
       summary: 'العيلة تطلب تصحيح. ما يتغيّر شيء إلا إذا وافقتوا.',
       steps: ['افتح الطلب واقبل أو ارفض.'],
     },
@@ -118,6 +125,7 @@ export function adminGuideSections(base = '') {
       id: 'notifications',
       title: 'إشعارات الجوال',
       pageHref: `${base}/admin/dashboard`,
+      videoId: 'notifications',
       summary: 'تنبيه على الموبايل لما يجي طلب أو يقرب الاشتراك يخلص.',
       steps: ['ثبّت التطبيق من المتجر، اربطه من صفحة اليوم، وجرّب إشعار.'],
     },

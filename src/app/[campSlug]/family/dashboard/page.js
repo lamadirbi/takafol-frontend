@@ -11,6 +11,7 @@ import { useFamilyFeed } from '@/context/FamilyFeedContext';
 import { familyFieldDisplay, genderLabel } from '@/lib/memberOptions';
 import { familyFieldValue } from '@/lib/familyFormSchema';
 import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
+import VideoGuideButton from '@/components/guide/VideoGuideButton';
 import { IconBell, IconClipboard, IconPackage, IconInfo } from '@/components/ui/Icons';
 import PageGuidePanel from '@/components/guide/PageGuidePanel';
 import { familyGuideHref, familyGuideSections } from '@/components/guide/familyGuide';
@@ -147,6 +148,10 @@ export default function FamilyDashboardPage() {
         </Link>
       ) : null}
 
+      <VideoGuideButton
+        videoId="notifications"
+        className="mb-3"
+      />
       <InstantNotificationsCard
         title="إشعارات العائلة"
         description="الإشعار بيوصل من تطبيق ntfy: طرد جديد، إلغاء طرد، ونتيجة طلب تعديل بياناتك."

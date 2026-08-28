@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import VideoGuideButton from '@/components/guide/VideoGuideButton';
 
 function Steps({ steps }) {
   if (!steps?.length) return null;
@@ -70,6 +71,11 @@ export default function UserGuide({ kicker, title, intro, sections }) {
               </Link>
             ) : null}
           </div>
+          {section.videoId ? (
+            <div className="mt-3">
+              <VideoGuideButton videoId={section.videoId} />
+            </div>
+          ) : null}
           <Steps steps={section.steps} />
           {section.tips?.length ? (
             <div className="mt-4 rounded-xl bg-[#F0F2F5] px-4 py-3">

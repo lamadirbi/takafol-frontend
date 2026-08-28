@@ -11,6 +11,7 @@ import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotice } from '@/context/NoticeContext';
 import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
+import VideoGuideButton from '@/components/guide/VideoGuideButton';
 import CampLogoForm from '@/components/admin/CampLogoForm';
 import PageGuidePanel from '@/components/guide/PageGuidePanel';
 import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
@@ -196,6 +197,10 @@ export default function AdminDashboardPage() {
 
       <CampLogoForm />
 
+      <VideoGuideButton
+        videoId="notifications"
+        className="mb-3"
+      />
       <InstantNotificationsCard
         title="إشعارات إدارة المخيم"
         description="اربط تطبيق ntfy حتى يوصلك إشعار عند طلب تعديل بيانات، تجديد الاشتراك، وقبل انتهاء الاشتراك."

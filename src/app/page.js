@@ -13,6 +13,7 @@ import Textarea from '@/components/ui/Textarea';
 import Spinner from '@/components/ui/Spinner';
 import { campLogoSrc } from '@/lib/brand';
 import { IconSearch, IconWhatsApp } from '@/components/ui/Icons';
+import VideoGuideButton from '@/components/guide/VideoGuideButton';
 import { useAuth } from '@/hooks/useAuth';
 import {
   REALM_ADMIN,
@@ -125,6 +126,7 @@ export default function GlobalHomePage() {
                 <a href="#register">
                   <Button type="button">طلب تسجيل مخيم</Button>
                 </a>
+                <VideoGuideButton videoId="camp-register" />
               </div>
             </div>
             <div className="w-full sm:w-80">
@@ -213,6 +215,7 @@ export default function GlobalHomePage() {
                 تواصل
               </Button>
             </Link>
+            <VideoGuideButton videoId="camp-register" />
             {familyUser && familyCampSlug ? (
               <Link href={`/${familyCampSlug}/family/dashboard`} className="inline-flex">
                 <Button type="button">حسابي</Button>
@@ -272,6 +275,9 @@ export default function GlobalHomePage() {
               الحساب مجاني لأسبوعين بعد التفعيل، وبعدها الاشتراك 50 شيكل كل شهر. املأ البيانات وسنتواصل عبر واتساب
               لإنشاء الحساب وإرسال رابط المخيم.
             </p>
+            <div className="mt-3">
+              <VideoGuideButton videoId="camp-register" />
+            </div>
             <form onSubmit={handleRequestSubmit} className="mt-5 space-y-4">
               {formErr ? (
                 <p className="border border-destructive/30 bg-(--stamp-fill) px-3 py-2 text-sm text-destructive" role="alert">
