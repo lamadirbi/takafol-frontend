@@ -9,40 +9,11 @@ import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useFamilyFeed } from '@/context/FamilyFeedContext';
 import { familyFieldDisplay, genderLabel } from '@/lib/memberOptions';
+import { familyFieldValue } from '@/lib/familyFormSchema';
 import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
 import { IconBell, IconClipboard, IconPackage } from '@/components/ui/Icons';
 
-const FAMILY_FIELD_LABELS = {
-  head_name: 'اسم رب الأسرة',
-  head_gender: 'جنس رب الأسرة',
-  national_id: 'رقم هوية رب الأسرة',
-  phone: 'الهاتف',
-  social_status: 'الحالة الاجتماعية',
-  financial_status: 'الوضع المالي',
-  spouse_name: 'اسم الزوج/الزوجة',
-  spouse_national_id: 'هوية الزوج/الزوجة',
-  total_members: 'عدد أفراد الأسرة',
-  file_status: 'حالة الملف',
-  original_governorate: 'المحافظة الأصلية',
-  original_neighborhood: 'الحي الأصلي',
-  login_serial: 'رقم الدخول',
-};
-
-const FAMILY_FIELD_ORDER = [
-  'head_name',
-  'head_gender',
-  'national_id',
-  'phone',
-  'social_status',
-  'financial_status',
-  'spouse_name',
-  'spouse_national_id',
-  'total_members',
-  'file_status',
-  'original_governorate',
-  'original_neighborhood',
-  'login_serial',
-];
+const LOGIN_FIELD = { key: 'login_serial', label: 'رقم الدخول' };
 
 function initials(name) {
   const s = String(name || '').trim();
@@ -57,7 +28,7 @@ export default function FamilyDashboardPage() {
   const sub = familyUser?.subscription;
   const inGrace = Boolean(sub?.in_grace);
   const monthlyAmount = sub?.monthly_amount_ils ?? 50;
-  const { family, distributions, announcements, loading, unreadCount } = useFamilyFeed();
+  const { family, formSchema, distributions, announcements, loading, unreadCount } = useFamilyFeed();
 
   if (loading) {
     return (
@@ -71,6 +42,15 @@ export default function FamilyDashboardPage() {
   const members = Array.isArray(family?.members) ? family.members : [];
   const pending = (distributions || []).filter((d) => d.status === 'pending');
   const received = (distributions || []).filter((d) => d.status === 'received');
+  const aboutFields = [
+    ...(Array.isArray(formSchema) && formSchema.length
+      ? formSchema.filter((f) => f.enabled)
+      : [
+          { key: 'head_name', label: 'اسم رب الأسرة' },
+          { key: 'national_id', label: 'رقم هوية رب الأسرة' },
+        ]),
+    LOGIN_FIELD,
+  ];
 
   return (
     <FamilyShell title={greetingName} subtitle={camp?.name} maxWidth="max-w-3xl">
@@ -168,17 +148,17 @@ export default function FamilyDashboardPage() {
         <section className="rounded-xl bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-lg font-bold">حول</h2>
           <dl className="space-y-2.5 text-sm">
-            {FAMILY_FIELD_ORDER.map((key) => (
-              <div key={key} className="flex justify-between gap-3 border-b border-black/6 pb-2 last:border-0 last:pb-0">
-                <dt className="text-[#65676B]">{FAMILY_FIELD_LABELS[key]}</dt>
+            {aboutFields.map((field) => (
+              <div key={field.key} className="flex justify-between gap-3 border-b border-black/6 pb-2 last:border-0 last:pb-0">
+                <dt className="text-[#65676B]">{field.label}</dt>
                 <dd
                   className={
-                    key.includes('id') || key === 'phone' || key === 'login_serial'
+                    field.key.includes('id') || field.key === 'phone' || field.key === 'login_serial'
                       ? 'font-mono tabular-nums font-medium'
                       : 'font-medium'
                   }
                 >
-                  {familyFieldDisplay(key, family?.[key])}
+                  {familyFieldDisplay(field.key, familyFieldValue(family, field.key))}
                 </dd>
               </div>
             ))}

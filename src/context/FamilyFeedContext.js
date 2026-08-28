@@ -81,6 +81,7 @@ export function FamilyFeedProvider({ children }) {
   const [distributions, setDistributions] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [family, setFamily] = useState(null);
+  const [formSchema, setFormSchema] = useState([]);
   const [loading, setLoading] = useState(true);
   const [seen, setSeen] = useState(() => new Set());
 
@@ -103,6 +104,7 @@ export function FamilyFeedProvider({ children }) {
       setDistributions([]);
       setAnnouncements([]);
       setFamily(null);
+      setFormSchema([]);
       setLoading(false);
       return;
     }
@@ -114,10 +116,12 @@ export function FamilyFeedProvider({ children }) {
       ]);
       const d = dashRes.data;
       setFamily(unwrapResource(d.family));
+      setFormSchema(Array.isArray(d.form_schema) ? d.form_schema : []);
       setDistributions(unwrapResourceArray(d.current_distributions));
       setAnnouncements(unwrapApiList(newsRes));
     } catch {
       setFamily(null);
+      setFormSchema([]);
       setDistributions([]);
       setAnnouncements([]);
     } finally {
@@ -148,6 +152,7 @@ export function FamilyFeedProvider({ children }) {
   const value = useMemo(
     () => ({
       family,
+      formSchema,
       distributions,
       announcements,
       items,
@@ -157,7 +162,7 @@ export function FamilyFeedProvider({ children }) {
       markAllRead,
       isRead: (id) => seen.has(String(id)),
     }),
-    [family, distributions, announcements, items, unreadCount, loading, refresh, markAllRead, seen]
+    [family, formSchema, distributions, announcements, items, unreadCount, loading, refresh, markAllRead, seen]
   );
 
   return <FamilyFeedContext.Provider value={value}>{children}</FamilyFeedContext.Provider>;
@@ -168,6 +173,7 @@ export function useFamilyFeed() {
   if (!ctx) {
     return {
       family: null,
+      formSchema: [],
       distributions: [],
       announcements: [],
       items: [],

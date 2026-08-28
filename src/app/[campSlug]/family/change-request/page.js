@@ -13,18 +13,13 @@ import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { getApiErrorMessage, unwrapResource } from '@/lib/utils';
 import { RELATIONSHIP_OPTIONS } from '@/lib/memberOptions';
+import FamilySchemaFields from '@/components/admin/FamilySchemaFields';
+import { enabledFamilyFields, formFromFamily } from '@/lib/familyFormSchema';
 
 const GENDER_OPTIONS = [
   { value: 'male', label: 'ذكر' },
   { value: 'female', label: 'أنثى' },
   { value: 'unknown', label: 'غير محدد' },
-];
-
-const SOCIAL_OPTIONS = [
-  { value: 'married', label: 'متزوج' },
-  { value: 'widowed', label: 'أرمل' },
-  { value: 'separated', label: 'منفصل' },
-  { value: 'abandoned', label: 'مهجور' },
 ];
 
 function normStr(v) {
@@ -37,17 +32,8 @@ function normDob(v) {
   return String(v).slice(0, 10);
 }
 
-function familyFormFromApi(f) {
-  return {
-    head_name: normStr(f?.head_name),
-    head_gender: normStr(f?.head_gender) || 'unknown',
-    phone: normStr(f?.phone),
-    social_status: normStr(f?.social_status),
-    spouse_name: normStr(f?.spouse_name),
-    spouse_national_id: normStr(f?.spouse_national_id),
-    original_governorate: normStr(f?.original_governorate),
-    original_neighborhood: normStr(f?.original_neighborhood),
-  };
+function familyFormFromApi(f, fields = []) {
+  return formFromFamily(fields, f);
 }
 
 function memberRowFromApi(m) {
@@ -70,26 +56,20 @@ function emptyNewMember() {
   };
 }
 
-function buildPayload(initialFamily, initialMemberRows, familyForm, memberRows, newMembers, deletedIds) {
-  const initFam = familyFormFromApi(initialFamily);
+function buildPayload(initialFamily, initialMemberRows, familyForm, memberRows, newMembers, deletedIds, schemaFields) {
+  const initFam = familyFormFromApi(initialFamily, schemaFields);
   const family = {};
-  const famKeys = [
-    'head_name',
-    'head_gender',
-    'phone',
-    'social_status',
-    'spouse_name',
-    'spouse_national_id',
-    'original_governorate',
-    'original_neighborhood',
-  ];
-  for (const k of famKeys) {
-    const a = k === 'head_gender' ? normStr(familyForm[k]) || 'unknown' : normStr(familyForm[k]);
-    const b = k === 'head_gender' ? normStr(initFam[k]) || 'unknown' : normStr(initFam[k]);
-    if (a !== b) {
-      family[k] = familyForm[k] === '' && k !== 'head_gender' ? null : familyForm[k] || null;
-    }
+  const extra = {};
+  for (const field of schemaFields || []) {
+    if (!field.enabled || field.key === 'national_id' || field.key === 'date_of_birth') continue;
+    const a = field.key === 'head_gender' ? normStr(familyForm[field.key]) || 'unknown' : normStr(familyForm[field.key]);
+    const b = field.key === 'head_gender' ? normStr(initFam[field.key]) || 'unknown' : normStr(initFam[field.key]);
+    if (a === b) continue;
+    const out = familyForm[field.key] === '' && field.key !== 'head_gender' ? null : familyForm[field.key] || null;
+    if (field.source === 'custom') extra[field.key] = out;
+    else family[field.key] = out;
   }
+  if (Object.keys(extra).length) family.extra_data = extra;
 
   const members = { add: [], update: [], delete: [] };
   const byIdInit = new Map(initialMemberRows.map((m) => [m.id, m]));
@@ -147,6 +127,7 @@ export default function FamilyChangeRequestPage() {
   const [initialFamily, setInitialFamily] = useState(null);
   const [initialMemberRows, setInitialMemberRows] = useState([]);
   const [familyForm, setFamilyForm] = useState(() => familyFormFromApi({}));
+  const [schemaFields, setSchemaFields] = useState([]);
   const [memberRows, setMemberRows] = useState([]);
   const [newMembers, setNewMembers] = useState([]);
   const [deletedIds, setDeletedIds] = useState(() => new Set());
@@ -169,9 +150,11 @@ export default function FamilyChangeRequestPage() {
         return;
       }
       setInitialFamily(raw);
+      const fields = enabledFamilyFields({ enabled_fields: res.data?.form_schema });
+      setSchemaFields(fields);
       const rows = Array.isArray(raw.members) ? raw.members.map(memberRowFromApi) : [];
       setInitialMemberRows(rows);
-      setFamilyForm(familyFormFromApi(raw));
+      setFamilyForm(familyFormFromApi(raw, fields));
       setMemberRows(rows.map((r) => ({ ...r })));
       setNewMembers([]);
       setDeletedIds(new Set());
@@ -232,7 +215,8 @@ export default function FamilyChangeRequestPage() {
       familyForm,
       memberRows,
       newMembers,
-      deletedIds
+      deletedIds,
+      schemaFields
     );
     if (!payload) {
       setError('لم يتغيّر أي حقل. عدّل البيانات أو أضف أفراداً ثم أرسل الطلب.');
@@ -347,91 +331,12 @@ export default function FamilyChangeRequestPage() {
                 رقم الهوية للدخول: <span className="font-mono">{nationalIdDisplay}</span> (لا يُعدَّل من هنا)
               </p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm">
-                  <span className="mb-1.5 block font-medium text-slate-700">اسم رب الأسرة</span>
-                  <input
-                    type="text"
-                    value={familyForm.head_name}
-                    onChange={(e) => setFamilyField('head_name', e.target.value)}
-                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="mb-1.5 block font-medium text-slate-700">جنس رب الأسرة</span>
-                  <select
-                    value={familyForm.head_gender}
-                    onChange={(e) => setFamilyField('head_gender', e.target.value)}
-                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
-                  >
-                    {GENDER_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block text-sm">
-                  <span className="mb-1.5 block font-medium text-slate-700">جوال</span>
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    value={familyForm.phone}
-                    onChange={(e) => setFamilyField('phone', e.target.value)}
-                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
-                    placeholder="05xxxxxxxx"
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="mb-1.5 block font-medium text-slate-700">الحالة الاجتماعية</span>
-                  <select
-                    value={familyForm.social_status || ''}
-                    onChange={(e) => setFamilyField('social_status', e.target.value)}
-                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
-                  >
-                    <option value="">—</option>
-                    {SOCIAL_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block text-sm sm:col-span-2">
-                  <span className="mb-1.5 block font-medium text-slate-700">اسم الزوج / الزوجة</span>
-                  <input
-                    type="text"
-                    value={familyForm.spouse_name}
-                    onChange={(e) => setFamilyField('spouse_name', e.target.value)}
-                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
-                  />
-                </label>
-                <label className="block text-sm sm:col-span-2">
-                  <span className="mb-1.5 block font-medium text-slate-700">رقم هوية الزوج / الزوجة</span>
-                  <input
-                    type="text"
-                    value={familyForm.spouse_national_id}
-                    onChange={(e) => setFamilyField('spouse_national_id', e.target.value)}
-                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="mb-1.5 block font-medium text-slate-700">المحافظة الأصلية</span>
-                  <input
-                    type="text"
-                    value={familyForm.original_governorate}
-                    onChange={(e) => setFamilyField('original_governorate', e.target.value)}
-                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="mb-1.5 block font-medium text-slate-700">الحي الأصلي</span>
-                  <input
-                    type="text"
-                    value={familyForm.original_neighborhood}
-                    onChange={(e) => setFamilyField('original_neighborhood', e.target.value)}
-                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm"
-                  />
-                </label>
+                <FamilySchemaFields
+                  fields={schemaFields}
+                  values={familyForm}
+                  onChange={setFamilyField}
+                  hideKeys={['national_id']}
+                />
               </div>
             </section>
 

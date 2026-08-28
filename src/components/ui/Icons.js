@@ -237,6 +237,14 @@ export function IconUser(props) {
   );
 }
 
+export function IconList(props) {
+  return (
+    <Svg {...props}>
+      <path {...stroke} d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />
+    </Svg>
+  );
+}
+
 export const NAV_ICONS = {
   home: IconHome,
   search: IconSearch,
@@ -252,4 +260,6 @@ export const NAV_ICONS = {
   family: IconFamily,
   bell: IconBell,
   user: IconUser,
+  menu: IconMenu,
+  list: IconList,
 };

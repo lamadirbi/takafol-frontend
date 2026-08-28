@@ -8,7 +8,14 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import { api } from '@/lib/api';
 import { cn, getApiErrorMessage } from '@/lib/utils';
-import { FAMILY_FINANCIAL_OPTIONS, RELATIONSHIP_OPTIONS } from '@/lib/memberOptions';
+import { RELATIONSHIP_OPTIONS } from '@/lib/memberOptions';
+import FamilySchemaFields from '@/components/admin/FamilySchemaFields';
+import {
+  buildFamilyPayload,
+  enabledFamilyFields,
+  formFromFamily,
+  isFamilyFieldMissing,
+} from '@/lib/familyFormSchema';
 
 function unwrapFamily(res) {
   const root = res?.data;
@@ -20,18 +27,6 @@ const GENDER_OPTS = [
   { value: 'female', label: 'أنثى' },
   { value: 'unknown', label: 'غير محدد' },
 ];
-
-const SOCIAL_OPTS = [
-  { value: 'married', label: 'متزوج' },
-  { value: 'widowed', label: 'أرمل' },
-  { value: 'separated', label: 'منفصل' },
-  { value: 'abandoned', label: 'مهجور' },
-];
-
-function normalizeSocialFromApi(value) {
-  if (value === 'single') return 'separated';
-  return value ?? 'married';
-}
 
 function relationshipSelectOptions(stored) {
   if (stored && !RELATIONSHIP_OPTIONS.some((o) => o.value === stored)) {
@@ -46,6 +41,7 @@ export default function AdminFamilyManageModal({ open, onClose, familyId, onSave
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState(null);
+  const [fields, setFields] = useState([]);
   const [members, setMembers] = useState([]);
   /** @type {null | { kind: 'member', member: object } | { kind: 'family' }} */
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -55,20 +51,16 @@ export default function AdminFamilyManageModal({ open, onClose, familyId, onSave
     setLoading(true);
     setError('');
     try {
-      const res = await api.get(`/admin/families/${familyId}`);
-      const f = unwrapFamily(res);
+      const [familyRes, schemaRes] = await Promise.all([
+        api.get(`/admin/families/${familyId}`),
+        api.get('/admin/family-form-schema'),
+      ]);
+      const f = unwrapFamily(familyRes);
+      const list = enabledFamilyFields(schemaRes.data);
+      setFields(list);
       setForm({
-        head_name: f.head_name ?? '',
-        national_id: f.national_id ?? '',
-        phone: f.phone ?? '',
-        social_status: normalizeSocialFromApi(f.social_status),
-        financial_status: f.financial_status ?? 'low',
-        spouse_name: f.spouse_name ?? '',
-        spouse_national_id: f.spouse_national_id ?? '',
-        original_governorate: f.original_governorate ?? '',
-        original_neighborhood: f.original_neighborhood ?? '',
-        total_members: f.total_members != null ? String(f.total_members) : '',
-        login_serial: f.login_serial ?? '',
+        ...formFromFamily(list, f, { login_serial: f.login_serial ?? '' }),
+        social_status: f.social_status === 'single' ? 'separated' : (f.social_status ?? ''),
       });
       const m = Array.isArray(f.members) ? f.members : [];
       setMembers(
@@ -102,10 +94,7 @@ export default function AdminFamilyManageModal({ open, onClose, familyId, onSave
   const isBlank = (v) => String(v ?? '').trim() === '';
 
   const familyIncomplete =
-    !form ||
-    isBlank(form.head_name) ||
-    isBlank(form.national_id) ||
-    isBlank(form.total_members);
+    !form || fields.some((field) => isFamilyFieldMissing(field, form[field.key]));
 
   const memberIncomplete = (m) =>
     isBlank(m?.name) || isBlank(m?.date_of_birth) || isBlank(m?.relationship);
@@ -115,30 +104,13 @@ export default function AdminFamilyManageModal({ open, onClose, familyId, onSave
     if (!form || !familyId) return;
     setSaving(true);
     setError('');
-    const total = form.total_members === '' ? undefined : parseInt(form.total_members, 10);
-    if (total !== undefined && (Number.isNaN(total) || total < 0)) {
-      setError('عدد الأفراد غير صالح.');
-      setSaving(false);
-      return;
-    }
-    if (isBlank(form.head_name) || isBlank(form.national_id) || isBlank(form.total_members)) {
+    if (fields.some((field) => isFamilyFieldMissing(field, form[field.key]))) {
       setError('يوجد حقول مطلوبة فارغة. أكمل البيانات أولاً.');
       setSaving(false);
       return;
     }
     try {
-      const payload = {
-        head_name: form.head_name.trim(),
-        national_id: form.national_id.trim(),
-        phone: form.phone.trim() || null,
-        social_status: form.social_status || null,
-        financial_status: form.financial_status || null,
-        spouse_name: form.spouse_name?.trim() || null,
-        spouse_national_id: form.spouse_national_id?.trim() || null,
-        original_governorate: form.original_governorate?.trim() || null,
-        original_neighborhood: form.original_neighborhood?.trim() || null,
-      };
-      if (total !== undefined) payload.total_members = total;
+      const payload = buildFamilyPayload(fields, form);
       await api.patch(`/admin/families/${familyId}`, payload);
       onSaved?.();
       onClose?.();
@@ -271,65 +243,7 @@ export default function AdminFamilyManageModal({ open, onClose, familyId, onSave
                 </span>
               </p>
             ) : null}
-            <Input
-              label="اسم رب الأسرة"
-              value={form.head_name}
-              onChange={(e) => setField('head_name', e.target.value)}
-              error={isBlank(form.head_name) ? 'مطلوب' : ''}
-            />
-            <Input
-              label="رقم الهوية في السجل"
-              value={form.national_id}
-              onChange={(e) => setField('national_id', e.target.value)}
-              error={isBlank(form.national_id) ? 'مطلوب' : ''}
-            />
-            <Input label="الجوال" value={form.phone} onChange={(e) => setField('phone', e.target.value)} inputMode="tel" />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input
-                label="اسم الزوج/الزوجة"
-                value={form.spouse_name}
-                onChange={(e) => setField('spouse_name', e.target.value)}
-              />
-              <Input
-                label="رقم هوية الزوج/الزوجة"
-                value={form.spouse_national_id}
-                onChange={(e) => setField('spouse_national_id', e.target.value)}
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input
-                label="العنوان الأصلي - المحافظة"
-                value={form.original_governorate}
-                onChange={(e) => setField('original_governorate', e.target.value)}
-              />
-              <Input
-                label="العنوان الأصلي - الحي"
-                value={form.original_neighborhood}
-                onChange={(e) => setField('original_neighborhood', e.target.value)}
-              />
-            </div>
-            <Input
-              label="عدد أفراد الأسرة (إحصائي)"
-              type="number"
-              min={0}
-              value={form.total_members}
-              onChange={(e) => setField('total_members', e.target.value)}
-              error={isBlank(form.total_members) ? 'مطلوب' : ''}
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Select
-                label="الحالة الاجتماعية"
-                value={form.social_status}
-                onChange={(e) => setField('social_status', e.target.value)}
-                options={SOCIAL_OPTS}
-              />
-              <Select
-                label="الوضع المادي"
-                value={form.financial_status}
-                onChange={(e) => setField('financial_status', e.target.value)}
-                options={FAMILY_FINANCIAL_OPTIONS}
-              />
-            </div>
+            <FamilySchemaFields fields={fields} values={form} onChange={setField} attempted />
             <Button type="submit" disabled={saving}>
               {saving ? 'جاري الحفظ…' : 'حفظ بيانات العائلة'}
             </Button>

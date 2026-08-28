@@ -14,7 +14,7 @@ import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { useNotice } from '@/context/NoticeContext';
-import { downloadBlobFromResponse, getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
+import { getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
 
 const AdminFamilyManageModal = dynamic(() => import('@/components/admin/AdminFamilyManageModal'), {
   ssr: false,
@@ -22,20 +22,6 @@ const AdminFamilyManageModal = dynamic(() => import('@/components/admin/AdminFam
 const AddFamilyModal = dynamic(() => import('@/components/admin/AddFamilyModal'), {
   ssr: false,
 });
-
-const EXCEL_COLUMNS = [
-  { label: 'الإسم', required: true },
-  { label: 'رقم الهوية', required: true },
-  { label: 'الجنس', required: false },
-  { label: 'تاريخ الميلاد', required: false },
-  { label: 'الحالة الاجتماعية', required: false },
-  { label: 'اسم الزوجة رباعي', required: false },
-  { label: 'رقم هوية الزوجة', required: false },
-  { label: 'رقم الموبايل', required: false },
-  { label: 'عدد افراد الاسرة الكلي', required: false },
-  { label: 'العنوان الأصلي- المحافظة', required: false },
-  { label: 'العنوان الأصلي- الحي', required: false },
-];
 
 function formatLoginSerial(row) {
   const s = row?.login_serial ?? row?.user?.login_serial;
@@ -56,7 +42,6 @@ export default function AdminFamiliesPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState('');
-  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const fileRef = useRef(null);
@@ -93,18 +78,6 @@ export default function AdminFamiliesPage() {
   function clearSearch() {
     setSearch('');
     setPage(1);
-  }
-
-  async function downloadExcelTemplate() {
-    setDownloadingTemplate(true);
-    try {
-      const res = await api.get('/admin/import/families-excel-template', { responseType: 'blob' });
-      downloadBlobFromResponse(res, 'نموذج-استيراد-العائلات.xlsx');
-    } catch (err) {
-      showNotice(getApiErrorMessage(err, 'تعذر تنزيل نموذج ملف الإكسل.'));
-    } finally {
-      setDownloadingTemplate(false);
-    }
   }
 
   async function handleExcel(e) {
@@ -280,15 +253,6 @@ export default function AdminFamiliesPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={downloadingTemplate}
-                  loading={downloadingTemplate}
-                  onClick={downloadExcelTemplate}
-                >
-                  <IconDownload className="h-4 w-4" /> نموذج ملف الإكسل
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
                   disabled={importing}
                   loading={importing}
                   onClick={() => fileRef.current?.click()}
@@ -300,36 +264,13 @@ export default function AdminFamiliesPage() {
                 </Button>
               </div>
             </div>
-            <section className="rounded-lg bg-[#F0F2F5] p-3" aria-labelledby="excel-template-heading">
-              <h2 id="excel-template-heading" className="text-sm font-semibold text-foreground">
-                نموذج ملف الإكسل
-              </h2>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                الملف النازل فيه أسماء الحقول فقط. املأ صفوف العائلات ثم اضغط «استيراد Excel». الإسم ورقم
-                الهوية إلزاميان. الأطفال يُضافون لاحقاً من صفحة العائلة.
-              </p>
-              <div className="mt-3 overflow-x-auto rounded-lg bg-white">
-                <table className="min-w-full text-start text-xs">
-                  <thead>
-                    <tr className="border-b border-black/8">
-                      {EXCEL_COLUMNS.map((col) => (
-                        <th
-                          key={col.label}
-                          className="whitespace-nowrap px-2.5 py-2 font-medium text-foreground"
-                        >
-                          {col.label}
-                          {col.required ? <span className="text-destructive"> *</span> : null}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                الجنس: ذكر أو أنثى. الحالة الاجتماعية: متزوج، أرمل، أرملة، منفصل، منفصلة، مطلق، مطلقة، مهجور،
-                مهجورة. تاريخ الميلاد مثل 1985-03-15. الحقل الفارغ يُكتب -
-              </p>
-            </section>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              استيراد الإكسل يستخدم الحقول اللي حددتها من صفحة{' '}
+              <Link href={`/${campSlug}/admin/family-fields`} className="font-semibold text-primary hover:underline">
+                حقول العائلات
+              </Link>
+              . رقم الهوية واسم رب الأسرة مطلوبان في الملف.
+            </p>
           </div>
         }
         empty={
@@ -342,13 +283,6 @@ export default function AdminFamiliesPage() {
               <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                 <Button onClick={() => setIsAddModalOpen(true)}>
                   <IconPlus className="h-4 w-4" /> إضافة عائلة
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={downloadExcelTemplate}
-                >
-                  نموذج ملف الإكسل
                 </Button>
                 <Button
                   type="button"

@@ -17,6 +17,7 @@ export default function Sidebar() {
   const daily = [
     { href: `${base}/admin/dashboard`, label: 'اليوم', icon: 'home', match: 'prefix' },
     { href: `${base}/admin/families`, label: 'سجل العائلات', icon: 'family', match: 'prefix' },
+    { href: `${base}/admin/family-fields`, label: 'حقول العائلات', icon: 'list', match: 'exact' },
     { href: `${base}/admin/filter`, label: 'فلترة للتوزيع', icon: 'filter', match: 'exact' },
     { href: `${base}/admin/change-requests`, label: 'طلبات التعديل', icon: 'clipboard', match: 'exact' },
   ];

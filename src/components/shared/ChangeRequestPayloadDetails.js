@@ -59,11 +59,20 @@ function renderFamilyBlock(family) {
     <div className="rounded-xl border border-slate-100 bg-white p-3">
       <SectionTitle>تعديل بيانات العائلة</SectionTitle>
       <div className="divide-y divide-slate-50">
-        {Object.entries(family).map(([key, value]) => (
-          <FieldRow key={key} label={FAMILY_FIELD_LABELS[key] ?? key}>
-            {formatValue(key, value)}
-          </FieldRow>
-        ))}
+        {Object.entries(family).map(([key, value]) => {
+          if (key === 'extra_data' && value && typeof value === 'object') {
+            return Object.entries(value).map(([extraKey, extraVal]) => (
+              <FieldRow key={extraKey} label={FAMILY_FIELD_LABELS[extraKey] ?? extraKey}>
+                {formatValue(extraKey, extraVal)}
+              </FieldRow>
+            ));
+          }
+          return (
+            <FieldRow key={key} label={FAMILY_FIELD_LABELS[key] ?? key}>
+              {formatValue(key, value)}
+            </FieldRow>
+          );
+        })}
       </div>
     </div>
   );
