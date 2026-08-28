@@ -8,8 +8,11 @@ import { FilePanel, LedgerStrip } from '@/components/ui/Card';
 import { IconCheck, IconCopy } from '@/components/ui/Icons';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useNotice } from '@/context/NoticeContext';
 import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
+import CampLogoForm from '@/components/admin/CampLogoForm';
+import Button from '@/components/ui/Button';
 import { formatDate, getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
 
 const PAYMENT_METHODS = [
@@ -79,9 +82,11 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState({ families: 0, members: 0 });
   const [loading, setLoading] = useState(true);
   const { camp, refreshCamp } = useCamp();
+  const { adminUser } = useAuth();
   const showNotice = useNotice();
   const [renewalUploading, setRenewalUploading] = useState(false);
   const [renewalHistory, setRenewalHistory] = useState([]);
+  const [renewalHistoryOpen, setRenewalHistoryOpen] = useState(false);
   const [renewalHistoryLoading, setRenewalHistoryLoading] = useState(false);
   const [renewalHistoryError, setRenewalHistoryError] = useState('');
   const base = campSlug ? `/${campSlug}` : '';
@@ -122,9 +127,10 @@ export default function AdminDashboardPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchRenewalHistory();
-  }, [fetchRenewalHistory]);
+  async function openRenewalHistory() {
+    setRenewalHistoryOpen(true);
+    await fetchRenewalHistory();
+  }
 
   const sub = camp?.subscription;
   const monthlyAmount = sub?.monthly_amount_ils ?? 50;
@@ -137,7 +143,7 @@ export default function AdminDashboardPage() {
       const fd = new FormData();
       fd.append('image', file);
       await api.post('/admin/camp/subscription-renewal-requests', fd);
-      await fetchRenewalHistory();
+      if (renewalHistoryOpen) await fetchRenewalHistory();
       await refreshCamp?.();
     } catch (err) {
       showNotice(getApiErrorMessage(err, 'تعذر إرسال إشعار الدفع.'));
@@ -156,6 +162,9 @@ export default function AdminDashboardPage() {
     { href: `${base}/admin/change-requests`, label: 'طلبات تعديل البيانات', desc: 'مراجعة الطلبات وقبولها أو رفضها' },
     { href: `${base}/admin/camp-records`, label: 'السجلات المحفوظة', desc: 'سجلات الفلترة والطرود المحفوظة' },
     { href: `${base}/news`, label: 'أخبار المخيم', desc: 'نشر إعلان أو متابعة التفاعل' },
+    ...(adminUser?.role === 'admin'
+      ? [{ href: `${base}/admin/admins`, label: 'المسؤولون', desc: 'إضافة وإدارة مسؤولي المخيم' }]
+      : []),
   ];
 
   return (
@@ -176,6 +185,8 @@ export default function AdminDashboardPage() {
           { label: 'الأفراد', value: loading ? '…' : stats.members, hint: 'حسب العدد المسجّل' },
         ]}
       />
+
+      <CampLogoForm />
 
       <InstantNotificationsCard
         title="إشعارات إدارة المخيم"
@@ -293,47 +304,69 @@ export default function AdminDashboardPage() {
             </section>
 
             <section className="border-t border-border px-4 py-4">
-              <h3 className="text-[length:var(--text-caption)] font-medium tracking-[0.12em] text-muted-foreground">
-                سجل الإشعارات
-              </h3>
-              {renewalHistoryLoading ? (
-                <p className="mt-2 text-xs text-muted-foreground">جاري تحميل السجل…</p>
-              ) : renewalHistoryError ? (
-                <p className="mt-2 border border-destructive/30 bg-(--stamp-fill) px-3 py-2 text-xs text-destructive">
-                  {renewalHistoryError}
-                </p>
-              ) : renewalHistory.length ? (
-                <ul className="mt-2 divide-y divide-border border border-border">
-                  {renewalHistory.map((row) => {
-                    const notice = NOTICE_STATUS[row.status] || NOTICE_STATUS.pending;
-                    return (
-                      <li key={row.id} className="px-3 py-3 text-xs">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <p className="font-medium text-foreground">{formatDate(row.created_at)}</p>
-                            <p className={notice.className}>{notice.label}</p>
-                          </div>
-                        </div>
-                        <div className="mt-2 overflow-hidden rounded-lg bg-[#F0F2F5]">
-                          {row.image_url ? (
-                            <a href={row.image_url} target="_blank" rel="noreferrer" className="block">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={row.image_url}
-                                alt="إشعار التحويل"
-                                className="mx-auto max-h-56 w-full object-contain"
-                              />
-                            </a>
-                          ) : (
-                            <p className="px-3 py-8 text-center text-[#65676B]">لا توجد صورة مرفقة</p>
-                          )}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+              <h3 className="text-sm font-semibold text-foreground">إشعارات التحويل السابقة</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                السجل لا يظهر هنا حتى تطلب عرضه.
+              </p>
+              {!renewalHistoryOpen ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 w-full sm:w-auto"
+                  onClick={openRenewalHistory}
+                >
+                  عرض إشعارات التحويل
+                </Button>
               ) : (
-                <p className="mt-2 text-xs text-muted-foreground">لا يوجد إشعارات مرسلة بعد.</p>
+                <div className="mt-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="mb-3 w-full sm:w-auto"
+                    onClick={() => setRenewalHistoryOpen(false)}
+                  >
+                    إخفاء السجل
+                  </Button>
+                  {renewalHistoryLoading ? (
+                    <p className="text-xs text-muted-foreground">جاري تحميل السجل…</p>
+                  ) : renewalHistoryError ? (
+                    <p className="border border-destructive/30 bg-(--stamp-fill) px-3 py-2 text-xs text-destructive">
+                      {renewalHistoryError}
+                    </p>
+                  ) : renewalHistory.length ? (
+                    <ul className="divide-y divide-border border border-border">
+                      {renewalHistory.map((row) => {
+                        const notice = NOTICE_STATUS[row.status] || NOTICE_STATUS.pending;
+                        return (
+                          <li key={row.id} className="px-3 py-3 text-xs">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p className="font-medium text-foreground">{formatDate(row.created_at)}</p>
+                                <p className={notice.className}>{notice.label}</p>
+                              </div>
+                            </div>
+                            <div className="mt-2 overflow-hidden rounded-lg bg-[#F0F2F5]">
+                              {row.image_url ? (
+                                <a href={row.image_url} target="_blank" rel="noreferrer" className="block">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={row.image_url}
+                                    alt="إشعار التحويل"
+                                    className="mx-auto max-h-56 w-full object-contain"
+                                  />
+                                </a>
+                              ) : (
+                                <p className="px-3 py-8 text-center text-[#65676B]">لا توجد صورة مرفقة</p>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">لا يوجد إشعارات مرسلة بعد.</p>
+                  )}
+                </div>
               )}
             </section>
           </div>

@@ -17,6 +17,9 @@ export default function CampFilterFields({
   setFilter,
   onApply,
   onReset,
+  onCreateAll,
+  createAllLabel,
+  createAllLoading = false,
   showArchiveLink = true,
   toggleMemberRelationship = () => {},
   applyDisabled = false,
@@ -187,12 +190,24 @@ export default function CampFilterFields({
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={onApply} disabled={applyDisabled}>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+            {onCreateAll ? (
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:w-auto"
+                onClick={onCreateAll}
+                disabled={applyDisabled || createAllLoading}
+                loading={createAllLoading}
+              >
+                {createAllLabel || (isFamily ? 'إنشاء فلترة لجميع المخيم' : 'إنشاء فلترة لجميع الأفراد')}
+              </Button>
+            ) : null}
+            <Button type="button" onClick={onApply} disabled={applyDisabled || createAllLoading} className="w-full sm:w-auto">
               تطبيق الفلترة
             </Button>
             {onReset ? (
-              <Button type="button" variant="outline" onClick={onReset}>
+              <Button type="button" variant="outline" onClick={onReset} disabled={applyDisabled || createAllLoading} className="w-full sm:w-auto">
                 مسح المعايير
               </Button>
             ) : null}

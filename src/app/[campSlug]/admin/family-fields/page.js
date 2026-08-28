@@ -84,7 +84,7 @@ export default function FamilyFieldsSettingsPage() {
       };
       const { data } = await api.put('/admin/family-form-schema', payload);
       setFields(Array.isArray(data?.fields) ? data.fields : fields);
-      setMsg('تم حفظ حقول العائلات. نموذج الإضافة واستيراد الإكسل صاروا حسب اختيارك.');
+      setMsg('تم حفظ حقول العائلات. النموذج صار حسب اختيارك، واستيراد الإكسل كمان بيقدر يعتمد أعمدة الملف.');
     } catch (err) {
       setError(getApiErrorMessage(err, 'تعذر حفظ الحقول.'));
     } finally {
@@ -95,7 +95,7 @@ export default function FamilyFieldsSettingsPage() {
   return (
     <AdminShell title="حقول العائلات" subtitle={camp?.name}>
       <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-        حدّد الحقول اللي بدك تدخلها للعائلات. الاستيراد من Excel بيستخدم نفس الأعمدة. رقم الهوية واسم رب الأسرة
+        حدّد الحقول يدوياً، أو ارفع ملف إكسل من سجل العائلات: النظام بيعتمد أعمدة الملف كحقول. رقم الهوية واسم رب الأسرة
         لازم يضلوا ظاهرين لأنهم للدخول.
       </p>
       {error ? <Alert className="mb-4">{error}</Alert> : null}

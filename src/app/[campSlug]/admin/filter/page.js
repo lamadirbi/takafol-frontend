@@ -84,6 +84,7 @@ export default function AdminFilterPage() {
   const [recordName, setRecordName] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingAll, setSavingAll] = useState(false);
   const [error, setError] = useState('');
   /** معاينة مؤقتة من /preview — لا يُحفَظ في DB */
   const [preview, setPreview] = useState(null);
@@ -154,6 +155,29 @@ export default function AdminFilterPage() {
       setSaving(false);
     }
   }, [recordName, mode, filters, router, campSlug]);
+
+  const handleCreateAll = useCallback(async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSavingAll(true);
+    setError('');
+    const today = new Intl.DateTimeFormat('en-CA').format(new Date());
+    const autoName =
+      mode === 'family' ? `جميع عائلات المخيم — ${today}` : `جميع الأفراد — ${today}`;
+    const name = recordName.trim() || autoName;
+    try {
+      await api.post('/admin/camp-filter-records', {
+        name,
+        filter_scope: mode === 'family' ? 'family' : 'members',
+      });
+      router.push(`/${campSlug}/admin/camp-records`);
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'تعذر إنشاء فلترة الجميع.'));
+    } finally {
+      submittingRef.current = false;
+      setSavingAll(false);
+    }
+  }, [recordName, mode, router, campSlug]);
 
   const snapshot = preview?.snapshot;
   const families = useMemo(() => snapshot?.families ?? [], [snapshot]);
@@ -252,7 +276,7 @@ export default function AdminFilterPage() {
             <PageHeading
               className="mb-0"
               title="فلترة حسب العائلة أو الأفراد"
-              description="استخدم «تطبيق الفلترة» لمعاينة مؤقتة دون حفظ. لحفظ السجل اكتب اسماً ثم «حفظ السجل» للانتقال لأرشيف الفلترة."
+              description="«إنشاء فلترة لجميع المخيم» أو «لجميع الأفراد» يحفظ سجلاً بلا شروط. أو استخدم «تطبيق الفلترة» للمعاينة ثم احفظ باسم."
             />
 
             <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-1 shadow-sm" role="tablist" aria-label="نوع الفلترة">
@@ -298,8 +322,13 @@ export default function AdminFilterPage() {
               setFilter={setFilter}
               onApply={handlePreview}
               onReset={resetFilters}
+              onCreateAll={handleCreateAll}
+              createAllLabel={
+                mode === 'family' ? 'إنشاء فلترة لجميع المخيم' : 'إنشاء فلترة لجميع الأفراد'
+              }
+              createAllLoading={savingAll}
               toggleMemberRelationship={toggleMemberRelationship}
-              applyDisabled={loading || saving}
+              applyDisabled={loading || saving || savingAll}
             />
 
             <p className="text-center text-sm text-slate-500 md:text-start">
@@ -427,7 +456,7 @@ export default function AdminFilterPage() {
                 <Button
                   type="button"
                   className="shrink-0 rounded-xl px-6 py-3 md:min-w-[200px]"
-                  disabled={!canSave || saving || loading}
+                  disabled={!canSave || saving || loading || savingAll}
                   onClick={handleSave}
                 >
                   {saving ? 'جاري الحفظ…' : 'حفظ السجل والانتقال للأرشيف'}

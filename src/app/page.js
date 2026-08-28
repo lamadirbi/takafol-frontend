@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Spinner from '@/components/ui/Spinner';
+import { campLogoSrc } from '@/lib/brand';
 import { IconSearch, IconWhatsApp } from '@/components/ui/Icons';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -151,12 +152,13 @@ export default function GlobalHomePage() {
                 <article key={camp.id} className={`flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between ${i > 0 ? 'border-t border-black/8' : ''}`}>
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-black/10 bg-[#F0F2F5]">
-                      {camp.logo_path ? (
+                      {camp.logo_url || camp.logo_path ? (
                         <Image
-                          src={camp.logo_path}
+                          src={campLogoSrc(camp)}
                           alt=""
                           width={44}
                           height={44}
+                          unoptimized
                           className="h-full w-full object-contain"
                         />
                       ) : (

@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { REALM_ADMIN, REALM_FAMILY, getAuthCampSlug, isGlobalSuperAdmin } from '@/lib/authSession';
-import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
+import { campLogoSrc, DEFAULT_BRAND_LOGO } from '@/lib/brand';
 import PublicNav from '@/components/layout/PublicNav';
 import InstallPwaButton from '@/components/ui/InstallPwaButton';
 import AccountMenu from '@/components/ui/AccountMenu';
@@ -23,7 +23,7 @@ export default function PublicShell({ children }) {
   const adminSlug = camp?.slug || getAuthCampSlug(REALM_ADMIN);
   const showFamilyMenu = Boolean(familyUser);
   const showAdminMenu = Boolean(adminUser && !isGlobalSuperAdmin(adminUser) && adminUser.camp_id != null);
-  const brandLogo = camp?.logo_path || DEFAULT_BRAND_LOGO;
+  const brandLogo = campLogoSrc(camp);
   const isGlobalHome = pathname === '/';
 
   useEffect(() => {
@@ -62,6 +62,7 @@ export default function PublicShell({ children }) {
               alt=""
               width={40}
               height={40}
+              unoptimized={brandLogo !== DEFAULT_BRAND_LOGO}
               className="h-10 w-10 rounded-full border border-black/10 bg-white object-contain"
             />
             <p className="truncate text-[15px] font-bold text-primary">

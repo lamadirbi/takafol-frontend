@@ -11,7 +11,7 @@ import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { getApiErrorMessage } from '@/lib/utils';
 import { loadFamilyLogin, saveFamilyLogin } from '@/lib/loginPrefs';
-import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
+import { campLogoSrc, DEFAULT_BRAND_LOGO } from '@/lib/brand';
 
 export default function FamilyLoginPage() {
   const router = useRouter();
@@ -77,10 +77,11 @@ export default function FamilyLoginPage() {
         <Link href="/" className="mb-3 flex flex-col items-center">
           <div className="mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-black/10 bg-white shadow-sm">
             <Image
-              src={camp?.logo_path || DEFAULT_BRAND_LOGO}
+              src={campLogoSrc(camp)}
               alt={camp?.name || 'تَكافل'}
               width={64}
               height={64}
+              unoptimized={campLogoSrc(camp) !== DEFAULT_BRAND_LOGO}
               className="h-full w-full object-contain"
               priority
             />

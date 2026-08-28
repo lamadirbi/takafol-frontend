@@ -55,8 +55,22 @@ export default function NewsPage() {
     );
   }, []);
 
+  const handlePostUpdated = useCallback((updated) => {
+    if (!updated?.id) {
+      fetchNews();
+      return;
+    }
+    setNews((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
+  }, [fetchNews]);
+
   const canPost = Boolean(adminUser && (adminUser.role === 'admin' || adminUser.is_super === true));
   const interactUser = familyUser || adminUser;
+
+  function canManagePost(item) {
+    if (!adminUser) return false;
+    if (adminUser.is_super || adminUser.is_primary_camp_admin) return true;
+    return Number(item?.admin_user?.id) === Number(adminUser.id);
+  }
 
   const feed = (
     <>
@@ -89,7 +103,9 @@ export default function NewsPage() {
               post={item}
               user={interactUser}
               isAdmin={canPost}
+              canManagePost={canManagePost(item)}
               onReactionUpdate={handleReactionUpdate}
+              onUpdated={handlePostUpdated}
               onDeleted={(id) => setNews((prev) => prev.filter((p) => p.id !== id))}
             />
           ))}

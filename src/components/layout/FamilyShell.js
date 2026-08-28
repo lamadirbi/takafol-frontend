@@ -6,7 +6,7 @@ import { useParams, usePathname } from 'next/navigation';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useFamilyFeed } from '@/context/FamilyFeedContext';
-import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
+import { campLogoSrc, DEFAULT_BRAND_LOGO } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 import LogoutButton from '@/components/ui/LogoutButton';
 import BackButton from '@/components/ui/BackButton';
@@ -94,6 +94,7 @@ export default function FamilyShell({
   const notifHref = campSlug ? `/${campSlug}/family/notifications` : '/';
   const requestsHref = campSlug ? `/${campSlug}/family/change-requests` : '/';
   const brandName = camp?.name || 'تَكافل';
+  const logoSrc = campLogoSrc(camp);
   const displayName = familyUser?.name || title || 'الأسرة';
 
   const onDash = pathname === dashHref || pathname?.startsWith(`${dashHref}`);
@@ -118,10 +119,11 @@ export default function FamilyShell({
             <BackButton fallbackHref={dashHref} className="h-10 w-10 rounded-full border-0 bg-[#E4E6EB]" />
             <Link href="/" className="flex min-w-0 items-center gap-2">
               <Image
-                src={camp?.logo_path || DEFAULT_BRAND_LOGO}
+                src={logoSrc}
                 alt=""
                 width={40}
                 height={40}
+                unoptimized={logoSrc !== DEFAULT_BRAND_LOGO}
                 className="h-10 w-10 rounded-full border border-black/10 bg-white object-contain"
               />
               <div className="hidden min-w-0 sm:block">

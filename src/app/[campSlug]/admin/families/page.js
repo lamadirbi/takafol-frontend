@@ -91,7 +91,7 @@ export default function AdminFamiliesPage() {
       fd.append('file', file);
       const { data } = await api.post('/admin/import/families-excel', fd);
       setImportMsg(
-        `تم الاستيراد: أُنشئ ${data?.created ?? 0}، حُدِّث ${data?.updated ?? 0}، تُخطّي ${data?.skipped ?? 0}.`
+        `تم اعتماد حقول الملف ثم الاستيراد: أُنشئ ${data?.created ?? 0}، حُدِّث ${data?.updated ?? 0}، تُخطّي ${data?.skipped ?? 0}.`
       );
       fetchFamilies();
     } catch (err) {
@@ -265,7 +265,8 @@ export default function AdminFamiliesPage() {
               </div>
             </div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              استيراد الإكسل يستخدم الحقول اللي حددتها من صفحة{' '}
+              ارفع ملف الإكسل اللي عندكم: النظام بيعتمد أعمدة الملف كحقول للعائلات وبعدين بيستورد البيانات. تقدر تعدّل
+              الحقول بعد الاستيراد من{' '}
               <Link href={`/${campSlug}/admin/family-fields`} className="font-semibold text-primary hover:underline">
                 حقول العائلات
               </Link>

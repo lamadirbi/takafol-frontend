@@ -8,7 +8,7 @@ import Spinner from '@/components/ui/Spinner';
 import FeaturedNewsSection from '@/components/home/FeaturedNewsSection';
 import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
-import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
+import { campLogoSrc, DEFAULT_BRAND_LOGO } from '@/lib/brand';
 import { IconBuilding, IconUsers, IconChat, IconChevron } from '@/components/ui/Icons';
 
 const FEATURES = [
@@ -79,6 +79,7 @@ export default function CampLandingPage({ compact = false }) {
   }
 
   const landingData = camp.landing_page_data || {};
+  const logoSrc = campLogoSrc(camp);
 
   return (
     <div className={compact ? 'flex flex-1 flex-col' : 'flex flex-1 flex-col bg-background'}>
@@ -94,10 +95,11 @@ export default function CampLandingPage({ compact = false }) {
         <div className="flex items-center gap-3">
           <div className="relative h-14 w-14 overflow-hidden rounded-[var(--radius-control)] border border-border bg-card">
             <Image
-              src={camp.logo_path || DEFAULT_BRAND_LOGO}
+              src={logoSrc}
               alt={camp.name}
               fill
               className="object-contain p-1.5"
+              unoptimized={logoSrc !== DEFAULT_BRAND_LOGO}
               priority
             />
           </div>

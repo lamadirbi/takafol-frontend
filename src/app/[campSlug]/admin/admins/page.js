@@ -148,7 +148,7 @@ export default function AdminUsersPage() {
         description="المسؤول الرئيسي للمخيم فقط يمكنه إضافة مسؤولين جدد. لا يمكن لأحد حذف المسؤول الرئيسي."
         actions={
           canAdd ? (
-            <Button onClick={() => setIsAddModalOpen(true)}>
+            <Button onClick={() => setIsAddModalOpen(true)} className="w-full sm:w-auto">
               <IconPlus className="h-4 w-4" /> إضافة مسؤول جديد
             </Button>
           ) : null

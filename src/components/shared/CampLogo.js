@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 
 import { useCamp } from '@/context/CampContext';
-import { DEFAULT_BRAND_LOGO } from '@/lib/brand';
+import { campLogoSrc, DEFAULT_BRAND_LOGO } from '@/lib/brand';
 
 export default function CampLogo({
   className = '',
@@ -16,7 +16,7 @@ export default function CampLogo({
   const { camp } = useCamp() || {};
 
   const campName = camp?.name || 'تَكافل - مخيم طيبة التربوي';
-  const campLogo = camp?.logo_path || DEFAULT_BRAND_LOGO;
+  const campLogo = campLogoSrc(camp);
 
   if (!showImage) {
     return (
@@ -36,6 +36,7 @@ export default function CampLogo({
       width={width}
       height={height}
       priority={priority}
+      unoptimized={campLogo !== DEFAULT_BRAND_LOGO}
       onError={() => setShowImage(false)}
       className={`h-auto w-auto object-contain object-right drop-shadow-[0_1px_2px_rgba(15,23,42,0.08)] [image-rendering:auto] ${className}`}
     />

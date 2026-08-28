@@ -187,6 +187,13 @@ export default function SuperAdminCampDetailPage() {
       title={camp?.name || 'تفاصيل المخيم'}
       description={loading ? 'جاري التحميل…' : camp ? 'بيانات المخيم والمسار' : 'غير موجود'}
       backHref="/super-admin/camps"
+      actions={
+        camp ? (
+          <Button onClick={() => setAdminOpen(true)} className="w-full sm:w-auto">
+            إضافة مسؤول
+          </Button>
+        ) : null
+      }
       extras={
         <>
           <Modal open={editOpen} onClose={() => setEditOpen(false)} title="تعديل مخيم">
@@ -291,18 +298,19 @@ export default function SuperAdminCampDetailPage() {
                 <p className="text-sm text-muted-foreground">لا يوجد مسؤولون مسجلون.</p>
               )
             ) : null}
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setHistoryOpen(false)}>
+                إغلاق
+              </Button>
               <Button
                 type="button"
+                className="w-full sm:w-auto"
                 onClick={() => {
                   setHistoryOpen(false);
                   setAdminOpen(true);
                 }}
               >
                 إضافة مسؤول
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setHistoryOpen(false)}>
-                إغلاق
               </Button>
             </div>
           </Modal>
@@ -384,6 +392,9 @@ export default function SuperAdminCampDetailPage() {
           <CopyablePath slug={camp.slug} label="المسار الكامل" />
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <Button variant="outline" className="w-full" onClick={openHistory}>
+              المسؤولون
+            </Button>
             <Button variant="outline" className="w-full" onClick={() => window.open(`/${camp.slug}`, '_blank', 'noopener,noreferrer')}>
               فتح الموقع
             </Button>
@@ -394,14 +405,10 @@ export default function SuperAdminCampDetailPage() {
             >
               دخول الإدارة
             </Button>
-            <Button variant="outline" onClick={openEdit}>
+            <Button variant="outline" className="w-full" onClick={openEdit}>
               تعديل
             </Button>
-            <Button variant="outline" onClick={openHistory}>
-              المسؤولون
-            </Button>
-            <Button onClick={() => setAdminOpen(true)}>+ مسؤول</Button>
-            <Button variant="danger" onClick={() => setDeleteOpen(true)}>
+            <Button variant="danger" className="w-full sm:col-span-2" onClick={() => setDeleteOpen(true)}>
               حذف المخيم
             </Button>
           </div>

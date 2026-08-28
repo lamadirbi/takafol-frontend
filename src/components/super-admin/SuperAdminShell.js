@@ -40,7 +40,7 @@ export default function SuperAdminShell({ title, description, actions, children,
           </div>
         </header>
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:py-8">
-          {actions ? <div className="mb-5 flex flex-wrap gap-2">{actions}</div> : null}
+          {actions ? <div className="mb-5 flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap">{actions}</div> : null}
           {children}
         </main>
         {extras}
