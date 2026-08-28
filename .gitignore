@@ -20,6 +20,9 @@
 # production
 /build
 
+# walkthrough videos are hosted as release assets, not in git
+/public/videos/
+
 # misc
 .DS_Store
 *.pem

@@ -1,15 +1,24 @@
 /**
  * فيديوهات توضيحية لأهم سيناريوهات المنصة.
- * الافتراضي: ملفات داخل /videos
- * إذا رُفعت إلى درايف: ضع الرابط في المتغيّر المقابل بـ .env
+ * الأزرار تفتح رابطاً خارجياً حتى لا تُرفع الملفات على سيرفر الموقع.
+ * يمكن استبدال الرابط من .env عند الحاجة.
  */
-const DRIVE = {
-  notifications: process.env.NEXT_PUBLIC_VIDEO_NOTIFICATIONS || '',
-  'excel-import': process.env.NEXT_PUBLIC_VIDEO_EXCEL_IMPORT || '',
-  'filter-distribute': process.env.NEXT_PUBLIC_VIDEO_FILTER_DISTRIBUTE || '',
-  'change-requests': process.env.NEXT_PUBLIC_VIDEO_CHANGE_REQUESTS || '',
-  'family-account': process.env.NEXT_PUBLIC_VIDEO_FAMILY_ACCOUNT || '',
-  'camp-register': process.env.NEXT_PUBLIC_VIDEO_CAMP_REGISTER || '',
+const HOSTED_BASE =
+  'https://github.com/lamadirbi/takafol-frontend/releases/download/walkthrough-videos';
+
+const HOSTED = {
+  notifications:
+    process.env.NEXT_PUBLIC_VIDEO_NOTIFICATIONS || `${HOSTED_BASE}/notifications.mp4`,
+  'excel-import':
+    process.env.NEXT_PUBLIC_VIDEO_EXCEL_IMPORT || `${HOSTED_BASE}/excel-import.mp4`,
+  'filter-distribute':
+    process.env.NEXT_PUBLIC_VIDEO_FILTER_DISTRIBUTE || `${HOSTED_BASE}/filter-distribute.mp4`,
+  'change-requests':
+    process.env.NEXT_PUBLIC_VIDEO_CHANGE_REQUESTS || `${HOSTED_BASE}/change-requests.mp4`,
+  'family-account':
+    process.env.NEXT_PUBLIC_VIDEO_FAMILY_ACCOUNT || `${HOSTED_BASE}/family-account.mp4`,
+  'camp-register':
+    process.env.NEXT_PUBLIC_VIDEO_CAMP_REGISTER || `${HOSTED_BASE}/camp-register.mp4`,
 };
 
 export const VIDEO_GUIDES = {
@@ -54,9 +63,7 @@ export const VIDEO_GUIDES = {
 export function videoGuideUrl(id) {
   const guide = VIDEO_GUIDES[id];
   if (!guide) return '';
-  const drive = String(DRIVE[id] || '').trim();
-  if (drive) return drive;
-  return `/videos/${guide.file}`;
+  return String(HOSTED[id] || '').trim();
 }
 
 export function getVideoGuide(id) {
