@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import SuperAdminShell from '@/components/super-admin/SuperAdminShell';
+import CampAdminModal from '@/components/admin/CampAdminModal';
 import CopyablePath from '@/components/ui/CopyablePath';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -40,12 +41,7 @@ export default function SuperAdminCampDetailPage() {
   const [editSaving, setEditSaving] = useState(false);
 
   const [adminOpen, setAdminOpen] = useState(false);
-  const [admName, setAdmName] = useState('');
-  const [admUser, setAdmUser] = useState('');
-  const [admPass, setAdmPass] = useState('');
-  const [admSaving, setAdmSaving] = useState(false);
-  const [admError, setAdmError] = useState('');
-  const [adminCreatedPopup, setAdminCreatedPopup] = useState(null);
+  const [editingAdmin, setEditingAdmin] = useState(null);
 
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyAdmins, setHistoryAdmins] = useState([]);
@@ -139,36 +135,6 @@ export default function SuperAdminCampDetailPage() {
     }
   };
 
-  const saveAdmin = async (e) => {
-    e.preventDefault();
-    if (!camp) return;
-    setAdmSaving(true);
-    setAdmError('');
-    try {
-      await api.post('/admin/users', {
-        name: admName,
-        username: admUser,
-        password: admPass,
-        camp_id: camp.id,
-        is_super: false,
-      });
-      setAdminOpen(false);
-      setAdminCreatedPopup({
-        campName: camp.name,
-        name: admName,
-        username: admUser,
-        password: admPass,
-      });
-      setAdmName('');
-      setAdmUser('');
-      setAdmPass('');
-    } catch (err) {
-      setAdmError(getApiErrorMessage(err, 'فشل إنشاء المسؤول.'));
-    } finally {
-      setAdmSaving(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (!camp) return;
     setDeleteSaving(true);
@@ -189,7 +155,13 @@ export default function SuperAdminCampDetailPage() {
       backHref="/super-admin/camps"
       actions={
         camp ? (
-          <Button onClick={() => setAdminOpen(true)} className="w-full sm:w-auto">
+          <Button
+            onClick={() => {
+              setEditingAdmin(null);
+              setAdminOpen(true);
+            }}
+            className="w-full sm:w-auto"
+          >
             إضافة مسؤول
           </Button>
         ) : null
@@ -246,38 +218,23 @@ export default function SuperAdminCampDetailPage() {
             </form>
           </Modal>
 
-          <Modal open={adminOpen} onClose={() => setAdminOpen(false)} title="مسؤول جديد للمخيم">
-            <form onSubmit={saveAdmin} className="space-y-3">
-              <p className="text-sm font-semibold text-primary">{camp?.name}</p>
-              <Input label="الاسم" id="adm-name" value={admName} onChange={(e) => setAdmName(e.target.value)} required />
-              <Input
-                label="اسم المستخدم"
-                id="adm-user"
-                value={admUser}
-                onChange={(e) => setAdmUser(e.target.value)}
-                required
-                dir="ltr"
-                inputClassName="text-left"
-              />
-              <Input
-                type="password"
-                label="كلمة المرور"
-                id="adm-pass"
-                value={admPass}
-                onChange={(e) => setAdmPass(e.target.value)}
-                required
-              />
-              {admError ? <Alert>{admError}</Alert> : null}
-              <div className="mt-6 flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setAdminOpen(false)} disabled={admSaving}>
-                  إلغاء
-                </Button>
-                <Button type="submit" disabled={admSaving} loading={admSaving}>
-                  إنشاء الحساب
-                </Button>
-              </div>
-            </form>
-          </Modal>
+          <CampAdminModal
+            open={adminOpen}
+            admin={editingAdmin}
+            campId={camp?.id || null}
+            onClose={() => {
+              setAdminOpen(false);
+              setEditingAdmin(null);
+            }}
+            onSaved={() => {
+              if (historyOpen && camp) {
+                api
+                  .get('/admin/users', { params: { camp_id: camp.id } })
+                  .then((res) => setHistoryAdmins(unwrapApiList(res)))
+                  .catch(() => {});
+              }
+            }}
+          />
 
           <Modal open={historyOpen} onClose={() => setHistoryOpen(false)} title="المسؤولون">
             {historyLoading ? <p className="text-sm text-muted-foreground">جاري التحميل…</p> : null}
@@ -286,11 +243,25 @@ export default function SuperAdminCampDetailPage() {
               historyAdmins.length ? (
                 <ul className="divide-y divide-border border border-border">
                   {historyAdmins.map((adm) => (
-                    <li key={adm.id} className="px-3 py-2 text-sm">
-                      <p className="font-semibold">{adm.name}</p>
-                      <p className="text-xs text-muted-foreground" dir="ltr">
-                        @{adm.username}
-                      </p>
+                    <li key={adm.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                      <div className="min-w-0">
+                        <p className="font-semibold">{adm.name}</p>
+                        <p className="text-xs text-muted-foreground" dir="ltr">
+                          {adm.username}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setHistoryOpen(false);
+                          setEditingAdmin(adm);
+                          setAdminOpen(true);
+                        }}
+                      >
+                        تعديل
+                      </Button>
                     </li>
                   ))}
                 </ul>
@@ -307,32 +278,11 @@ export default function SuperAdminCampDetailPage() {
                 className="w-full sm:w-auto"
                 onClick={() => {
                   setHistoryOpen(false);
+                  setEditingAdmin(null);
                   setAdminOpen(true);
                 }}
               >
                 إضافة مسؤول
-              </Button>
-            </div>
-          </Modal>
-
-          <Modal open={Boolean(adminCreatedPopup)} onClose={() => setAdminCreatedPopup(null)} title="تم إنشاء المسؤول">
-            <div className="space-y-2 border border-border bg-muted p-3 text-sm">
-              <p>
-                <span className="font-semibold">المخيم:</span> {adminCreatedPopup?.campName}
-              </p>
-              <p>
-                <span className="font-semibold">الاسم:</span> {adminCreatedPopup?.name}
-              </p>
-              <p dir="ltr">
-                <span className="font-semibold">Username:</span> {adminCreatedPopup?.username}
-              </p>
-              <p dir="ltr">
-                <span className="font-semibold">Password:</span> {adminCreatedPopup?.password}
-              </p>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <Button type="button" onClick={() => setAdminCreatedPopup(null)}>
-                تم
               </Button>
             </div>
           </Modal>

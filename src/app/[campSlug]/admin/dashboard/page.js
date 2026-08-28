@@ -157,7 +157,7 @@ export default function AdminDashboardPage() {
     sub?.status === 'locked' ? 'stamp' : sub?.status === 'grace' ? 'warn' : 'carbon';
 
   const quickLinks = [
-    { href: `${base}/admin/families`, label: 'سجل العائلات', desc: 'إضافة، تعديل، استيراد Excel' },
+    { href: `${base}/admin/families`, label: 'سجل العائلات', desc: 'اضغط اسم رب الأسرة لفتح الملف، أو أضف وعدّل واستورد Excel' },
     { href: `${base}/admin/filter`, label: 'فلترة المخيم', desc: 'عائلات أو أفراد وحفظ السجلات' },
     { href: `${base}/admin/change-requests`, label: 'طلبات تعديل البيانات', desc: 'مراجعة الطلبات وقبولها أو رفضها' },
     { href: `${base}/admin/camp-records`, label: 'السجلات المحفوظة', desc: 'سجلات الفلترة والطرود المحفوظة' },

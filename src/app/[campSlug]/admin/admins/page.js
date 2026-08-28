@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeading from '@/components/ui/PageHeading';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import AddAdminModal from '@/components/admin/AddAdminModal';
+import CampAdminModal from '@/components/admin/CampAdminModal';
 import { IconPlus } from '@/components/ui/Icons';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
@@ -17,7 +17,8 @@ import { getApiErrorMessage, unwrapApiList } from '@/lib/utils';
 export default function AdminUsersPage() {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState(null);
   const [adminToDelete, setAdminToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -25,6 +26,7 @@ export default function AdminUsersPage() {
   const { user, refresh } = useAuth();
 
   const canAdd = Boolean(user?.can_add_camp_admins);
+  const isGlobalSuper = Boolean(user?.is_super && user?.camp_id == null);
 
   const fetchAdmins = useCallback(async () => {
     setLoading(true);
@@ -63,9 +65,20 @@ export default function AdminUsersPage() {
     }
   };
 
+  function canEditRow(row) {
+    if (!row) return false;
+    if (isGlobalSuper) return true;
+    if (canAdd) return true;
+    return Number(user?.id) === Number(row.id);
+  }
+
   const columns = [
     { key: 'name', label: 'الاسم الكامل' },
-    { key: 'username', label: 'اسم المستخدم' },
+    {
+      key: 'username',
+      label: 'اسم المستخدم',
+      render: (row) => <span dir="ltr">{row.username || '—'}</span>,
+    },
     {
       key: 'rank',
       label: 'الصلاحية',
@@ -82,31 +95,35 @@ export default function AdminUsersPage() {
     {
       key: 'actions',
       label: 'إجراءات',
-      render: (row) => {
-        if (row.is_primary_camp_admin) {
-          return (
-            <span className="text-xs text-slate-500" title="لا يمكن حذف المسؤول الرئيسي">
-              —
-            </span>
-          );
-        }
-        if (!canAdd) {
-          return <span className="text-xs text-slate-400">—</span>;
-        }
-        return (
-          <Button
-            size="sm"
-            variant="outline"
-            className="border-red-200 text-red-600"
-            onClick={() => {
-              setDeleteError('');
-              setAdminToDelete(row);
-            }}
-          >
-            حذف
-          </Button>
-        );
-      },
+      render: (row) => (
+        <div className="flex flex-wrap items-center gap-2">
+          {canEditRow(row) ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setEditingAdmin(row);
+                setModalOpen(true);
+              }}
+            >
+              تعديل
+            </Button>
+          ) : null}
+          {!row.is_primary_camp_admin && canAdd ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-destructive"
+              onClick={() => {
+                setDeleteError('');
+                setAdminToDelete(row);
+              }}
+            >
+              حذف
+            </Button>
+          ) : null}
+        </div>
+      ),
     },
   ];
 
@@ -116,16 +133,19 @@ export default function AdminUsersPage() {
       subtitle={camp?.name}
       extras={
         <>
-          {canAdd ? (
-            <AddAdminModal
-              open={isAddModalOpen}
-              onClose={() => setIsAddModalOpen(false)}
-              onCreated={() => {
-                fetchAdmins();
-                refresh?.();
-              }}
-            />
-          ) : null}
+          <CampAdminModal
+            open={modalOpen}
+            admin={editingAdmin}
+            allowSuper={isGlobalSuper}
+            onClose={() => {
+              setModalOpen(false);
+              setEditingAdmin(null);
+            }}
+            onSaved={() => {
+              fetchAdmins();
+              refresh?.();
+            }}
+          />
           <ConfirmDialog
             open={adminToDelete !== null}
             onClose={() => !deleting && setAdminToDelete(null)}
@@ -145,10 +165,16 @@ export default function AdminUsersPage() {
     >
       <PageHeading
         title={`المسؤولين في ${camp?.name || ''}`}
-        description="المسؤول الرئيسي للمخيم فقط يمكنه إضافة مسؤولين جدد. لا يمكن لأحد حذف المسؤول الرئيسي."
+        description="المسؤول الرئيسي يضيف مديراً ثانياً، يشوف اسمه واسم المستخدم وكلمة السر، ويقدر يعدّل بياناته لاحقاً. كلمة السر تظهر عند الإنشاء أو عند تعيين كلمة جديدة فقط."
         actions={
           canAdd ? (
-            <Button onClick={() => setIsAddModalOpen(true)} className="w-full sm:w-auto">
+            <Button
+              onClick={() => {
+                setEditingAdmin(null);
+                setModalOpen(true);
+              }}
+              className="w-full sm:w-auto"
+            >
               <IconPlus className="h-4 w-4" /> إضافة مسؤول جديد
             </Button>
           ) : null

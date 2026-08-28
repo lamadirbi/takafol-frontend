@@ -16,6 +16,8 @@ import {
   IconWhatsApp,
   IconClose,
   IconClipboard,
+  IconInfo,
+  IconChat,
 } from '@/components/ui/Icons';
 
 const SUPPORT_WA =
@@ -51,8 +53,12 @@ export default function PublicNav({ onNavigate, onClose }) {
   const familyLoginHref = camp?.slug ? `/${camp.slug}/login` : null;
   const adminLoginHref = camp?.slug ? `/${camp.slug}/login/admin` : null;
 
+  const aboutHref = camp?.slug ? `/${camp.slug}/about` : '/about';
+  const contactHref = camp?.slug ? `/${camp.slug}/contact` : '/contact';
   const isHome = pathname === homeHref || pathname === '/';
   const isNews = pathname === '/news' || pathname?.endsWith('/news');
+  const isAbout = pathname === '/about' || pathname === aboutHref;
+  const isContact = pathname === '/contact' || pathname === contactHref;
 
   return (
     <div className="flex h-full min-h-0 flex-col px-3 py-4" dir="rtl">
@@ -72,11 +78,23 @@ export default function PublicNav({ onNavigate, onClose }) {
 
       <nav className="flex flex-1 flex-col overflow-y-auto" aria-label="القائمة">
         <div className="flex flex-col gap-0.5">
-          <Link href={homeHref} onClick={onNavigate} className={itemClass(isHome && !isNews)} aria-current={isHome && !isNews ? 'page' : undefined}>
+          <Link href={homeHref} onClick={onNavigate} className={itemClass(isHome && !isNews && !isAbout && !isContact)} aria-current={isHome && !isNews && !isAbout && !isContact ? 'page' : undefined}>
             <IconWell>
               <IconHome className="h-5 w-5" />
             </IconWell>
             الرئيسية
+          </Link>
+          <Link href={aboutHref} onClick={onNavigate} className={itemClass(isAbout)} aria-current={isAbout ? 'page' : undefined}>
+            <IconWell>
+              <IconInfo className="h-5 w-5" />
+            </IconWell>
+            من نحن
+          </Link>
+          <Link href={contactHref} onClick={onNavigate} className={itemClass(isContact)} aria-current={isContact ? 'page' : undefined}>
+            <IconWell>
+              <IconChat className="h-5 w-5" />
+            </IconWell>
+            تواصل
           </Link>
           {camp?.slug ? (
             <Link href={newsHref} onClick={onNavigate} className={itemClass(isNews)} aria-current={isNews ? 'page' : undefined}>

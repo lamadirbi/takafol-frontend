@@ -99,6 +99,12 @@ export default function FamilyDashboardPage() {
                 <IconClipboard className="h-4 w-4 shrink-0" />
                 الطلبات
               </Link>
+              <Link
+                href={`/${campSlug}/contact`}
+                className="col-span-2 inline-flex min-h-10 items-center justify-center rounded-lg bg-[#E4E6EB] px-2 text-center text-sm font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3"
+              >
+                تواصل مع إدارة المنصة
+              </Link>
             </div>
           </div>
         </div>

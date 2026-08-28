@@ -112,13 +112,18 @@ export default function GlobalHomePage() {
               <h1 className="text-[length:var(--text-h2)] font-semibold tracking-tight">كل المخيمات</h1>
               <p className="mt-1 text-sm text-muted-foreground">ظاهر لإدارة المنصة فقط.</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <a href="#register">
-                  <Button type="button">طلب تسجيل مخيم</Button>
-                </a>
-                <a href="#contact">
+                <Link href="/about">
+                  <Button type="button" variant="outline">
+                    من نحن
+                  </Button>
+                </Link>
+                <Link href="/contact">
                   <Button type="button" variant="outline">
                     تواصل
                   </Button>
+                </Link>
+                <a href="#register">
+                  <Button type="button">طلب تسجيل مخيم</Button>
                 </a>
               </div>
             </div>
@@ -197,18 +202,30 @@ export default function GlobalHomePage() {
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
             دخول العائلات أو دخول الإدارة من نفس القائمة. لتسجيل مخيم جديد استخدم النموذج بالأسفل.
           </p>
-          {familyUser && familyCampSlug ? (
-            <Link href={`/${familyCampSlug}/family/dashboard`} className="mt-4 inline-flex">
-              <Button type="button">حسابي</Button>
-            </Link>
-          ) : null}
-          {adminUser && !isSuper && adminCampSlug ? (
-            <Link href={`/${adminCampSlug}/admin/dashboard`} className="mt-4 ms-2 inline-flex">
-              <Button type="button" variant={familyUser ? 'outline' : 'primary'}>
-                لوحة الإدارة
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link href="/about">
+              <Button type="button" variant="outline">
+                من نحن
               </Button>
             </Link>
-          ) : null}
+            <Link href="/contact">
+              <Button type="button" variant="outline">
+                تواصل
+              </Button>
+            </Link>
+            {familyUser && familyCampSlug ? (
+              <Link href={`/${familyCampSlug}/family/dashboard`} className="inline-flex">
+                <Button type="button">حسابي</Button>
+              </Link>
+            ) : null}
+            {adminUser && !isSuper && adminCampSlug ? (
+              <Link href={`/${adminCampSlug}/admin/dashboard`} className="inline-flex">
+                <Button type="button" variant={familyUser ? 'outline' : 'primary'}>
+                  لوحة الإدارة
+                </Button>
+              </Link>
+            ) : null}
+          </div>
           {loading ? (
             <div className="flex justify-center py-10">
               <Spinner className="h-10 w-10 text-primary" label="جاري تحميل المخيمات" />
@@ -311,22 +328,24 @@ export default function GlobalHomePage() {
           </section>
 
           <section id="contact" className="scroll-mt-24 rounded-xl bg-white p-5 shadow-sm md:p-6">
-            <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">تواصل عبر واتساب</h2>
+            <h2 className="text-[length:var(--text-h3)] font-semibold tracking-tight">تواصل مع إدارة المنصة</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              لاستفسارات تأسيس المخيمات أو الدعم الفني، راسلنا على واتساب.
+              استفسار أو طلب تعديل على المنصة يصل للإدارة العليا من صفحة التواصل. يمكنكم أيضاً المراسلة على واتساب.
             </p>
+            <Link href="/contact" className="mt-5 block">
+              <Button type="button" className="w-full">
+                فتح صفحة التواصل
+              </Button>
+            </Link>
             <a
               href={supportHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] bg-[#25D366] py-3 text-sm font-semibold text-[#064e3b] transition-[filter] duration-(--duration-press) ease-(--ease-out) hover:brightness-[0.96]"
+              className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] border border-border bg-white py-3 text-sm font-semibold text-foreground hover:bg-muted/50"
             >
-              <IconWhatsApp className="h-5 w-5" />
-              فتح واتساب
+              <IconWhatsApp className="h-5 w-5 text-[#128C7E]" />
+              واتساب
             </a>
-            <p className="mt-3 text-xs text-muted-foreground" dir="ltr">
-              {supportHref}
-            </p>
           </section>
         </div>
       </main>

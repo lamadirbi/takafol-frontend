@@ -32,6 +32,7 @@ export default function AdminMobileNav() {
     { href: `${base}/news`, label: 'الأخبار', icon: 'megaphone', match: 'news' },
     { href: `${base}/admin/camp-records`, label: 'سجلات الفلترة', icon: 'folder', match: 'exact' },
     { href: `${base}/admin/family-fields`, label: 'حقول العائلات', icon: 'list', match: 'exact' },
+    { href: `${base}/contact`, label: 'تواصل', icon: 'chat', match: 'exact' },
   ];
 
   if (adminUser?.role === 'admin') {

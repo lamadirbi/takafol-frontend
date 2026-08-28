@@ -14,6 +14,8 @@ const baseURL =
 /** مسارات لا تُفسَّر كـ slug مخيم (جذر التطبيق) */
 const RESERVED_PATH_SEGMENTS = new Set([
   'super-admin',
+  'about',
+  'contact',
   '_next',
   'api',
   'favicon.ico',
@@ -60,7 +62,8 @@ function isPublicApiUrl(url) {
     u.includes('/site-settings') ||
     u.includes('/push/public-key') ||
     u.includes('/push/instant-app') ||
-    u.includes('/camp-registration-requests')
+    u.includes('/camp-registration-requests') ||
+    u.includes('/platform-contact-messages')
   );
 }
 

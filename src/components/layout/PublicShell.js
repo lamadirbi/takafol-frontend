@@ -70,6 +70,18 @@ export default function PublicShell({ children }) {
             </p>
           </Link>
           <div className="ms-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto">
+            <Link
+              href={camp?.slug ? `/${camp.slug}/about` : '/about'}
+              className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm"
+            >
+              من نحن
+            </Link>
+            <Link
+              href={camp?.slug ? `/${camp.slug}/contact` : '/contact'}
+              className="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-[#E4E6EB] px-2.5 text-xs font-semibold text-foreground hover:bg-[#d8dadf] sm:px-3 sm:text-sm"
+            >
+              تواصل
+            </Link>
             {pathname === '/' ? (
               <a
                 href="#register"

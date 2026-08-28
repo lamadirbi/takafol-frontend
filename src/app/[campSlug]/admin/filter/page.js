@@ -12,9 +12,12 @@ import { Card } from '@/components/ui/Card';
 import Alert from '@/components/ui/Alert';
 import PageHeading from '@/components/ui/PageHeading';
 import Spinner from '@/components/ui/Spinner';
+import FilterReadinessNotice from '@/components/admin/FilterReadinessNotice';
+import FamilyProfileLink from '@/components/admin/FamilyProfileLink';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { cn, getApiErrorMessage } from '@/lib/utils';
+import { analyzeFilterReadiness } from '@/lib/filterReadiness';
 
 const SOCIAL_AR = {
   married: 'متزوج',
@@ -90,6 +93,22 @@ export default function AdminFilterPage() {
   const [preview, setPreview] = useState(null);
   const [resultSearch, setResultSearch] = useState('');
   const submittingRef = useRef(false);
+  const [readiness, setReadiness] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await api.get('/admin/filter-readiness');
+        if (!cancelled) setReadiness(data);
+      } catch {
+        if (!cancelled) setReadiness(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     setResultSearch('');
@@ -190,6 +209,7 @@ export default function AdminFilterPage() {
       for (const m of members) {
         rows.push({
           id: `${fam.id}-${m.id}`,
+          family_id: fam.id,
           member_name: m.name,
           age: m.age ?? '—',
           gender: GENDER_AR[m.gender] || m.gender || '—',
@@ -208,7 +228,21 @@ export default function AdminFilterPage() {
 
   const familyColumns = useMemo(
     () => [
-      { key: 'head_name', label: 'رب الأسرة' },
+      {
+        key: 'head_name',
+        label: (
+          <span>
+            رب الأسرة
+            <span className="mt-0.5 block text-[11px] font-normal text-primary">اضغط لفتح الملف</span>
+          </span>
+        ),
+        render: (row) =>
+          row.id ? (
+            <FamilyProfileLink href={`/${campSlug}/admin/families/${row.id}`} name={row.head_name} />
+          ) : (
+            row.head_name || '—'
+          ),
+      },
       { key: 'national_id', label: 'رقم الهوية' },
       { key: 'phone', label: 'الجوال' },
       { key: 'total_members', label: 'عدد الأفراد' },
@@ -218,20 +252,46 @@ export default function AdminFilterPage() {
         render: (row) => SOCIAL_AR[row.social_status] ?? row.social_status ?? '—',
       },
     ],
-    []
+    [campSlug]
   );
 
   const memberColumns = useMemo(
     () => [
-      { key: 'member_name', label: 'اسم الفرد' },
+      {
+        key: 'member_name',
+        label: 'اسم الفرد',
+        render: (row) =>
+          row.family_id ? (
+            <FamilyProfileLink
+              href={`/${campSlug}/admin/families/${row.family_id}`}
+              name={row.member_name}
+            />
+          ) : (
+            row.member_name || '—'
+          ),
+      },
       { key: 'age', label: 'العمر' },
       { key: 'gender', label: 'الجنس' },
       { key: 'relationship', label: 'صلة القرابة' },
-      { key: 'head_name', label: 'رب الأسرة' },
+      {
+        key: 'head_name',
+        label: (
+          <span>
+            رب الأسرة
+            <span className="mt-0.5 block text-[11px] font-normal text-primary">اضغط لفتح الملف</span>
+          </span>
+        ),
+        render: (row) =>
+          row.family_id ? (
+            <FamilyProfileLink href={`/${campSlug}/admin/families/${row.family_id}`} name={row.head_name} />
+          ) : (
+            row.head_name || '—'
+          ),
+      },
       { key: 'national_id', label: 'هوية الأسرة' },
       { key: 'phone', label: 'جوال الأسرة' },
     ],
-    []
+    [campSlug]
   );
 
   const limitNote = snapshot?.limit_applied
@@ -269,6 +329,10 @@ export default function AdminFilterPage() {
   }, [allMemberRows, resultSearch]);
 
   const canSave = recordName.trim().length > 0;
+  const readinessAnalysis = useMemo(
+    () => analyzeFilterReadiness(mode, readiness),
+    [mode, readiness]
+  );
 
   return (
     <AdminShell title="فلترة العائلات والأفراد" subtitle={camp?.name}>
@@ -278,6 +342,8 @@ export default function AdminFilterPage() {
               title="فلترة حسب العائلة أو الأفراد"
               description="«إنشاء فلترة لجميع المخيم» أو «لجميع الأفراد» يحفظ سجلاً بلا شروط. أو استخدم «تطبيق الفلترة» للمعاينة ثم احفظ باسم."
             />
+
+            <FilterReadinessNotice issues={readinessAnalysis.issues} families={readinessAnalysis.families} />
 
             <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-1 shadow-sm" role="tablist" aria-label="نوع الفلترة">
               <button
@@ -329,6 +395,7 @@ export default function AdminFilterPage() {
               createAllLoading={savingAll}
               toggleMemberRelationship={toggleMemberRelationship}
               applyDisabled={loading || saving || savingAll}
+              issues={readinessAnalysis.issues}
             />
 
             <p className="text-center text-sm text-slate-500 md:text-start">
@@ -350,9 +417,15 @@ export default function AdminFilterPage() {
                   <div className="border-b border-border bg-muted/60 px-5 py-4">
                     <h2 className="text-lg font-bold text-foreground">معاينة النتيجة</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      غير محفوظة في الأرشيف. بعد مراجعة الجدول اكتب اسماً ثم احفظ السجل.
+                      غير محفوظة في الأرشيف. اضغطوا اسم رب الأسرة لفتح ملف العائلة. بعد مراجعة الجدول اكتبوا اسماً ثم احفظوا السجل.
                     </p>
                     {limitNote ? <p className="mt-2 text-xs text-amber-700">{limitNote}</p> : null}
+                    {readinessAnalysis.issues.length > 0 ? (
+                      <p className="mt-2 text-xs leading-relaxed text-amber-800">
+                        إذا الجدول فاضي أو ناقص، السبب غالباً إن معيار الفلترة مش موجود بملف الاستيراد أو البيانات مش
+                        متعبّاة. راجعوا التنبيه أعلى الصفحة.
+                      </p>
+                    ) : null}
                     <div className="mt-3 flex flex-wrap gap-3">
                       <Link
                         href={`/${campSlug}/admin/camp-records`}

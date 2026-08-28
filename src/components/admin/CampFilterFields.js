@@ -6,6 +6,17 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import { RELATIONSHIP_OPTIONS } from '@/lib/memberOptions';
+import { issueById } from '@/lib/filterReadiness';
+
+function FieldHint({ issue }) {
+  if (!issue) return null;
+  return (
+    <p className="mt-1 text-xs leading-relaxed text-amber-800">
+      {issue.text}
+      {issue.excel ? ` العمود في الملف: «${issue.excel}».` : ''}
+    </p>
+  );
+}
 
 /**
  * @param {'family' | 'members'} mode
@@ -23,11 +34,19 @@ export default function CampFilterFields({
   showArchiveLink = true,
   toggleMemberRelationship = () => {},
   applyDisabled = false,
+  issues = [],
 }) {
   const { campSlug } = useParams();
   const campBase = campSlug ? `/${campSlug}` : '';
   const isFamily = mode === 'family';
   const selectedRels = filters.member_relationships || [];
+  const socialIssue = issueById(issues, 'social_status');
+  const membersIssue = issueById(issues, 'total_members');
+  const newbornIssue = issueById(issues, 'has_newborn');
+  const ageIssue = issueById(issues, 'member_age');
+  const genderIssue = issueById(issues, 'member_gender');
+  const relIssue = issueById(issues, 'member_relationship');
+  const listIssue = issueById(issues, 'members_list');
 
   return (
     <div
@@ -52,19 +71,22 @@ export default function CampFilterFields({
               العائلة
             </h4>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Select
-                label="الحالة الاجتماعية"
-                name="social_status"
-                value={filters.social_status}
-                onChange={(e) => setFilter('social_status', e.target.value)}
-                options={[
-                  { value: '', label: 'الكل — بدون تقييد' },
-                  { value: 'married', label: 'متزوج' },
-                  { value: 'widowed', label: 'أرمل' },
-                  { value: 'separated', label: 'منفصل' },
-                  { value: 'abandoned', label: 'مهجور' },
-                ]}
-              />
+              <div>
+                <Select
+                  label="الحالة الاجتماعية"
+                  name="social_status"
+                  value={filters.social_status}
+                  onChange={(e) => setFilter('social_status', e.target.value)}
+                  options={[
+                    { value: '', label: 'الكل — بدون تقييد' },
+                    { value: 'married', label: 'متزوج' },
+                    { value: 'widowed', label: 'أرمل' },
+                    { value: 'separated', label: 'منفصل' },
+                    { value: 'abandoned', label: 'مهجور' },
+                  ]}
+                />
+                <FieldHint issue={socialIssue} />
+              </div>
               <div className="sm:col-span-2 lg:col-span-1">
                 <p className="mb-1.5 text-sm font-medium text-muted-foreground">عدد أفراد الأسرة</p>
                 <div className="flex flex-wrap items-end gap-2">
@@ -89,6 +111,7 @@ export default function CampFilterFields({
                     />
                   </div>
                 </div>
+                <FieldHint issue={membersIssue} />
               </div>
               <div className="sm:col-span-2 lg:col-span-3">
                 <label className="flex cursor-pointer items-center gap-2 border border-border px-3 py-2.5 text-sm">
@@ -103,6 +126,7 @@ export default function CampFilterFields({
                 <p className="mt-1 text-xs text-muted-foreground">
                   يفلتر العائلات التي لديها «ابن/ابنة» عمره 0 ضمن أفراد الأسرة.
                 </p>
+                <FieldHint issue={newbornIssue} />
               </div>
             </div>
           </section>
@@ -111,6 +135,7 @@ export default function CampFilterFields({
             <h4 className="mb-3 text-sm font-semibold text-foreground">
               أفراد يطابقون الشروط
             </h4>
+            <FieldHint issue={listIssue} />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="sm:col-span-2 lg:col-span-4">
                 <label className="flex cursor-pointer items-center gap-2 border border-border px-3 py-2.5 text-sm">
@@ -125,6 +150,7 @@ export default function CampFilterFields({
                 <p className="mt-1 text-xs text-muted-foreground">
                   عند تفعيلها سيتم تثبيت العمر على 0 (حديث الولادة) بغض النظر عن نطاق العمر.
                 </p>
+                <FieldHint issue={ageIssue} />
               </div>
               <div className="sm:col-span-2">
                 <p className="mb-1.5 text-sm font-medium text-muted-foreground">عمر الفرد (نطاق)</p>
@@ -152,18 +178,22 @@ export default function CampFilterFields({
                     />
                   </div>
                 </div>
+                <FieldHint issue={ageIssue} />
               </div>
-              <Select
-                label="جنس الفرد"
-                name="member_gender"
-                value={filters.member_gender}
-                onChange={(e) => setFilter('member_gender', e.target.value)}
-                options={[
-                  { value: '', label: 'الكل' },
-                  { value: 'male', label: 'ذكر' },
-                  { value: 'female', label: 'أنثى' },
-                ]}
-              />
+              <div>
+                <Select
+                  label="جنس الفرد"
+                  name="member_gender"
+                  value={filters.member_gender}
+                  onChange={(e) => setFilter('member_gender', e.target.value)}
+                  options={[
+                    { value: '', label: 'الكل' },
+                    { value: 'male', label: 'ذكر' },
+                    { value: 'female', label: 'أنثى' },
+                  ]}
+                />
+                <FieldHint issue={genderIssue} />
+              </div>
               <div className="sm:col-span-2 lg:col-span-4">
                 <p className="mb-2 text-sm font-medium text-muted-foreground">
                   صلة القرابة (اختيار متعدد — يُطبَّق مع العمر والجنس على نفس الفرد)
@@ -184,6 +214,7 @@ export default function CampFilterFields({
                     </label>
                   ))}
                 </div>
+                <FieldHint issue={relIssue} />
               </div>
             </div>
           </section>

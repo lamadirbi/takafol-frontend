@@ -10,6 +10,7 @@ import Input from '@/components/ui/Input';
 import Alert from '@/components/ui/Alert';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { IconPlus, IconSearch, IconDownload, IconClose } from '@/components/ui/Icons';
+import FamilyProfileLink from '@/components/admin/FamilyProfileLink';
 import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
@@ -148,14 +149,14 @@ export default function AdminFamiliesPage() {
   const columns = [
     {
       key: 'head_name',
-      label: 'رب الأسرة',
+      label: (
+        <span>
+          رب الأسرة
+          <span className="mt-0.5 block text-[11px] font-normal text-primary">اضغط لفتح الملف</span>
+        </span>
+      ),
       render: (row) => (
-        <Link
-          href={`/${campSlug}/admin/families/${row.id}`}
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          {row.head_name || '—'}
-        </Link>
+        <FamilyProfileLink href={`/${campSlug}/admin/families/${row.id}`} name={row.head_name} />
       ),
     },
     { key: 'national_id', label: 'رقم الهوية' },
@@ -175,7 +176,12 @@ export default function AdminFamiliesPage() {
       key: 'actions',
       label: 'إجراءات',
       render: (row) => (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={`/${campSlug}/admin/families/${row.id}`}>
+            <Button size="sm" variant="outline">
+              ملف العائلة
+            </Button>
+          </Link>
           <Button size="sm" variant="outline" onClick={() => setSelectedFamilyId(row.id)}>
             تعديل
           </Button>
@@ -255,6 +261,13 @@ export default function AdminFamiliesPage() {
         onPageChange={setPage}
         toolbar={
           <div className="flex flex-col gap-3">
+            <p className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm leading-relaxed text-foreground">
+              لفتح بيانات الأسرة كاملة (الأفراد، رقم الدخول، الطرود): اضغطوا على{' '}
+              <span className="font-semibold text-primary underline decoration-primary/50 underline-offset-4">
+                اسم رب الأسرة
+              </span>{' '}
+              أو زر <span className="font-semibold">ملف العائلة</span>. زر تعديل لتغيير البيانات، وحذف لإزالة الأسرة.
+            </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="min-w-0 flex-1" role="search">
                 <label htmlFor="family-search" className="sr-only">
@@ -304,12 +317,13 @@ export default function AdminFamiliesPage() {
               </div>
             </div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              مش فاهم الشكل؟ نزّل النموذج الفاضي (نفس ترتيب ملف المخيم، بدون بيانات عائلات)، عبّيه، وبعدين ارفعه من استيراد
-              Excel. تقدر كمان ترفع ملفكم جاهز: النظام بيعتمد أعمدة الملف كحقول. عدّل الحقول بعد الاستيراد من{' '}
+              نزّلوا النموذج: فيه كل معايير الفلترة (الحالة الاجتماعية، عدد الأفراد، الجنس، تاريخ الميلاد، وصلة القرابة
+              لأفراد إضافيين من فرد 1 إلى فرد 6). عبّوه ثم ارفعوه من استيراد Excel. تقدروا كمان ترفعوا ملفكم الجاهز.
+              عدّلوا الحقول بعد الاستيراد من{' '}
               <Link href={`/${campSlug}/admin/family-fields`} className="font-semibold text-primary hover:underline">
                 حقول العائلات
               </Link>
-              . رقم الهوية واسم رب الأسرة مطلوبان في الملف.
+              . رقم الهوية واسم رب الأسرة مطلوبان.
             </p>
           </div>
         }

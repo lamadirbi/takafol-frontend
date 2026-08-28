@@ -55,6 +55,12 @@ export default function Footer({ compact = false }) {
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} تَكافل</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link href={camp?.slug ? `/${camp.slug}/about` : '/about'} className="hover:text-primary">
+              من نحن
+            </Link>
+            <Link href={camp?.slug ? `/${camp.slug}/contact` : '/contact'} className="hover:text-primary">
+              تواصل
+            </Link>
             <a href={supportHref} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
               واتساب
             </a>
@@ -70,9 +76,12 @@ export default function Footer({ compact = false }) {
     );
   }
 
+  const aboutHref = camp?.slug ? `${base}/about` : '/about';
   const navLinks = camp?.slug
     ? [
         { href: base, label: 'صفحة المخيم' },
+        { href: aboutHref, label: 'من نحن' },
+        { href: `${base}/contact`, label: 'تواصل' },
         { href: `${base}/news`, label: 'أخبار المخيم' },
         familyUser
           ? { href: `${base}/family/dashboard`, label: 'حسابي' }
@@ -80,6 +89,8 @@ export default function Footer({ compact = false }) {
         ...(showAllCamps ? [{ href: '/', label: 'كل المخيمات' }] : []),
       ]
     : [
+        { href: '/about', label: 'من نحن' },
+        { href: '/contact', label: 'تواصل' },
         { href: '/#register', label: 'طلب تسجيل مخيم' },
         ...(showAllCamps ? [{ href: '/', label: 'كل المخيمات' }] : []),
       ];

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import AdminShell from '@/components/layout/AdminShell';
 import Table from '@/components/ui/Table';
@@ -13,6 +12,7 @@ import PageHeading from '@/components/ui/PageHeading';
 import Select from '@/components/ui/Select';
 import Textarea from '@/components/ui/Textarea';
 import ChangeRequestPayloadDetails from '@/components/shared/ChangeRequestPayloadDetails';
+import FamilyProfileLink from '@/components/admin/FamilyProfileLink';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { useNotice } from '@/context/NoticeContext';
@@ -104,12 +104,10 @@ export default function AdminChangeRequestsPage() {
       render: (row) => (
         <div>
           {row.family_id ? (
-            <Link
+            <FamilyProfileLink
               href={`${base}/admin/families/${row.family_id}`}
-              className="font-medium text-primary hover:underline"
-            >
-              {row.family?.head_name || `عائلة #${row.family_id}`}
-            </Link>
+              name={row.family?.head_name || `عائلة #${row.family_id}`}
+            />
           ) : (
             <p className="font-medium text-slate-900">{row.family?.head_name || '—'}</p>
           )}

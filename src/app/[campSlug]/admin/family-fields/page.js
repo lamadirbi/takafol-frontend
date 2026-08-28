@@ -96,7 +96,8 @@ export default function FamilyFieldsSettingsPage() {
     <AdminShell title="حقول العائلات" subtitle={camp?.name}>
       <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
         حدّد الحقول يدوياً، أو ارفع ملف إكسل من سجل العائلات: النظام بيعتمد أعمدة الملف كحقول. رقم الهوية واسم رب الأسرة
-        لازم يضلوا ظاهرين لأنهم للدخول.
+        لازم يضلوا ظاهرين لأنهم للدخول. نموذج الاستيراد فيه معايير الفلترة: الحالة الاجتماعية، عدد الأفراد، الجنس، تاريخ
+        الميلاد، وباقي الأفراد في أعمدة فرد 1 إلى فرد 6 مع صلة القرابة.
       </p>
       {error ? <Alert className="mb-4">{error}</Alert> : null}
       {msg ? (

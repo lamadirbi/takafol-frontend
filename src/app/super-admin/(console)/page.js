@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import SuperAdminShell from '@/components/super-admin/SuperAdminShell';
 import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
-import { IconBuilding, IconClipboard, IconMegaphone } from '@/components/ui/Icons';
+import { IconBuilding, IconClipboard, IconMegaphone, IconChat } from '@/components/ui/Icons';
 
 const SECTIONS = [
   {
@@ -19,6 +19,12 @@ const SECTIONS = [
     icon: IconClipboard,
   },
   {
+    href: '/super-admin/contact',
+    title: 'رسائل التواصل',
+    desc: 'استفسارات وطلبات تعديل المنصة من المستخدمين.',
+    icon: IconChat,
+  },
+  {
     href: '/super-admin/renewals',
     title: 'تجديد الاشتراك',
     desc: 'إشعارات الدفع وطلبات تجديد اشتراك المخيمات.',
@@ -31,7 +37,7 @@ export default function SuperAdminHomePage() {
     <SuperAdminShell title="إدارة المنصة" description="اختر قسماً للمتابعة">
       <InstantNotificationsCard
         title="إشعارات المنصة"
-        description="اربط تطبيق ntfy حتى يوصلك إشعار عند طلب تسجيل مخيم، تجديد اشتراك، أو قرب انتهاء الاشتراك."
+        description="اربط تطبيق ntfy حتى يوصلك إشعار عند طلب تسجيل مخيم، رسالة تواصل، تجديد اشتراك، أو قرب انتهاء الاشتراك."
       />
       <div className="mt-4 space-y-3">
         {SECTIONS.map((item) => {

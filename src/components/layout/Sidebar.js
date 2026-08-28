@@ -25,6 +25,7 @@ export default function Sidebar() {
   const archive = [
     { href: `${base}/admin/camp-records`, label: 'سجلات الفلترة', icon: 'folder', match: 'exact' },
     { href: `${base}/news`, label: 'الأخبار', icon: 'megaphone', match: 'exact' },
+    { href: `${base}/contact`, label: 'تواصل', icon: 'chat', match: 'exact' },
   ];
 
   if (adminUser?.role === 'admin') {

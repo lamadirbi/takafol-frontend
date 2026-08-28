@@ -148,11 +148,35 @@ export default function CampLandingPage({ compact = false }) {
               أخبار المخيم
             </Button>
           </Link>
+          <Link href={`/${camp.slug}/about`} className="block">
+            <Button variant="outline" size="lg" className="w-full">
+              من نحن
+            </Button>
+          </Link>
+          <Link href={`/${camp.slug}/contact`} className="block">
+            <Button variant="outline" size="lg" className="w-full">
+              تواصل
+            </Button>
+          </Link>
           <AboutCampBlock />
         </div>
         )}
 
-        {compact ? <AboutCampBlock className="mt-4" /> : null}
+        {compact ? (
+          <>
+            <Link href={`/${camp.slug}/about`} className="mt-4 block">
+              <Button variant="outline" className="w-full">
+                من نحن
+              </Button>
+            </Link>
+            <Link href={`/${camp.slug}/contact`} className="mt-2 block">
+              <Button variant="outline" className="w-full">
+                تواصل
+              </Button>
+            </Link>
+            <AboutCampBlock className="mt-3" />
+          </>
+        ) : null}
 
         <div className="mt-10">
           <FeaturedNewsSection />
