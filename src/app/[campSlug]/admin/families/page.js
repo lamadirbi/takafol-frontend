@@ -14,7 +14,7 @@ import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
 import { useCamp } from '@/context/CampContext';
 import { useNotice } from '@/context/NoticeContext';
-import { getApiErrorMessage, unwrapPaginated } from '@/lib/utils';
+import { getApiErrorMessage, unwrapPaginated, downloadBlobFromResponse } from '@/lib/utils';
 
 const AdminFamilyManageModal = dynamic(() => import('@/components/admin/AdminFamilyManageModal'), {
   ssr: false,
@@ -41,6 +41,7 @@ export default function AdminFamiliesPage() {
   const [selectedFamilyId, setSelectedFamilyId] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [importMsg, setImportMsg] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -78,6 +79,18 @@ export default function AdminFamiliesPage() {
   function clearSearch() {
     setSearch('');
     setPage(1);
+  }
+
+  async function downloadTemplate() {
+    setDownloadingTemplate(true);
+    try {
+      const res = await api.get('/admin/import/families-excel-template', { responseType: 'blob' });
+      downloadBlobFromResponse(res, 'نموذج-استيراد-العائلات.xlsx');
+    } catch (err) {
+      showNotice(getApiErrorMessage(err, 'تعذر تنزيل النموذج.'));
+    } finally {
+      setDownloadingTemplate(false);
+    }
   }
 
   async function handleExcel(e) {
@@ -270,11 +283,20 @@ export default function AdminFamiliesPage() {
                 <Button
                   type="button"
                   variant="outline"
+                  disabled={downloadingTemplate || importing}
+                  loading={downloadingTemplate}
+                  onClick={downloadTemplate}
+                >
+                  <IconDownload className="h-4 w-4" /> تنزيل النموذج
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
                   disabled={importing}
                   loading={importing}
                   onClick={() => fileRef.current?.click()}
                 >
-                  <IconDownload className="h-4 w-4" /> استيراد Excel
+                  استيراد Excel
                 </Button>
                 <Button onClick={() => setIsAddModalOpen(true)}>
                   <IconPlus className="h-4 w-4" /> إضافة عائلة
@@ -282,8 +304,8 @@ export default function AdminFamiliesPage() {
               </div>
             </div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              ارفع ملف الإكسل اللي عندكم: النظام بيعتمد أعمدة الملف كحقول للعائلات وبعدين بيستورد البيانات. تقدر تعدّل
-              الحقول بعد الاستيراد من{' '}
+              مش فاهم الشكل؟ نزّل النموذج الفاضي (نفس ترتيب ملف المخيم، بدون بيانات عائلات)، عبّيه، وبعدين ارفعه من استيراد
+              Excel. تقدر كمان ترفع ملفكم جاهز: النظام بيعتمد أعمدة الملف كحقول. عدّل الحقول بعد الاستيراد من{' '}
               <Link href={`/${campSlug}/admin/family-fields`} className="font-semibold text-primary hover:underline">
                 حقول العائلات
               </Link>
@@ -296,11 +318,20 @@ export default function AdminFamiliesPage() {
             <div className="mx-auto max-w-sm">
               <p className="text-[length:var(--text-h3)] font-semibold text-foreground">لا عائلات في السجل بعد</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                أضف عائلة واحدة للبدء، أو استورد ملفاً إذا كان السجل جاهزاً في Excel.
+                أضف عائلة واحدة للبدء، أو نزّل النموذج الفاضي وعبّيه، أو ارفع ملف Excel جاهز.
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                 <Button onClick={() => setIsAddModalOpen(true)}>
                   <IconPlus className="h-4 w-4" /> إضافة عائلة
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={downloadingTemplate || importing}
+                  loading={downloadingTemplate}
+                  onClick={downloadTemplate}
+                >
+                  تنزيل النموذج
                 </Button>
                 <Button
                   type="button"
