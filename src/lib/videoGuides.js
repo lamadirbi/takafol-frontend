@@ -25,37 +25,37 @@ export const VIDEO_GUIDES = {
   notifications: {
     id: 'notifications',
     topic: 'تفعيل الإشعارات',
-    buttonLabel: 'فيديو',
+    buttonLabel: 'فيديو توضيحي لتفعيل الإشعارات',
     file: 'notifications.mp4',
   },
   'excel-import': {
     id: 'excel-import',
     topic: 'استيراد العائلات من إكسل',
-    buttonLabel: 'فيديو',
+    buttonLabel: 'فيديو توضيحي لاستيراد العائلات من إكسل',
     file: 'excel-import.mp4',
   },
   'filter-distribute': {
     id: 'filter-distribute',
     topic: 'فلترة التوزيع وتسجيل الطرود',
-    buttonLabel: 'فيديو',
+    buttonLabel: 'فيديو توضيحي لفلترة التوزيع وتسجيل الطرود',
     file: 'filter-distribute.mp4',
   },
   'change-requests': {
     id: 'change-requests',
     topic: 'طلب تعديل البيانات',
-    buttonLabel: 'فيديو',
+    buttonLabel: 'فيديو توضيحي لطلب تعديل البيانات',
     file: 'change-requests.mp4',
   },
   'family-account': {
     id: 'family-account',
     topic: 'حساب العائلة',
-    buttonLabel: 'فيديو',
+    buttonLabel: 'فيديو توضيحي لحساب العائلة',
     file: 'family-account.mp4',
   },
   'camp-register': {
     id: 'camp-register',
     topic: 'تسجيل المخيم',
-    buttonLabel: 'فيديو',
+    buttonLabel: 'فيديو توضيحي لتسجيل المخيم',
     file: 'camp-register.mp4',
   },
 };

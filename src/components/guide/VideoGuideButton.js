@@ -11,7 +11,7 @@ export default function VideoGuideButton({ videoId, className = '' }) {
       href={guide.url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:brightness-95 ${className}`.trim()}
+      className={`inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-center text-sm font-semibold text-white hover:brightness-95 ${className}`.trim()}
     >
       {guide.buttonLabel}
     </a>

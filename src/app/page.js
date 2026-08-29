@@ -15,12 +15,7 @@ import { campLogoSrc } from '@/lib/brand';
 import { IconSearch, IconWhatsApp } from '@/components/ui/Icons';
 import VideoGuideButton from '@/components/guide/VideoGuideButton';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  REALM_ADMIN,
-  REALM_FAMILY,
-  getAuthCampSlug,
-  isGlobalSuperAdmin,
-} from '@/lib/authSession';
+import { isGlobalSuperAdmin } from '@/lib/authSession';
 
 const SUPPORT_WA =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP) || '970592533678';
@@ -30,11 +25,9 @@ function waDigits(s) {
 }
 
 export default function GlobalHomePage() {
-  const { adminUser, familyUser, adminLoading, familyLoading } = useAuth();
+  const { adminUser, adminLoading, familyLoading } = useAuth();
   const isSuper = isGlobalSuperAdmin(adminUser);
   const authReady = !adminLoading && !familyLoading;
-  const familyCampSlug = getAuthCampSlug(REALM_FAMILY);
-  const adminCampSlug = getAuthCampSlug(REALM_ADMIN);
 
   const [camps, setCamps] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -112,22 +105,6 @@ export default function GlobalHomePage() {
             <div>
               <h1 className="text-[length:var(--text-h2)] font-semibold tracking-tight">كل المخيمات</h1>
               <p className="mt-1 text-sm text-muted-foreground">ظاهر لإدارة المنصة فقط.</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link href="/about">
-                  <Button type="button" variant="outline">
-                    من نحن
-                  </Button>
-                </Link>
-                <Link href="/contact">
-                  <Button type="button" variant="outline">
-                    تواصل
-                  </Button>
-                </Link>
-                <a href="#register">
-                  <Button type="button">طلب تسجيل مخيم</Button>
-                </a>
-                <VideoGuideButton videoId="camp-register" />
-              </div>
             </div>
             <div className="w-full sm:w-80">
               <Input
@@ -204,31 +181,6 @@ export default function GlobalHomePage() {
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
             دخول العائلات أو دخول الإدارة من نفس القائمة. لتسجيل مخيم جديد استخدم النموذج بالأسفل.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link href="/about">
-              <Button type="button" variant="outline">
-                من نحن
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button type="button" variant="outline">
-                تواصل
-              </Button>
-            </Link>
-            <VideoGuideButton videoId="camp-register" />
-            {familyUser && familyCampSlug ? (
-              <Link href={`/${familyCampSlug}/family/dashboard`} className="inline-flex">
-                <Button type="button">حسابي</Button>
-              </Link>
-            ) : null}
-            {adminUser && !isSuper && adminCampSlug ? (
-              <Link href={`/${adminCampSlug}/admin/dashboard`} className="inline-flex">
-                <Button type="button" variant={familyUser ? 'outline' : 'primary'}>
-                  لوحة الإدارة
-                </Button>
-              </Link>
-            ) : null}
-          </div>
           {loading ? (
             <div className="flex justify-center py-10">
               <Spinner className="h-10 w-10 text-primary" label="جاري تحميل المخيمات" />
