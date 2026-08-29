@@ -9,7 +9,7 @@ import { useCamp } from '@/context/CampContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useFamilyFeed } from '@/context/FamilyFeedContext';
 import { familyFieldDisplay, genderLabel } from '@/lib/memberOptions';
-import { familyFieldValue } from '@/lib/familyFormSchema';
+import { familyFieldValue, familyHasIncompleteFilterData, withFilterCriteriaFields } from '@/lib/familyFormSchema';
 import InstantNotificationsCard from '@/components/family/InstantNotificationsCard';
 import VideoGuideButton from '@/components/guide/VideoGuideButton';
 import { IconBell, IconClipboard, IconPackage, IconInfo } from '@/components/ui/Icons';
@@ -46,14 +46,17 @@ export default function FamilyDashboardPage() {
   const pending = (distributions || []).filter((d) => d.status === 'pending');
   const received = (distributions || []).filter((d) => d.status === 'received');
   const aboutFields = [
-    ...(Array.isArray(formSchema) && formSchema.length
-      ? formSchema.filter((f) => f.enabled)
-      : [
-          { key: 'head_name', label: 'اسم رب الأسرة' },
-          { key: 'national_id', label: 'رقم هوية رب الأسرة' },
-        ]),
+    ...withFilterCriteriaFields(
+      Array.isArray(formSchema) && formSchema.length
+        ? formSchema.filter((f) => f.enabled)
+        : [
+            { key: 'head_name', label: 'اسم رب الأسرة' },
+            { key: 'national_id', label: 'رقم هوية رب الأسرة' },
+          ]
+    ),
     LOGIN_FIELD,
   ];
+  const filterIncomplete = familyHasIncompleteFilterData(family);
 
   return (
     <FamilyShell title={greetingName} subtitle={camp?.name} maxWidth="max-w-3xl">
@@ -175,6 +178,12 @@ export default function FamilyDashboardPage() {
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start">
         <section className="rounded-xl bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-lg font-bold">حول</h2>
+          {filterIncomplete && !inGrace ? (
+            <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-sm leading-relaxed text-amber-900">
+              في بيانات ناقصة للفلترة (الحالة الاجتماعية، الجنس، صلة القرابة، أو تاريخ الميلاد). عدّلوا الملف من هنا
+              واختاروا القيمة من القائمة، وبعد موافقة اللجنة الفلترة بتزبط. ما في داعي تعبّوا النموذج كامل.
+            </p>
+          ) : null}
           <dl className="space-y-2.5 text-sm">
             {aboutFields.map((field) => (
               <div key={field.key} className="flex justify-between gap-3 border-b border-black/6 pb-2 last:border-0 last:pb-0">
@@ -215,6 +224,7 @@ export default function FamilyDashboardPage() {
                     <p className="truncate text-xs text-[#65676B]">
                       {m.relationship || 'غير محدد'}
                       {m.gender ? ` · ${genderLabel(m.gender)}` : ''}
+                      {m.date_of_birth ? ` · ${String(m.date_of_birth).slice(0, 10)}` : ' · بدون تاريخ ميلاد'}
                     </p>
                   </li>
                 ))}

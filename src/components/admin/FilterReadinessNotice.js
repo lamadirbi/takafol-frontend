@@ -11,6 +11,7 @@ export default function FilterReadinessNotice({ issues = [], families = 0 }) {
 
   const missingColumns = issues.filter((item) => item.kind === 'missing_column' && item.excel);
   const needsMembers = issues.some((item) => item.kind === 'missing_members');
+  const emptyData = issues.some((item) => item.kind === 'empty_data');
 
   return (
     <aside
@@ -21,7 +22,7 @@ export default function FilterReadinessNotice({ issues = [], families = 0 }) {
       <p className="mt-1 leading-relaxed text-amber-900/90">
         {families === 0
           ? 'ما في عائلات بالسجل بعد. ارفعوا ملف الإكسل أو أضيفوا أسرة، وبعدين ارجعوا للفلترة.'
-          : 'بعض المعايير تعتمد على أعمدة أو بيانات مش موجودة في ملف الاستيراد. النتيجة ممكن تطلع فاضية.'}
+          : 'إذا السجل المستورد ناقص، اطلبوا من العائلات تعدّل صفحتها وتبعت طلب تعديل. بعد الموافقة الفلترة بتزبط، ومن غير ما يتضطروا يعبّوا نموذج كامل.'}
       </p>
       <ul className="mt-3 space-y-2">
         {issues.map((item) => (
@@ -37,26 +38,27 @@ export default function FilterReadinessNotice({ issues = [], families = 0 }) {
         ))}
       </ul>
       <div className="mt-3 space-y-1.5 leading-relaxed text-amber-900/90">
+        {emptyData || needsMembers ? (
+          <p>
+            قولوا للعيلة تفتح <strong className="font-semibold">ملفي</strong> ثم <strong className="font-semibold">تعديل الملف</strong>،
+            وتختار الحالة الاجتماعية والجنس وصلة القرابة وتاريخ الميلاد من القائمة، وتبعت الطلب. بعد ما تقبلوا الطلب من{' '}
+            <Link href={`${base}/admin/change-requests`} className="font-semibold underline underline-offset-4">
+              طلبات التعديل
+            </Link>
+            ، ارجعوا للفلترة.
+          </p>
+        ) : null}
         {missingColumns.length > 0 ? (
           <p>
-            أضيفوا العمود للملف وأعيدوا رفعه من{' '}
+            إذا العمود مش موجود أصلاً في الملف، فعّلوا الحقل من{' '}
+            <Link href={`${base}/admin/family-fields`} className="font-semibold underline underline-offset-4">
+              حقول العائلات
+            </Link>
+            {' '}أو أضيفوه للإكسل من{' '}
             <Link href={`${base}/admin/families`} className="font-semibold underline underline-offset-4">
               سجل العائلات
             </Link>
-            ، أو فعّلوا الحقل من{' '}
-            <Link href={`${base}/admin/family-fields`} className="font-semibold underline underline-offset-4">
-              حقول العائلات
-            </Link>{' '}
-            وعبّوا البيانات من تعديل الأسرة.
-          </p>
-        ) : null}
-        {issues.some((item) => item.kind === 'empty_data') ? (
-          <p>إذا العمود موجود بس فاضي: صحّحوا القيم في الإكسل وأعيدوا الاستيراد، أو عبّوها يدوياً من زر تعديل في السجل.</p>
-        ) : null}
-        {needsMembers ? (
-          <p>
-            ملف الإكسل يحفظ رب الأسرة والزوج/الزوجة، وباقي الأفراد من أعمدة «فرد 1» إلى «فرد 6» في النموذج. عبّوا الاسم
-            وصلة القرابة وتاريخ الميلاد، أو أضيفوهم من تعديل العائلة.
+            . العيلة كمان تقدر تعبّي نفس الحقل من صفحتها.
           </p>
         ) : null}
       </div>

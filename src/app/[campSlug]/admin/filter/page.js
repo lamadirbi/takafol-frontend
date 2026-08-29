@@ -429,8 +429,8 @@ export default function AdminFilterPage() {
                     {limitNote ? <p className="mt-2 text-xs text-amber-700">{limitNote}</p> : null}
                     {readinessAnalysis.issues.length > 0 ? (
                       <p className="mt-2 text-xs leading-relaxed text-amber-800">
-                        إذا الجدول فاضي أو ناقص، السبب غالباً إن معيار الفلترة مش موجود بملف الاستيراد أو البيانات مش
-                        متعبّاة. راجعوا التنبيه أعلى الصفحة.
+                        إذا الجدول فاضي أو ناقص، غالباً البيانات مش متعبّاة. اطلبوا من العائلات تعدّل صفحتها وتبعت طلب
+                        تعديل — بعد الموافقة الفلترة بتزبط من غير نموذج كامل.
                       </p>
                     ) : null}
                     <div className="mt-3 flex flex-wrap gap-3">

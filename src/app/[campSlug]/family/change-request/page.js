@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { getApiErrorMessage, unwrapResource } from '@/lib/utils';
 import { RELATIONSHIP_OPTIONS } from '@/lib/memberOptions';
 import FamilySchemaFields from '@/components/admin/FamilySchemaFields';
-import { enabledFamilyFields, formFromFamily } from '@/lib/familyFormSchema';
+import { enabledFamilyFields, formFromFamily, withFilterCriteriaFields } from '@/lib/familyFormSchema';
 import PageGuidePanel from '@/components/guide/PageGuidePanel';
 import { familyGuideHref, familyGuideSections } from '@/components/guide/familyGuide';
 
@@ -152,7 +152,7 @@ export default function FamilyChangeRequestPage() {
         return;
       }
       setInitialFamily(raw);
-      const fields = enabledFamilyFields({ enabled_fields: res.data?.form_schema });
+      const fields = withFilterCriteriaFields(enabledFamilyFields({ enabled_fields: res.data?.form_schema }));
       setSchemaFields(fields);
       const rows = Array.isArray(raw.members) ? raw.members.map(memberRowFromApi) : [];
       setInitialMemberRows(rows);
@@ -296,7 +296,8 @@ export default function FamilyChangeRequestPage() {
         />
         <h1 className="text-2xl font-bold text-foreground">تعديل مقترح على السجل</h1>
         <p className="mt-2 text-sm text-[#65676B]">
-          عدّل البيانات كما تريدها أن تصبح؛ لا يُطبَّق أي تغيير على السجل إلا بعد موافقة الإدارة.
+          إذا سجل اللجنة ناقص، عبّوا بس الحقول الناقصة من القوائم (الحالة الاجتماعية، الجنس، صلة القرابة، تاريخ الميلاد).
+          ما في داعي تعبّوا النموذج كامل. ما يتغيّر شيء بالسجل إلا بعد موافقة الإدارة.
         </p>
 
         {loading ? <PageSpinner /> : null}
@@ -335,7 +336,8 @@ export default function FamilyChangeRequestPage() {
             <section className="rounded-[var(--radius-card)] border border-border bg-white p-6 shadow-sm">
               <h2 className="text-lg font-bold text-foreground">بيانات رب الأسرة والعائلة</h2>
               <p className="mt-1 text-xs text-slate-500">
-                رقم الهوية للدخول: <span className="font-mono">{nationalIdDisplay}</span> (لا يُعدَّل من هنا)
+                رقم الهوية للدخول: <span className="font-mono">{nationalIdDisplay}</span> (لا يُعدَّل من هنا). الحالة
+                الاجتماعية والجنس والوضع المادي قوائم جاهزة عشان الفلترة تزبط.
               </p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <FamilySchemaFields
@@ -350,7 +352,8 @@ export default function FamilyChangeRequestPage() {
             <section className="rounded-[var(--radius-card)] border border-border bg-white p-6 shadow-sm">
               <h2 className="text-lg font-bold text-foreground">أفراد الأسرة المسجّلون</h2>
               <p className="mt-1 text-xs text-slate-500">
-                طلب حذف فرد يُرسل للمراجعة؛ لا يمكن حذف سجل «رب الأسرة» من هنا.
+                صلة القرابة والجنس من القائمة، وتاريخ الميلاد من التقويم. طلب حذف فرد يُرسل للمراجعة؛ لا يمكن حذف «رب
+                الأسرة» من هنا.
               </p>
               <div className="mt-4 space-y-4">
                 {memberRows.map((row) => {

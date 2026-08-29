@@ -14,7 +14,7 @@ export default function FamilySchemaFields({ fields, values, onChange, attempted
         const value = values[field.key] ?? '';
         const error = attempted && isFamilyFieldMissing(field, value) ? 'مطلوب' : '';
         const label = field.required ? `${field.label} *` : field.label;
-        if (field.type === 'select') {
+        if (field.type === 'select' || (Array.isArray(field.options) && field.options.length > 0)) {
           const options = [
             { value: '', label: '—' },
             ...(field.options || []),

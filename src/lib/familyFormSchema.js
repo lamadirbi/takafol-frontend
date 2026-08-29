@@ -1,6 +1,83 @@
+import { FAMILY_FINANCIAL_OPTIONS } from '@/lib/memberOptions';
+
+export const FILTER_CRITERIA_FIELDS = [
+  {
+    key: 'social_status',
+    label: 'الحالة الاجتماعية',
+    type: 'select',
+    enabled: true,
+    source: 'catalog',
+    options: [
+      { value: 'married', label: 'متزوج' },
+      { value: 'widowed', label: 'أرمل' },
+      { value: 'separated', label: 'منفصل' },
+      { value: 'divorced', label: 'مطلق' },
+      { value: 'abandoned', label: 'مهجور' },
+    ],
+  },
+  {
+    key: 'head_gender',
+    label: 'جنس رب الأسرة',
+    type: 'select',
+    enabled: true,
+    source: 'catalog',
+    options: [
+      { value: 'male', label: 'ذكر' },
+      { value: 'female', label: 'أنثى' },
+      { value: 'unknown', label: 'غير محدد' },
+    ],
+  },
+  {
+    key: 'financial_status',
+    label: 'الوضع المادي',
+    type: 'select',
+    enabled: true,
+    source: 'catalog',
+    options: FAMILY_FINANCIAL_OPTIONS.map((o) => ({ ...o })),
+  },
+];
+
+export const FILTER_CRITERIA_KEYS = FILTER_CRITERIA_FIELDS.map((field) => field.key);
+
 export function enabledFamilyFields(schema) {
   const list = schema?.enabled_fields || (schema?.fields || []).filter((f) => f.enabled);
   return Array.isArray(list) ? list : [];
+}
+
+/** حقول الفلترة تظهر دائماً في صفحة العائلة كقوائم اختيار، حتى لو السجل المستورد ناقص. */
+export function withFilterCriteriaFields(fields) {
+  const list = Array.isArray(fields) ? fields.map((field) => ({ ...field })) : [];
+  const byKey = new Map(list.map((field) => [field.key, field]));
+  for (const extra of FILTER_CRITERIA_FIELDS) {
+    const existing = byKey.get(extra.key);
+    if (existing) {
+      existing.enabled = true;
+      existing.type = 'select';
+      existing.options = extra.options;
+      if (!existing.label) existing.label = extra.label;
+    } else {
+      const next = { ...extra };
+      byKey.set(extra.key, next);
+      list.push(next);
+    }
+  }
+  return list;
+}
+
+export function familyHasIncompleteFilterData(family) {
+  if (!family) return false;
+  if (!String(familyFieldValue(family, 'social_status') || '').trim()) return true;
+  const members = Array.isArray(family.members) ? family.members : [];
+  const head = members.find((member) => String(member?.relationship || '').trim() === 'رب الأسرة');
+  const headGender = String(familyFieldValue(family, 'head_gender') || head?.gender || '').trim();
+  if (!headGender || headGender === 'unknown') return true;
+  if (members.length === 0) return true;
+  return members.some((member) => {
+    const rel = String(member?.relationship || '').trim();
+    const gender = String(member?.gender || '').trim();
+    const dob = String(member?.date_of_birth || '').trim();
+    return !rel || !gender || gender === 'unknown' || !dob;
+  });
 }
 
 export function familyFieldValue(family, key) {
