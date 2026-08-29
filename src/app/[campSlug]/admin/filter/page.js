@@ -20,17 +20,11 @@ import { cn, getApiErrorMessage } from '@/lib/utils';
 import { analyzeFilterReadiness } from '@/lib/filterReadiness';
 import PageGuidePanel from '@/components/guide/PageGuidePanel';
 import { adminGuideHref, adminGuideSections } from '@/components/guide/adminGuide';
-
-const SOCIAL_AR = {
-  married: 'متزوج',
-  widowed: 'أرمل',
-  separated: 'منفصل',
-  divorced: 'مطلّق',
-  abandoned: 'مهجور',
-};
+import { socialStatusLabel, financialStatusLabel } from '@/lib/memberOptions';
 
 const initialFilters = {
-  social_status: '',
+  social_statuses: [],
+  financial_status: '',
   members_min: '',
   members_max: '',
   has_newborn: false,
@@ -47,7 +41,10 @@ function buildCriteriaPayload(mode, filters) {
   const payload = { filter_scope: scope };
 
   if (mode === 'family') {
-    if (filters.social_status) payload.social_status = filters.social_status;
+    const socials = (filters.social_statuses || []).filter(Boolean);
+    if (socials.length === 1) payload.social_status = socials[0];
+    else if (socials.length > 1) payload.social_statuses = socials;
+    if (filters.financial_status) payload.financial_status = filters.financial_status;
     if (filters.members_min !== '' && filters.members_min != null) {
       payload.members_min = Number(filters.members_min);
     }
@@ -126,6 +123,15 @@ export default function AdminFilterPage() {
       if (checked) next.add(value);
       else next.delete(value);
       return { ...prev, member_relationships: [...next] };
+    });
+  }, []);
+
+  const toggleSocialStatus = useCallback((value, checked) => {
+    setFilters((prev) => {
+      const next = new Set(prev.social_statuses || []);
+      if (checked) next.add(value);
+      else next.delete(value);
+      return { ...prev, social_statuses: [...next] };
     });
   }, []);
 
@@ -251,7 +257,12 @@ export default function AdminFilterPage() {
       {
         key: 'social_status',
         label: 'الحالة الاجتماعية',
-        render: (row) => SOCIAL_AR[row.social_status] ?? row.social_status ?? '—',
+        render: (row) => socialStatusLabel(row.social_status),
+      },
+      {
+        key: 'financial_status',
+        label: 'الوضع المادي',
+        render: (row) => financialStatusLabel(row.financial_status),
       },
     ],
     [campSlug]
@@ -401,6 +412,7 @@ export default function AdminFilterPage() {
               }
               createAllLoading={savingAll}
               toggleMemberRelationship={toggleMemberRelationship}
+              toggleSocialStatus={toggleSocialStatus}
               applyDisabled={loading || saving || savingAll}
               issues={readinessAnalysis.issues}
             />

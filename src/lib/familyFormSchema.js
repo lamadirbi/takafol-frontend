@@ -1,4 +1,4 @@
-import { FAMILY_FINANCIAL_OPTIONS } from '@/lib/memberOptions';
+import { FAMILY_FINANCIAL_OPTIONS, SOCIAL_STATUS_OPTIONS, canonicalSocialStatus } from '@/lib/memberOptions';
 
 export const FILTER_CRITERIA_FIELDS = [
   {
@@ -7,13 +7,7 @@ export const FILTER_CRITERIA_FIELDS = [
     type: 'select',
     enabled: true,
     source: 'catalog',
-    options: [
-      { value: 'married', label: 'متزوج' },
-      { value: 'widowed', label: 'أرمل' },
-      { value: 'separated', label: 'منفصل' },
-      { value: 'divorced', label: 'مطلق' },
-      { value: 'abandoned', label: 'مهجور' },
-    ],
+    options: SOCIAL_STATUS_OPTIONS.map((o) => ({ ...o })),
   },
   {
     key: 'head_gender',
@@ -97,7 +91,8 @@ export function formFromFamily(fields, family, extras = {}) {
   const form = { ...extras };
   for (const field of fields) {
     const v = familyFieldValue(family, field.key);
-    form[field.key] = v == null ? '' : String(v);
+    const raw = v == null ? '' : String(v);
+    form[field.key] = field.key === 'social_status' ? canonicalSocialStatus(raw) || raw : raw;
   }
   return form;
 }

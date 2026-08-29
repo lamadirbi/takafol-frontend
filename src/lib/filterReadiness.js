@@ -32,7 +32,7 @@ export function analyzeFilterReadiness(mode, data) {
           title: 'الحالة الاجتماعية',
           excel: 'الحالة الاجتماعية',
           kind: 'missing_column',
-          text: 'العمود مش موجود في ملف الاستيراد. فلترة متزوج / أرمل / منفصل ما بتزبط.',
+          text: 'العمود مش موجود في ملف الاستيراد. فلترة متزوج / أرمل / مطلق ما بتزبط.',
         })
       );
     } else if (families > 0 && ratioLow(filled.social_status, families)) {
@@ -43,6 +43,28 @@ export function analyzeFilterReadiness(mode, data) {
           excel: 'الحالة الاجتماعية',
           kind: 'empty_data',
           text: 'الحقل موجود، بس أغلب العائلات بدون حالة اجتماعية. اطلبوا من العائلات تعدّل صفحتها وتختار القيمة من القائمة، وتبعت طلب تعديل.',
+        })
+      );
+    }
+
+    if (!enabled.has('financial_status')) {
+      issues.push(
+        issue({
+          id: 'financial_status',
+          title: 'الوضع المادي',
+          excel: 'الوضع المادي',
+          kind: 'missing_column',
+          text: 'عمود الوضع المادي مش موجود في ملف الاستيراد. فلترة منخفض / متوسط / جيد ما بتزبط.',
+        })
+      );
+    } else if (families > 0 && ratioLow(filled.financial_status, families)) {
+      issues.push(
+        issue({
+          id: 'financial_status',
+          title: 'الوضع المادي',
+          excel: 'الوضع المادي',
+          kind: 'empty_data',
+          text: 'الحقل موجود، بس أغلب العائلات بدون وضع مادي. اطلبوا من العائلات تعدّل صفحتها وتختار القيمة من القائمة، وتبعت طلب تعديل.',
         })
       );
     }

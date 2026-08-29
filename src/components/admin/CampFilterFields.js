@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { RELATIONSHIP_OPTIONS } from '@/lib/memberOptions';
+import { FAMILY_FINANCIAL_OPTIONS, RELATIONSHIP_OPTIONS, SOCIAL_STATUS_OPTIONS } from '@/lib/memberOptions';
 import { issueById } from '@/lib/filterReadiness';
 
 function FieldHint({ issue }) {
@@ -21,6 +21,7 @@ function FieldHint({ issue }) {
 /**
  * @param {'family' | 'members'} mode
  * @param {(value: string, checked: boolean) => void} [toggleMemberRelationship]
+ * @param {(value: string, checked: boolean) => void} [toggleSocialStatus]
  */
 export default function CampFilterFields({
   mode = 'family',
@@ -33,6 +34,7 @@ export default function CampFilterFields({
   createAllLoading = false,
   showArchiveLink = true,
   toggleMemberRelationship = () => {},
+  toggleSocialStatus = () => {},
   applyDisabled = false,
   issues = [],
 }) {
@@ -40,7 +42,9 @@ export default function CampFilterFields({
   const campBase = campSlug ? `/${campSlug}` : '';
   const isFamily = mode === 'family';
   const selectedRels = filters.member_relationships || [];
+  const selectedSocial = filters.social_statuses || [];
   const socialIssue = issueById(issues, 'social_status');
+  const financialIssue = issueById(issues, 'financial_status');
   const membersIssue = issueById(issues, 'total_members');
   const newbornIssue = issueById(issues, 'has_newborn');
   const ageIssue = issueById(issues, 'member_age');
@@ -59,7 +63,7 @@ export default function CampFilterFields({
         </h3>
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
           {isFamily
-            ? 'معايير على مستوى الأسرة (الحالة الاجتماعية، عدد الأفراد). إذا السجل ناقص، اطلبوا من العائلات تعدّل صفحتها وتبعت طلب تعديل بدل ما يعبّوا نموذج كامل.'
+            ? 'معايير على مستوى الأسرة (الحالة الاجتماعية تقدروا تختاروا أكثر من واحدة، والوضع المادي، وعدد الأفراد). إذا السجل ناقص، اطلبوا من العائلات تعدّل صفحتها وتبعت طلب تعديل بدل ما يعبّوا نموذج كامل.'
             : 'العمر والجنس وصلة القرابة تُطبَّق معاً على نفس الفرد. الجنس وصلة القرابة عند العيلة قوائم جاهزة. يمكن اختيار أكثر من صلة قرابة.'}
         </p>
       </div>
@@ -71,22 +75,40 @@ export default function CampFilterFields({
               العائلة
             </h4>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="sm:col-span-2 lg:col-span-3">
+                <p className="mb-2 text-sm font-medium text-muted-foreground">
+                  الحالة الاجتماعية (اختيار متعدد)
+                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-2 border border-border p-3">
+                  {SOCIAL_STATUS_OPTIONS.map((opt) => (
+                    <label
+                      key={opt.value}
+                      className="flex cursor-pointer items-center gap-2 text-sm text-foreground"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSocial.includes(opt.value)}
+                        onChange={(e) => toggleSocialStatus(opt.value, e.target.checked)}
+                        className="h-4 w-4 shrink-0 rounded border-slate-300 text-primary focus:ring-primary/30"
+                      />
+                      <span>{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <FieldHint issue={socialIssue} />
+              </div>
               <div>
                 <Select
-                  label="الحالة الاجتماعية"
-                  name="social_status"
-                  value={filters.social_status}
-                  onChange={(e) => setFilter('social_status', e.target.value)}
+                  label="الوضع المادي"
+                  name="financial_status"
+                  value={filters.financial_status ?? ''}
+                  onChange={(e) => setFilter('financial_status', e.target.value)}
                   options={[
                     { value: '', label: 'الكل — بدون تقييد' },
-                    { value: 'married', label: 'متزوج' },
-                    { value: 'widowed', label: 'أرمل' },
-                    { value: 'separated', label: 'منفصل' },
-                    { value: 'divorced', label: 'مطلق' },
-                    { value: 'abandoned', label: 'مهجور' },
+                    ...FAMILY_FINANCIAL_OPTIONS,
                   ]}
                 />
-                <FieldHint issue={socialIssue} />
+                <FieldHint issue={financialIssue} />
               </div>
               <div className="sm:col-span-2 lg:col-span-1">
                 <p className="mb-1.5 text-sm font-medium text-muted-foreground">عدد أفراد الأسرة</p>

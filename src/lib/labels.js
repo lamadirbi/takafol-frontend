@@ -25,10 +25,11 @@ export function genderAr(gender) {
 const SOCIAL_AR = {
   married: 'متزوج',
   widowed: 'أرمل',
-  separated: 'منفصل',
+  divorced: 'مطلق',
+  separated: 'مطلق',
   abandoned: 'مهجور',
-  /** قيمة قديمة في السجلات — تُعرض كمنفصل */
-  single: 'منفصل',
+  /** قيمة قديمة في السجلات — تُعرض كمطلق */
+  single: 'مطلق',
 };
 
 const FINANCIAL_AR = {

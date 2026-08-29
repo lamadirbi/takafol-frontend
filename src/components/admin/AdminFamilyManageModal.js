@@ -58,10 +58,7 @@ export default function AdminFamilyManageModal({ open, onClose, familyId, onSave
       const f = unwrapFamily(familyRes);
       const list = enabledFamilyFields(schemaRes.data);
       setFields(list);
-      setForm({
-        ...formFromFamily(list, f, { login_serial: f.login_serial ?? '' }),
-        social_status: f.social_status === 'single' ? 'separated' : (f.social_status ?? ''),
-      });
+      setForm(formFromFamily(list, f, { login_serial: f.login_serial ?? '' }));
       const m = Array.isArray(f.members) ? f.members : [];
       setMembers(
         m.map((row) => {

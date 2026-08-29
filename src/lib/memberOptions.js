@@ -21,6 +21,21 @@ export const FAMILY_FINANCIAL_OPTIONS = [
   { value: 'good', label: 'جيد' },
 ];
 
+/** الحالة الاجتماعية المعروضة في النماذج والفلترة (مطلق يشمل السجلات القديمة «منفصل») */
+export const SOCIAL_STATUS_OPTIONS = [
+  { value: 'married', label: 'متزوج' },
+  { value: 'widowed', label: 'أرمل' },
+  { value: 'divorced', label: 'مطلق' },
+  { value: 'abandoned', label: 'مهجور' },
+];
+
+export function canonicalSocialStatus(value) {
+  const s = String(value || '').trim();
+  if (!s) return '';
+  if (s === 'separated' || s === 'single' || s === 'منفصل' || s === 'منفصلة') return 'divorced';
+  return s;
+}
+
 export const GENDER_LABELS = {
   male: 'ذكر',
   female: 'أنثى',
@@ -30,10 +45,10 @@ export const GENDER_LABELS = {
 export const SOCIAL_STATUS_LABELS = {
   married: 'متزوج',
   widowed: 'أرمل',
-  separated: 'منفصل',
-  divorced: 'مطلّق',
+  separated: 'مطلق',
+  divorced: 'مطلق',
   abandoned: 'مهجور',
-  single: 'أعزب',
+  single: 'مطلق',
 };
 
 export const FILE_STATUS_LABELS = {
@@ -54,7 +69,7 @@ export function genderLabel(value) {
 }
 
 export function socialStatusLabel(value) {
-  return lookupLabel(SOCIAL_STATUS_LABELS, value);
+  return lookupLabel(SOCIAL_STATUS_LABELS, canonicalSocialStatus(value) || value);
 }
 
 export function financialStatusLabel(value) {
