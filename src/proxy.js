@@ -15,6 +15,12 @@ export const config = {
   ],
 };
 
+function withFrameGuard(response) {
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('Content-Security-Policy', "frame-ancestors 'none'");
+  return response;
+}
+
 function hostWithoutPort(hostname) {
   if (!hostname) return 'localhost';
   if (hostname.startsWith('[')) {
@@ -63,21 +69,23 @@ export default function proxy(req) {
     ];
     for (const [re, dest] of legacy) {
       if (re.test(p)) {
-        return NextResponse.redirect(new URL(dest + url.search, req.url));
+        return withFrameGuard(NextResponse.redirect(new URL(dest + url.search, req.url)));
       }
     }
     const m = p.match(/^\/admin\/camp-records\/(\d+)\/?$/);
     if (m) {
-      return NextResponse.redirect(
-        new URL(`/${DEFAULT_CAMP}/admin/camp-records/${m[1]}${url.search}`, req.url)
+      return withFrameGuard(
+        NextResponse.redirect(
+          new URL(`/${DEFAULT_CAMP}/admin/camp-records/${m[1]}${url.search}`, req.url)
+        )
       );
     }
-    return NextResponse.next();
+    return withFrameGuard(NextResponse.next());
   }
 
   const subdomain = host.split('.')[0];
 
   // Rewrite to the specific camp directory
-  return NextResponse.rewrite(new URL(`/${subdomain}${path}`, req.url));
+  return withFrameGuard(NextResponse.rewrite(new URL(`/${subdomain}${path}`, req.url)));
 }
 

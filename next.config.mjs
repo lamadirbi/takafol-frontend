@@ -37,8 +37,21 @@ const storagePatterns = [
   storagePatternFromUrl(process.env.NEXT_PUBLIC_SITE_URL),
 ].filter(Boolean);
 
+const clickjackingHeaders = [
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+];
+
 const nextConfig = {
   compress: true,
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: clickjackingHeaders,
+      },
+    ];
+  },
   allowedDevOrigins: [
     '10.220.3.135',
     '*.loca.lt',
