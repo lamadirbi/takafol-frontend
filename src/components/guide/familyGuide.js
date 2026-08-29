@@ -8,7 +8,6 @@ export function familyGuideSections(base = '') {
       id: 'start',
       title: 'الدخول',
       pageHref: `${base}/login`,
-      videoId: 'family-account',
       summary: 'ادخل من دخول العائلات على صفحة المخيم.',
       steps: [
         'اكتب رقم الدخول اللي عطتكم ياه اللجنة.',
@@ -60,7 +59,6 @@ export function familyGuideSections(base = '') {
       id: 'requests',
       title: 'الطلبات',
       pageHref: `${base}/family/change-requests`,
-      videoId: 'change-requests',
       summary: 'حالة طلباتك: قيد المراجعة، مقبول، أو مرفوض.',
       steps: ['إذا انقبل الطلب، البيانات الجديدة بتظهر في ملفي.'],
     },
@@ -68,7 +66,6 @@ export function familyGuideSections(base = '') {
       id: 'ntfy',
       title: 'إشعارات الموبايل',
       pageHref: `${base}/family/dashboard`,
-      videoId: 'notifications',
       summary: 'ربط الموبايل من ملفي عشان يوصلك تنبيه الطرد.',
       steps: ['ثبّت التطبيق، افتحه، اربط الجهاز من البطاقة.'],
     },

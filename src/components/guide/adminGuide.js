@@ -18,7 +18,6 @@ export function adminGuideSections(base = '') {
       id: 'today',
       title: 'اليوم',
       pageHref: `${base}/admin/dashboard`,
-      videoId: 'notifications',
       summary: 'هنا العدد، الشعار، والاشتراك.',
       steps: [
         'ارفع الشعار واقصّ الصورة إذا بدك.',
@@ -53,7 +52,6 @@ export function adminGuideSections(base = '') {
       id: 'fields',
       title: 'حقول العائلات',
       pageHref: `${base}/admin/family-fields`,
-      videoId: 'excel-import',
       summary: 'اختار شو يظهر في استمارة العيلة.',
       steps: [
         'فعّل الحقل أو أخفيه.',
@@ -76,7 +74,6 @@ export function adminGuideSections(base = '') {
       id: 'records',
       title: 'سجلات الفلترة',
       pageHref: `${base}/admin/camp-records`,
-      videoId: 'filter-distribute',
       summary: 'الفلاتر اللي حفظتوها.',
       steps: ['اضغط اسم السجل عشان التوزيع والاستلام.'],
     },
@@ -84,7 +81,6 @@ export function adminGuideSections(base = '') {
       id: 'record-detail',
       title: 'الطرود والاستلام',
       pageHref: `${base}/admin/camp-records`,
-      videoId: 'filter-distribute',
       summary: 'إشعار بالطرد وتأكيد الاستلام.',
       steps: [
         'اكتب اسم الطرد وابعت إشعار.',
